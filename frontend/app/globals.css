@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0f172a;
+  --card: #0b1220;
+  --muted: #94a3b8;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100;
+}
+
+/* auth layout specific */
+.auth-hero {
+  background: linear-gradient(180deg,#1f2937 0%, #111827 100%);
+}
+
+.card {
+  @apply bg-white dark:bg-slate-800 rounded-lg shadow-md;
+}
