@@ -8,11 +8,11 @@ interface Props extends React.InputHTMLAttributes<HTMLInputElement> {
 
 const Input = React.forwardRef<HTMLInputElement, Props>(
   ({ label, name, error, ...rest }, ref) => {
-    const base = 'w-full px-3 py-2 rounded-md bg-white dark:bg-slate-700 '
+    const base = 'w-full px-4 py-3 md:px-3 md:py-2 rounded-md bg-white dark:bg-slate-700 text-base md:text-sm'
     const border = error ? 'border-red-500' : 'border-slate-200 dark:border-slate-600'
     return (
       <div>
-        {label && <label className="block text-sm font-medium mb-1">{label}</label>}
+        {label && <label className="block text-sm md:text-xs font-medium mb-2 md:mb-1">{label}</label>}
         <input
           ref={ref}
           name={name}

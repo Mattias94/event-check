@@ -4,7 +4,7 @@ export default function Button({ children, ...props }: React.ButtonHTMLAttribute
   return (
     <button
       {...props}
-      className={`w-full py-2 rounded-md bg-slate-900 text-white hover:opacity-90 ${props.className ?? ''}`}
+      className={`w-full px-3 py-3 md:py-2 rounded-md bg-slate-900 text-white hover:opacity-90 transition-opacity text-base md:text-sm font-medium ${props.className ?? ''}`}
     >
       {children}
     </button>

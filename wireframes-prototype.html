@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event-Check Wireframes - Protótipo HTML</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+
+        header h1 {
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #6b7280;
+        }
+
+        .nav {
+            margin: 30px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .nav button {
+            padding: 10px 20px;
+            border: 2px solid #d1d5db;
+            background: white;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .nav button.active {
+            border-color: #0066cc;
+            background: #0066cc;
+            color: white;
+        }
+
+        .nav button:hover {
+            border-color: #0066cc;
+            color: #0066cc;
+        }
+
+        .wireframe-section {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+            margin-bottom: 20px;
+        }
+
+        .wireframe-section.active {
+            display: block;
+        }
+
+        .wireframe-section h2 {
+            color: #0066cc;
+            margin-bottom: 20px;
+            font-size: 24px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 15px;
+        }
+
+        .wireframe {
+            background: #f9fafb;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 40px;
+            margin-bottom: 30px;
+            text-align: center;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .wireframe-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 10px;
+        }
+
+        .wireframe-description {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: left;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .card-content {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 15px;
+            min-height: 60px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #0066cc;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #004fa3;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #10b981;
+            width: 45%;
+        }
+
+        .color-palette {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .color-swatch {
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+
+        .component-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .component-item {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .component-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .component-props {
+            font-size: 12px;
+            color: #6b7280;
+            font-family: monospace;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 3px solid #0066cc;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .wireframe {
+                padding: 20px;
+            }
+
+            body {
+                padding: 10px;
+            }
+        }
+
+        .section-grid {
+            margin-top: 20px;
+        }
+
+        .state-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .state-box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .state-box h4 {
+            color: #0066cc;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .state-visual {
+            background: white;
+            padding: 15px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            margin: 10px 0;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .responsive-note {
+            background: #e0f2fe;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            color: #0c4a6e;
+            font-size: 14px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: #f0f9ff;
+            border-left: 4px solid #0284c7;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #0066cc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 Event-Check Wireframes - Protótipo HTML</h1>
+            <p>Telas de baixa fidelidade para o sistema de gerenciamento de eventos</p>
+        </header>
+
+        <div class="nav">
+            <button class="nav-btn active" onclick="showSection('user-flow')">👤 Fluxo Usuário</button>
+            <button class="nav-btn" onclick="showSection('admin-flow')">👨‍💼 Fluxo Admin</button>
+            <button class="nav-btn" onclick="showSection('components')">🧩 Componentes</button>
+            <button class="nav-btn" onclick="showSection('design-tokens')">🎨 Design Tokens</button>
+            <button class="nav-btn" onclick="showSection('states')">🔄 Estados</button>
+            <button class="nav-btn" onclick="showSection('responsive')">📱 Responsividade</button>
+        </div>
+
+        <!-- FLUXO USUÁRIO -->
+        <div id="user-flow" class="wireframe-section active">
+            <h2>👤 Fluxo de Usuário Regular</h2>
+
+            <div class="wireframe">
+                <div class="wireframe-title">1. Tela de Login</div>
+                <div class="wireframe-description">Autenticação para usuários existentes</div>
+                <div style="width: 100%; max-width: 400px; text-align: left;">
+                    <div style="text-align: center; font-weight: 600; margin-bottom: 20px; color: #0066cc;">EventCheck 📋</div>
+                    <div style="background: #f9fafb; padding: 30px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px;">E-mail</label>
+                            <input type="text" placeholder="seu@email.com" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px;">Senha</label>
+                            <input type="password" placeholder="••••••••" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;">Login</button>
+                        <div style="font-size: 12px; text-align: center; color: #6b7280;">ou <a href="#" style="color: #0066cc;">registre-se</a></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wireframe">
+                <div class="wireframe-title">2. Dashboard do Usuário</div>
+                <div class="wireframe-description">Visão geral de eventos próximos e histórico</div>
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-title">Meus Próximos Eventos</div>
+                        <div class="card-content">
+                            <strong>Workshop React</strong><br>
+                            📍 São Paulo<br>
+                            📅 20/09/2026 14:00<br>
+                            ✓ Confirmado (Inscrito)
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-primary">Ver Detalhes</button>
+                            <button class="btn btn-secondary">QR Code</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Descubra Novos Eventos</div>
+                        <div class="card-content">
+                            🤖 Inovação em IA<br>
+                            Data: 25/09<br>
+                            Vagas: 50 disponíveis
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-primary">Ver Eventos</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wireframe">
+                <div class="wireframe-title">3. Página de Exploração de Eventos</div>
+                <div class="wireframe-description">Busca e filtro de eventos disponíveis</div>
+                <div style="width: 100%; text-align: left;">
+                    <div style="background: #f9fafb; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                        <input type="text" placeholder="🔍 Buscar eventos..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; margin-bottom: 10px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                            <select style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px;">
+                                <option>Categoria ▼</option>
+                            </select>
+                            <input type="date" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px;">
+                            <input type="date" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px;">
+                        </div>
+                    </div>
+
+                    <div class="grid-3">
+                        <div class="card">
+                            <div class="card-title">Evento 1</div>
+                            <div class="card-content">
+                                📍 São Paulo<br>
+                                📅 20/09/2026<br>
+                                Vagas: 50/100<br>
+                                <span class="status-badge status-active">Com Vagas</span>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn btn-primary">Inscrever-se</button>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Evento 2</div>
+                            <div class="card-content">
+                                📍 Rio de Janeiro<br>
+                                📅 25/09/2026<br>
+                                Vagas: 120/200<br>
+                                <span class="status-badge status-inactive">Cheio</span>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn btn-secondary">Ver Detalhes</button>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Evento 3</div>
+                            <div class="card-content">
+                                📍 Belo Horizonte<br>
+                                📅 30/09/2026<br>
+                                Vagas: 75/150<br>
+                                <span class="status-badge status-active">Com Vagas</span>
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn btn-primary">Inscrever-se</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FLUXO ADMIN -->
+        <div id="admin-flow" class="wireframe-section">
+            <h2>👨‍💼 Fluxo de Admin</h2>
+
+            <div class="wireframe">
+                <div class="wireframe-title">1. Painel de Eventos (Admin)</div>
+                <div class="wireframe-description">Lista de eventos criados pelo admin</div>
+                <div style="width: 100%;">
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-label">Total de Eventos</div>
+                            <div class="stat-value">1</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Ativos</div>
+                            <div class="stat-value">1</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Inscritos</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Cancelados</div>
+                            <div class="stat-value">0</div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="margin-bottom: 15px;">
+                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; align-items: center;">
+                            <div>
+                                <div class="card-title">Workshop de React Avançado</div>
+                                <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">
+                                    📅 24/09/2026 às 14:00 | 📍 São Paulo - Auditório<br>
+                                    📂 Tecnologia | 🟢 Ativo
+                                </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; margin-bottom: 5px;">Inscritos: 0/150</div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="card-actions" style="flex-direction: column; gap: 8px;">
+                                <button class="btn btn-primary" style="width: 100%; font-size: 11px;">📊 Dashboard</button>
+                                <button class="btn btn-secondary" style="width: 100%; font-size: 11px;">✏️ Editar</button>
+                                <button class="btn btn-secondary" style="width: 100%; font-size: 11px;">⏸️ Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wireframe">
+                <div class="wireframe-title">2. Criar Evento</div>
+                <div class="wireframe-description">Formulário para criar novo evento</div>
+                <div style="width: 100%; max-width: 500px; margin: 0 auto; text-align: left;">
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px;">Título</label>
+                            <input type="text" placeholder="Workshop de React..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px;">Descrição</label>
+                            <textarea placeholder="Descreva o evento..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; height: 80px;"></textarea>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px;">Categoria</label>
+                            <select style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                <option>Selecione uma categoria</option>
+                                <option>Tecnologia</option>
+                                <option>Negócios</option>
+                                <option>Educação</option>
+                            </select>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px;">Data</label>
+                                <input type="date" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px;">Horário</label>
+                                <input type="time" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px;">Localização</label>
+                            <input type="text" placeholder="São Paulo - Auditório..." style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px;">Capacidade (vagas)</label>
+                            <input type="number" placeholder="150" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%;">Criar Evento</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wireframe">
+                <div class="wireframe-title">3. Dashboard do Evento (Admin)</div>
+                <div class="wireframe-description">Visão detalhada com gráficos e inscritos</div>
+                <div class="responsive-note">
+                    ℹ️ Inclui: 3 cards de estatísticas, gráfico de pizza (status), gráfico de linha (ocupação), tabela de inscritos, check-ins recentes, próximos eventos
+                </div>
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label">👥 Total de Inscritos</div>
+                        <div class="stat-value">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">✓ Presentes (Check-in)</div>
+                        <div class="stat-value">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">✨ Vagas Restantes</div>
+                        <div class="stat-value">150</div>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-title">📊 Status dos Inscritos</div>
+                        <div style="text-align: center; color: #6b7280; padding: 40px 20px;">
+                            [Gráfico de Pizza]
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">📈 Taxa de Ocupação</div>
+                        <div style="text-align: center; color: #6b7280; padding: 40px 20px;">
+                            [Gráfico de Linha]
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPONENTES -->
+        <div id="components" class="wireframe-section">
+            <h2>🧩 Componentes Reutilizáveis</h2>
+
+            <div class="wireframe">
+                <div class="wireframe-title">Button Componente</div>
+                <div class="wireframe-description">Estados: Default, Hover, Disabled, Loading</div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 20px;">
+                    <button class="btn btn-primary">Default</button>
+                    <button class="btn btn-primary" style="opacity: 0.7;">Hover</button>
+                    <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">Disabled</button>
+                    <button class="btn btn-secondary">Secondary</button>
+                    <button class="btn btn-danger">Delete</button>
+                </div>
+            </div>
+
+            <div class="component-list">
+                <div class="component-item">
+                    <div class="component-name">Input</div>
+                    <input type="text" placeholder="Valor de entrada..." style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px;">
+                    <div class="component-props">Props: label, placeholder, error, type</div>
+                </div>
+
+                <div class="component-item">
+                    <div class="component-name">Select/Dropdown</div>
+                    <select style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px;">
+                        <option>Selecione uma opção</option>
+                        <option>Opção 1</option>
+                        <option>Opção 2</option>
+                    </select>
+                    <div class="component-props">Props: options, value, onChange</div>
+                </div>
+
+                <div class="component-item">
+                    <div class="component-name">Badge/Status</div>
+                    <div>
+                        <span class="status-badge status-active">🟢 Ativo</span>
+                        <span class="status-badge status-inactive" style="margin-left: 10px;">🔴 Inativo</span>
+                    </div>
+                    <div class="component-props">Props: label, variant (active/inactive)</div>
+                </div>
+
+                <div class="component-item">
+                    <div class="component-name">Progress Bar</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 65%;"></div>
+                    </div>
+                    <div class="component-props">Props: value, max, color</div>
+                </div>
+
+                <div class="component-item">
+                    <div class="component-name">Card</div>
+                    <div class="card">
+                        <div class="card-title">Título do Card</div>
+                        <div class="card-content">Conteúdo do componente...</div>
+                    </div>
+                    <div class="component-props">Props: title, content, actions</div>
+                </div>
+
+                <div class="component-item">
+                    <div class="component-name">Loading State</div>
+                    <div style="text-align: center; padding: 20px;">
+                        ⟲ Carregando...
+                    </div>
+                    <div class="component-props">Props: message</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DESIGN TOKENS -->
+        <div id="design-tokens" class="wireframe-section">
+            <h2>🎨 Design Tokens</h2>
+
+            <h3 style="margin-top: 30px; color: #374151;">Paleta de Cores</h3>
+            <div class="color-palette">
+                <div class="color-swatch" style="background: #0066cc;">
+                    <div>Primary</div>
+                    <div style="font-size: 10px; opacity: 0.8;">#0066cc</div>
+                </div>
+                <div class="color-swatch" style="background: #10b981;">
+                    <div>Success</div>
+                    <div style="font-size: 10px; opacity: 0.8;">#10b981</div>
+                </div>
+                <div class="color-swatch" style="background: #ef4444;">
+                    <div>Error</div>
+                    <div style="font-size: 10px; opacity: 0.8;">#ef4444</div>
+                </div>
+                <div class="color-swatch" style="background: #f59e0b;">
+                    <div>Warning</div>
+                    <div style="font-size: 10px; opacity: 0.8;">#f59e0b</div>
+                </div>
+                <div class="color-swatch" style="background: #1f2937; color: #fff;">
+                    <div>Dark</div>
+                    <div style="font-size: 10px; opacity: 0.8;">#1f2937</div>
+                </div>
+                <div class="color-swatch" style="background: #f3f4f6; color: #1f2937;">
+                    <div>Light</div>
+                    <div style="font-size: 10px; opacity: 0.8;">#f3f4f6</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; color: #374151;">Tipografia</h3>
+            <div style="background: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                <div style="font-size: 32px; font-weight: 700; margin-bottom: 20px;">H1 - 32px Bold</div>
+                <div style="font-size: 24px; font-weight: 700; margin-bottom: 20px;">H2 - 24px Bold</div>
+                <div style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">H3 - 20px SemiBold</div>
+                <div style="font-size: 16px; font-weight: 400; margin-bottom: 20px;">Body - 16px Regular</div>
+                <div style="font-size: 14px; font-weight: 400; margin-bottom: 20px;">Small - 14px Regular</div>
+                <div style="font-size: 12px; font-weight: 400;">Caption - 12px Regular</div>
+            </div>
+
+            <h3 style="margin-top: 30px; color: #374151;">Espaçamento</h3>
+            <div style="background: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; font-family: monospace; font-size: 12px;">
+                <div>0px, 2px, 4px, 6px, 8px, 12px, 16px, 20px, 24px, 32px, 40px, 48px</div>
+                <br>
+                <div style="color: #6b7280;">Exemplo:</div>
+                <div>• Padding Button: 12px (v) x 16px (h)</div>
+                <div>• Margin Section: 32px (v) x 0 (h)</div>
+                <div>• Gap Grid: 16px</div>
+                <div>• Border Radius: 8px (cards), 6px (inputs)</div>
+            </div>
+        </div>
+
+        <!-- ESTADOS -->
+        <div id="states" class="wireframe-section">
+            <h2>🔄 Estados de Componentes</h2>
+
+            <h3 style="margin: 30px 0 20px 0; color: #374151;">Button States</h3>
+            <div class="state-comparison">
+                <div class="state-box">
+                    <h4>Default</h4>
+                    <div class="state-visual" style="background: #0066cc; color: white; border-color: #0066cc;">
+                        [Button]
+                    </div>
+                </div>
+                <div class="state-box">
+                    <h4>Hover</h4>
+                    <div class="state-visual" style="background: #004fa3; color: white; border-color: #004fa3;">
+                        [Button]
+                    </div>
+                </div>
+                <div class="state-box">
+                    <h4>Disabled</h4>
+                    <div class="state-visual" style="background: #d1d5db; color: #9ca3af; border-color: #d1d5db;">
+                        [Button]
+                    </div>
+                </div>
+                <div class="state-box">
+                    <h4>Loading</h4>
+                    <div class="state-visual" style="background: #0066cc; color: white; border-color: #0066cc;">
+                        ⟲ Loading...
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 20px 0; color: #374151;">Input States</h3>
+            <div class="state-comparison">
+                <div class="state-box">
+                    <h4>Default</h4>
+                    <div class="state-visual" style="flex-direction: column; align-items: flex-start;">
+                        <input type="text" placeholder="Placeholder..." style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px;">
+                    </div>
+                </div>
+                <div class="state-box">
+                    <h4>Filled</h4>
+                    <div class="state-visual" style="flex-direction: column; align-items: flex-start;">
+                        <input type="text" value="Valor preenchido" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 12px; background: #f9fafb;">
+                    </div>
+                </div>
+                <div class="state-box">
+                    <h4>Error</h4>
+                    <div class="state-visual" style="flex-direction: column; align-items: flex-start; border-color: #ef4444;">
+                        <input type="text" value="Valor" style="width: 100%; padding: 8px; border: 1px solid #ef4444; border-radius: 4px; font-size: 12px; background: #fef2f2;">
+                    </div>
+                    <div style="font-size: 10px; color: #dc2626; margin-top: 5px;">⚠️ Mensagem de erro</div>
+                </div>
+                <div class="state-box">
+                    <h4>Focus</h4>
+                    <div class="state-visual" style="flex-direction: column; align-items: flex-start;">
+                        <input type="text" placeholder="Foco..." style="width: 100%; padding: 8px; border: 2px solid #0066cc; border-radius: 4px; font-size: 12px;">
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 20px 0; color: #374151;">Card States</h3>
+            <div class="grid-3">
+                <div class="card" style="border: 2px solid #e5e7eb;">
+                    <div class="card-title">Default</div>
+                    <div class="card-content">Shadow: 1<br>Cursor: default</div>
+                </div>
+                <div class="card" style="border: 2px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;">
+                    <div class="card-title">Hover</div>
+                    <div class="card-content">Shadow: 2<br>Cursor: pointer</div>
+                </div>
+                <div class="card" style="border: 2px solid #0066cc;">
+                    <div class="card-title">Selected</div>
+                    <div class="card-content">Border: primary<br>Indica seleção</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESPONSIVIDADE -->
+        <div id="responsive" class="wireframe-section">
+            <h2>📱 Responsividade</h2>
+
+            <div class="wireframe">
+                <div class="wireframe-title">Breakpoints</div>
+                <div class="wireframe-description">Pontos de quebra para diferentes dispositivos</div>
+                <ul class="feature-list" style="text-align: left;">
+                    <li><strong>Mobile:</strong> &lt; 640px (sm)</li>
+                    <li><strong>Tablet:</strong> 640px - 1024px (md)</li>
+                    <li><strong>Desktop:</strong> &gt; 1024px (lg, xl)</li>
+                </ul>
+            </div>
+
+            <div class="wireframe">
+                <div class="wireframe-title">Espaçamento Responsivo</div>
+                <div class="wireframe-description">Adaptação de padding e margin por dispositivo</div>
+                <div style="text-align: left;">
+                    <div class="card" style="margin-bottom: 15px;">
+                        <div class="card-title">Padding (Horizontal)</div>
+                        <div class="card-content">
+                            📱 Mobile: 16px<br>
+                            📱 Tablet: 24px<br>
+                            💻 Desktop: 32px
+                        </div>
+                    </div>
+                    <div class="card" style="margin-bottom: 15px;">
+                        <div class="card-title">Margin Vertical (Seções)</div>
+                        <div class="card-content">
+                            📱 Mobile: 16px<br>
+                            📱 Tablet: 24px<br>
+                            💻 Desktop: 32px
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Gap (Grid/Flex)</div>
+                        <div class="card-content">
+                            📱 Mobile: 12px<br>
+                            📱 Tablet: 16px<br>
+                            💻 Desktop: 20px
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wireframe">
+                <div class="wireframe-title">Grid Layout</div>
+                <div class="wireframe-description">Mudança de colunas por tamanho de tela</div>
+                <div style="text-align: left;">
+                    <div class="card" style="margin-bottom: 15px;">
+                        <div class="card-title">📱 Mobile (1 coluna)</div>
+                        <div style="background: #f9fafb; padding: 15px; border-radius: 6px; margin-top: 10px;">
+                            <div style="background: white; border: 1px solid #d1d5db; padding: 15px; margin-bottom: 10px; text-align: center; color: #6b7280;">Seção 1</div>
+                            <div style="background: white; border: 1px solid #d1d5db; padding: 15px; margin-bottom: 10px; text-align: center; color: #6b7280;">Seção 2</div>
+                            <div style="background: white; border: 1px solid #d1d5db; padding: 15px; text-align: center; color: #6b7280;">Seção 3</div>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-bottom: 15px;">
+                        <div class="card-title">📱 Tablet (2 colunas)</div>
+                        <div style="background: #f9fafb; padding: 15px; border-radius: 6px; margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div style="background: white; border: 1px solid #d1d5db; padding: 15px; text-align: center; color: #6b7280;">Seção 1</div>
+                            <div style="background: white; border: 1px solid #d1d5db; padding: 15px; text-align: center; color: #6b7280;">Seção 2</div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">💻 Desktop (3 colunas)</div>
+                        <div style="background: #f9fafb; padding: 15px; border-radius: 6px; margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                            <div style="background: white; border: 1px solid #d1d5db; padding: 15px; text-align: center; color: #6b7280;">Seção 1</div>
+                            <div style="background: white; border: 1px solid #d1d5db; padding: 15px; text-align: center; color: #6b7280;">Seção 2</div>
+                            <div style="background: white; border: 1px solid #d1d5db; padding: 15px; text-align: center; color: #6b7280;">Seção 3</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="responsive-note">
+                ✓ Teste no navegador com DevTools (F12) para visualizar as mudanças de layout em diferentes tamanhos de tela
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            const sections = document.querySelectorAll('.wireframe-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+
+            // Update nav buttons
+            const buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+    </script>
+</body>
+</html>

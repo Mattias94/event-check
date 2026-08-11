@@ -30,9 +30,7 @@ export default function LoginForm() {
     setLoading(true)
     setError(null)
     try {
-      await new Promise((r) => setTimeout(r, 800))
-
-      const user = verifyCredentials(data.email, data.password)
+      const user = await verifyCredentials(data.email, data.password)
       if (!user) {
         setError('E-mail ou senha inválidos.')
         setLoading(false)
@@ -40,7 +38,12 @@ export default function LoginForm() {
       }
 
       localStorage.setItem('currentUser', JSON.stringify(user))
-      router.push('/dashboard')
+
+      if (user.role === 'admin') {
+        router.push('/admin/events')
+      } else {
+        router.push('/dashboard')
+      }
     } catch (e) {
       setError('Erro ao fazer login. Tente novamente.')
     } finally {
@@ -49,8 +52,8 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="card p-6">
-      <h1 className="text-2xl font-semibold mb-4">Fazer Login</h1>
+    <div className="card p-4 md:p-6 w-full">
+      <h1 className="text-xl md:text-2xl font-semibold mb-6">Fazer Login</h1>
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <Input
           label="E-mail"
@@ -73,14 +76,14 @@ export default function LoginForm() {
         </Button>
       </form>
 
-      {error && <div className="mt-4 p-3 rounded-md bg-red-50 text-red-800">{error}</div>}
+      {error && <div className="mt-4 p-3 rounded-md bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-sm">{error}</div>}
 
-      <div className="my-4 text-center text-sm text-slate-500">ou</div>
+      <div className="my-4 text-center text-xs md:text-sm text-slate-500">ou</div>
 
       <div className="mt-2">
         <button
           type="button"
-          className="w-full py-2 rounded-md border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+          className="w-full px-3 py-3 md:py-2 rounded-md border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition text-base md:text-sm font-medium"
           onClick={() => router.push('/register')}
         >
           Ainda não tem conta? Registre-se
@@ -90,7 +93,7 @@ export default function LoginForm() {
       <div className="mt-4">
         <button
           type="button"
-          className="w-full text-sm text-sky-500 hover:underline transition"
+          className="w-full text-sm text-sky-500 hover:underline transition py-2"
           onClick={() => router.push('/forgot-password')}
         >
           Esqueceu a senha?

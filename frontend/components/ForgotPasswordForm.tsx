@@ -40,9 +40,7 @@ export default function ForgotPasswordForm() {
     setSuccess(null)
     setError(null)
     try {
-      await new Promise((r) => setTimeout(r, 800))
-
-      const result = initiatePasswordReset(data.email)
+      const result = await initiatePasswordReset(data.email)
       if (!result) {
         setError('E-mail não encontrado em nosso sistema.')
         setLoading(false)
@@ -58,9 +56,9 @@ export default function ForgotPasswordForm() {
   }
 
   return (
-    <div className="card p-6">
-      <h1 className="text-2xl font-semibold mb-2">Recuperar Senha</h1>
-      <p className="text-sm text-slate-500 mb-4">Informe seu e-mail para receber um link de recuperação.</p>
+    <div className="card p-4 md:p-6 w-full">
+      <h1 className="text-xl md:text-2xl font-semibold mb-2">Recuperar Senha</h1>
+      <p className="text-xs md:text-sm text-slate-500 mb-6">Informe seu e-mail para receber um link de recuperação.</p>
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <Input
           label="E-mail"
@@ -75,12 +73,12 @@ export default function ForgotPasswordForm() {
         </Button>
       </form>
 
-      {error && <div className="mt-4 p-3 rounded-md bg-red-50 text-red-800">{error}</div>}
+      {error && <div className="mt-4 p-3 rounded-md bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-sm">{error}</div>}
 
       <div className="mt-4">
         <button
           type="button"
-          className="w-full text-sm text-slate-600 dark:text-slate-400 hover:underline transition"
+          className="w-full text-xs md:text-sm text-slate-600 dark:text-slate-400 hover:underline transition py-2"
           onClick={() => router.push('/login')}
         >
           Voltar ao login
@@ -88,11 +86,9 @@ export default function ForgotPasswordForm() {
       </div>
 
       {success && (
-        <div className="mt-4 p-3 rounded-md bg-green-50 text-green-800">
+        <div className="mt-4 p-3 rounded-md bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 text-sm">
           <p className="font-medium">✓ Sucesso!</p>
-          <p className="text-sm mt-1">{success}</p>
-          <p className="text-xs mt-2 text-green-700">
-          </p>
+          <p className="text-xs mt-1">{success}</p>
         </div>
       )}
     </div>
