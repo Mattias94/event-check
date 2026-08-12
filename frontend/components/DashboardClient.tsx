@@ -92,8 +92,7 @@ export default function DashboardClient() {
 
   if (!user) return null
 
-  const userName = user.name
-  .toUpperCase()
+  const userName = user.name.toUpperCase()
   const userEmail = user.email
   const initials = userName
     .split(' ')

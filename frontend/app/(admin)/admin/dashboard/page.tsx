@@ -26,16 +26,6 @@ export default function AdminDashboardPage() {
   const [proximosEventos, setProximosEventos] = useState<Event[]>([])
 
   useEffect(() => {
-    const userId = getCurrentUserId()
-    if (!userId) {
-      router.push('/login')
-      return
-    }
-
-    if (!requireAdmin(router)) {
-      return
-    }
-
     if (!eventId) {
       router.push('/admin/events')
       return
@@ -165,21 +155,21 @@ export default function AdminDashboardPage() {
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-900">
       {/* Header */}
-      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+      <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-4">
-          <div className="flex justify-between items-start md:items-center">
-            <div className="flex-1">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl font-bold text-slate-900 dark:text-white">EventCheck</span>
-                <span className="text-xl">📋</span>
+                <span className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">EventCheck</span>
+                <span className="text-lg md:text-xl">📋</span>
               </div>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mt-1 truncate">
                 Visão Geral do Evento: {event.title} - {new Date(event.date).toLocaleDateString('pt-BR')}
               </p>
             </div>
             <button
               onClick={() => router.push('/admin/events')}
-              className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium transition"
+              className="px-3 md:px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-medium transition text-sm md:text-base flex-shrink-0 w-full sm:w-auto"
             >
               ← Voltar para Meus Eventos
             </button>
@@ -188,37 +178,37 @@ export default function AdminDashboardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
         {/* Top Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
           {/* Total Inscritos */}
-          <div className="card p-6 bg-slate-800 dark:bg-slate-700 text-white rounded-xl">
+          <div className="card p-4 md:p-6 bg-slate-800 dark:bg-slate-700 text-white rounded-xl">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-slate-300">👥 Total de Inscritos</span>
+              <span className="text-xs md:text-sm font-medium text-slate-300">👥 Total de Inscritos</span>
             </div>
-            <p className="text-4xl font-bold mb-2">{event.currentEnrollments}</p>
+            <p className="text-2xl md:text-4xl font-bold mb-2">{event.currentEnrollments}</p>
             <p className="text-xs text-slate-400">
               {confirmados} Confirmados + {cancelados} Cancelados
             </p>
           </div>
 
           {/* Presentes (Check-in) */}
-          <div className="card p-6 bg-slate-800 dark:bg-slate-700 text-white rounded-xl">
+          <div className="card p-4 md:p-6 bg-slate-800 dark:bg-slate-700 text-white rounded-xl">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-slate-300">✓ Presentes (Check-in)</span>
+              <span className="text-xs md:text-sm font-medium text-slate-300">✓ Presentes (Check-in)</span>
             </div>
-            <p className="text-4xl font-bold mb-2">{checkInsRealizados}</p>
+            <p className="text-2xl md:text-4xl font-bold mb-2">{checkInsRealizados}</p>
             <p className="text-xs text-green-400">
               ↑ {Math.round((checkInsRealizados / event.capacity) * 100)}% da Capacidade
             </p>
           </div>
 
           {/* Vagas Restantes */}
-          <div className="card p-6 bg-slate-800 dark:bg-slate-700 text-white rounded-xl">
+          <div className="card p-4 md:p-6 bg-slate-800 dark:bg-slate-700 text-white rounded-xl">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-slate-300">✨ Vagas Restantes</span>
+              <span className="text-xs md:text-sm font-medium text-slate-300">✨ Vagas Restantes</span>
             </div>
-            <p className="text-4xl font-bold mb-2">{availableSpots}</p>
+            <p className="text-2xl md:text-4xl font-bold mb-2">{availableSpots}</p>
             <p className="text-xs text-slate-400">
               Capacidade Máxima: {event.capacity}
             </p>
@@ -226,12 +216,12 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
           {/* Left Column */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 md:space-y-6">
             {/* Status dos Inscritos */}
-            <div className="card p-6 bg-white dark:bg-slate-800 rounded-xl">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+            <div className="card p-4 md:p-6 bg-white dark:bg-slate-800 rounded-xl">
+              <h2 className="text-base md:text-lg font-semibold text-slate-900 dark:text-white mb-4">
                 Status dos Inscritos
               </h2>
               <ResponsiveContainer width="100%" height={250}>
@@ -253,7 +243,7 @@ export default function AdminDashboardPage() {
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="flex justify-center gap-6 mt-4 text-sm">
+              <div className="flex flex-wrap justify-center gap-3 md:gap-6 mt-4 text-xs md:text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-green-500"></div>
                   <span className="text-slate-600 dark:text-slate-400">Confirmados</span>
@@ -270,8 +260,8 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Taxa de Ocupação e Check-in */}
-            <div className="card p-6 bg-white dark:bg-slate-800 rounded-xl">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+            <div className="card p-4 md:p-6 bg-white dark:bg-slate-800 rounded-xl overflow-x-auto">
+              <h2 className="text-base md:text-lg font-semibold text-slate-900 dark:text-white mb-4">
                 Taxa de Ocupação e Check-in
               </h2>
               <ResponsiveContainer width="100%" height={300}>
@@ -289,72 +279,72 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Lista de Inscritos */}
-            <div className="card p-6 bg-white dark:bg-slate-800 rounded-xl">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <div className="card p-4 md:p-6 bg-white dark:bg-slate-800 rounded-xl">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+                <h2 className="text-base md:text-lg font-semibold text-slate-900 dark:text-white">
                   Lista de Inscritos
                 </h2>
                 <button
                   onClick={exportToCSV}
-                  className="px-3 py-1 rounded text-sm bg-slate-800 hover:bg-slate-700 text-white font-medium transition"
+                  className="px-3 py-1 rounded text-xs md:text-sm bg-slate-800 hover:bg-slate-700 text-white font-medium transition w-full sm:w-auto"
                 >
                   Exportar para CSV
                 </button>
               </div>
 
-              <div className="mb-4 flex gap-2">
+              <div className="mb-4 flex flex-col sm:flex-row gap-2">
                 <input
                   type="text"
                   placeholder="🔍 Search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 px-3 py-2 rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                  className="flex-1 px-3 py-2 rounded text-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                 />
-                <button className="px-3 py-2 rounded border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-600 transition">
+                <button className="px-3 py-2 rounded text-sm border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-600 transition whitespace-nowrap">
                   ⊟ Filter
                 </button>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs md:text-sm">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-600">
-                      <th className="text-left py-3 px-3 font-semibold text-slate-900 dark:text-white">Nome</th>
-                      <th className="text-left py-3 px-3 font-semibold text-slate-900 dark:text-white">E-mail</th>
-                      <th className="text-left py-3 px-3 font-semibold text-slate-900 dark:text-white">Status</th>
-                      <th className="text-left py-3 px-3 font-semibold text-slate-900 dark:text-white">Hora Check-in</th>
-                      <th className="text-left py-3 px-3 font-semibold text-slate-900 dark:text-white">Ações</th>
+                      <th className="text-left py-2 md:py-3 px-2 md:px-3 font-semibold text-slate-900 dark:text-white">Nome</th>
+                      <th className="text-left py-2 md:py-3 px-2 md:px-3 font-semibold text-slate-900 dark:text-white hidden sm:table-cell">E-mail</th>
+                      <th className="text-left py-2 md:py-3 px-2 md:px-3 font-semibold text-slate-900 dark:text-white">Status</th>
+                      <th className="text-left py-2 md:py-3 px-2 md:px-3 font-semibold text-slate-900 dark:text-white hidden md:table-cell">Hora Check-in</th>
+                      <th className="text-left py-2 md:py-3 px-2 md:px-3 font-semibold text-slate-900 dark:text-white">Ações</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredEnrollments.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-4 text-center text-slate-500">
+                        <td colSpan={5} className="py-4 text-center text-slate-500 text-xs md:text-sm">
                           Nenhum inscrito encontrado
                         </td>
                       </tr>
                     ) : (
                       filteredEnrollments.slice(0, 10).map((enrollment) => (
                         <tr key={enrollment.id} className="border-b border-slate-100 dark:border-slate-700">
-                          <td className="py-3 px-3 text-slate-900 dark:text-white">{enrollment.userName}</td>
-                          <td className="py-3 px-3 text-slate-600 dark:text-slate-400">{enrollment.userEmail}</td>
-                          <td className="py-3 px-3">
+                          <td className="py-2 md:py-3 px-2 md:px-3 text-slate-900 dark:text-white text-xs md:text-sm">{enrollment.userName}</td>
+                          <td className="py-2 md:py-3 px-2 md:px-3 text-slate-600 dark:text-slate-400 hidden sm:table-cell text-xs md:text-sm">{enrollment.userEmail}</td>
+                          <td className="py-2 md:py-3 px-2 md:px-3">
                             <span className="px-2 py-1 rounded text-xs bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200 font-medium">
                               Confirmado
                             </span>
                           </td>
-                          <td className="py-3 px-3 text-slate-600 dark:text-slate-400">
+                          <td className="py-2 md:py-3 px-2 md:px-3 text-slate-600 dark:text-slate-400 hidden md:table-cell text-xs">
                             {new Date(enrollment.enrolledAt).toLocaleTimeString('pt-BR')}
                           </td>
-                          <td className="py-3 px-3">
-                            <div className="flex flex-nowrap items-center gap-2">
-                              <button className="px-2 py-1 rounded text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 font-medium hover:opacity-80 transition whitespace-nowrap">
-                                Visualizar
+                          <td className="py-2 md:py-3 px-2 md:px-3">
+                            <div className="flex flex-wrap items-center gap-1 md:gap-2">
+                              <button className="px-1.5 md:px-2 py-1 rounded text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 font-medium hover:opacity-80 transition whitespace-nowrap">
+                                Ver
                               </button>
-                              <button className="px-2 py-1 rounded text-xs bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 font-medium hover:opacity-80 transition whitespace-nowrap">
-                                Cancelar
+                              <button className="px-1.5 md:px-2 py-1 rounded text-xs bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200 font-medium hover:opacity-80 transition whitespace-nowrap">
+                                Canc
                               </button>
-                              <button className="px-2 py-1 rounded text-xs bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-medium hover:opacity-80 transition whitespace-nowrap">
+                              <button className="px-1.5 md:px-2 py-1 rounded text-xs bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-medium hover:opacity-80 transition whitespace-nowrap hidden md:inline-block">
                                 Exportar
                               </button>
                             </div>
@@ -369,20 +359,20 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Right Column */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {/* Check-Ins Recentes */}
-            <div className="card p-6 bg-white dark:bg-slate-800 rounded-xl">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+            <div className="card p-4 md:p-6 bg-white dark:bg-slate-800 rounded-xl">
+              <h2 className="text-base md:text-lg font-semibold text-slate-900 dark:text-white mb-4">
                 Check-Ins Recentes
               </h2>
               <div className="space-y-3">
                 {enrollments.slice(0, 4).map((enrollment) => (
                   <div key={enrollment.id} className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-slate-600 flex items-center justify-center text-white font-bold text-sm">
+                    <div className="w-8 md:w-10 h-8 md:h-10 rounded-full bg-gradient-to-br from-blue-400 to-slate-600 flex items-center justify-center text-white font-bold text-xs md:text-sm flex-shrink-0">
                       {enrollment.userName.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                    <div className="min-w-0">
+                      <p className="text-xs md:text-sm font-medium text-slate-900 dark:text-white truncate">
                         {enrollment.userName}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -395,17 +385,17 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Próximos Eventos */}
-            <div className="card p-6 bg-white dark:bg-slate-800 rounded-xl">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+            <div className="card p-4 md:p-6 bg-white dark:bg-slate-800 rounded-xl">
+              <h2 className="text-base md:text-lg font-semibold text-slate-900 dark:text-white mb-4">
                 Próximos Eventos
               </h2>
               <div className="space-y-3">
                 {proximosEventos.length === 0 ? (
-                  <p className="text-sm text-slate-500">Nenhum outro evento</p>
+                  <p className="text-xs md:text-sm text-slate-500">Nenhum outro evento</p>
                 ) : (
                   proximosEventos.map(evt => (
                     <div key={evt.id} className="p-3 rounded bg-slate-50 dark:bg-slate-700">
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      <p className="text-xs md:text-sm font-medium text-slate-900 dark:text-white truncate">
                         {evt.title}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">

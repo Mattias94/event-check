@@ -23,18 +23,8 @@ export default function AdminEventListPage() {
   const [toasts, setToasts] = useState<Toast[]>([])
 
   useEffect(() => {
-    const userId = getCurrentUserId()
-    if (!userId) {
-      router.push('/login')
-      return
-    }
-
-    if (!requireAdmin(router)) {
-      return
-    }
-
     loadEvents()
-  }, [router])
+  }, [])
 
   async function loadEvents() {
     setLoading(true)

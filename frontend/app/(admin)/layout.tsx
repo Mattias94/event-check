@@ -1,7 +1,11 @@
 import { ReactNode } from 'react'
+import AdminProtection from '../../components/AdminProtection'
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <>{children}</>
+    <AdminProtection>
+      {children}
+    </AdminProtection>
   )
 }
+

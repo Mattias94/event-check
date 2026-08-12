@@ -31,18 +31,8 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const userId = getCurrentUserId()
-    if (!userId) {
-      router.push('/login')
-      return
-    }
-
-    if (!requireAdmin(router)) {
-      return
-    }
-
     loadUsers()
-  }, [router])
+  }, [])
 
   async function loadUsers() {
     setLoading(true)

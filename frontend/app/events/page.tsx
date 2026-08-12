@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import { getUpcomingEvents, getCategories } from '../../lib/events'
 import { Event, EventFilters } from '../../lib/types'
 import { getCurrentUserId } from '../../lib/auth-guard'
+import UserProtection from '../../components/UserProtection'
 import LoadingState from '../../components/LoadingState'
 import ErrorState from '../../components/ErrorState'
 import EmptyState from '../../components/EmptyState'
 
-export default function EventsPage() {
+function EventsPageContent() {
   const router = useRouter()
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -18,15 +19,9 @@ export default function EventsPage() {
   const [categories, setCategories] = useState<string[]>([])
 
   useEffect(() => {
-    const userId = getCurrentUserId()
-    if (!userId) {
-      router.push('/login')
-      return
-    }
-
     loadEvents()
     loadCategories()
-  }, [router])
+  }, [])
 
   useEffect(() => {
     const filters: EventFilters = {}
@@ -152,5 +147,13 @@ export default function EventsPage() {
         )}
       </main>
     </div>
+  )
+}
+
+export default function EventsPage() {
+  return (
+    <UserProtection>
+      <EventsPageContent />
+    </UserProtection>
   )
 }
