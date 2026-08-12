@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import LoadingState from '../../../../components/LoadingState'
 import EmptyState from '../../../../components/EmptyState'
 import { getAllUniqueUserIds, getUserEnrollmentStats, searchUsers } from '../../../../lib/events'
-import { getCurrentUserId } from '../../../../lib/auth-guard'
+import { getCurrentUserId, requireAdmin } from '../../../../lib/auth-guard'
 
 interface UserEnrollment {
   eventId: string
@@ -34,6 +34,10 @@ export default function AdminUsersPage() {
     const userId = getCurrentUserId()
     if (!userId) {
       router.push('/login')
+      return
+    }
+
+    if (!requireAdmin(router)) {
       return
     }
 

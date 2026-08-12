@@ -8,6 +8,7 @@ import ErrorState from '../../../../../components/ErrorState'
 import { getEventById, updateEvent, getEnrollments } from '../../../../../lib/events'
 import { Event, EnrollmentRecord } from '../../../../../lib/types'
 import { EventCreationData } from '../../../../../lib/schemas'
+import { getCurrentUserId, requireAdmin } from '../../../../../lib/auth-guard'
 
 export default function EventDetailPage() {
   const router = useRouter()
@@ -21,6 +22,16 @@ export default function EventDetailPage() {
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   useEffect(() => {
+    const userId = getCurrentUserId()
+    if (!userId) {
+      router.push('/login')
+      return
+    }
+
+    if (!requireAdmin(router)) {
+      return
+    }
+
     getEventById(eventId)
       .then(async (eventData) => {
         if (!eventData) {
@@ -34,7 +45,7 @@ export default function EventDetailPage() {
       })
       .catch(() => setError('Erro ao carregar evento'))
       .finally(() => setLoading(false))
-  }, [eventId])
+  }, [eventId, router])
 
   async function handleUpdate(data: EventCreationData) {
     setSubmitError(null)

@@ -6,7 +6,7 @@ import LoadingState from '../../../../components/LoadingState'
 import ErrorState from '../../../../components/ErrorState'
 import EmptyState from '../../../../components/EmptyState'
 import { getEventsByAdmin, deleteEvent, cancelEvent } from '../../../../lib/events'
-import { getCurrentUserId } from '../../../../lib/auth-guard'
+import { getCurrentUserId, requireAdmin } from '../../../../lib/auth-guard'
 import { Event } from '../../../../lib/types'
 
 interface Toast {
@@ -26,6 +26,10 @@ export default function AdminEventListPage() {
     const userId = getCurrentUserId()
     if (!userId) {
       router.push('/login')
+      return
+    }
+
+    if (!requireAdmin(router)) {
       return
     }
 

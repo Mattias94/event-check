@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { getEventById, getEnrollments, getEventsByAdmin } from '../../../../lib/events'
 import { getUserById } from '../../../../lib/auth'
 import { Event, EnrollmentRecord } from '../../../../lib/types'
-import { getCurrentUserId } from '../../../../lib/auth-guard'
+import { getCurrentUserId, requireAdmin } from '../../../../lib/auth-guard'
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 interface EnrollmentWithDetails extends EnrollmentRecord {
@@ -29,6 +29,10 @@ export default function AdminDashboardPage() {
     const userId = getCurrentUserId()
     if (!userId) {
       router.push('/login')
+      return
+    }
+
+    if (!requireAdmin(router)) {
       return
     }
 

@@ -114,20 +114,20 @@ export default function DashboardClient() {
               <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Bem-vindo</h2>
               <p className="text-xs md:text-base text-slate-600 dark:text-slate-400 mt-1">Aqui estão os seus eventos, {userName}.</p>
             </div>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap justify-end">
               {user?.role === 'admin' && (
                 <button
                   onClick={() => router.push('/admin/events')}
-                  className="px-4 py-2 md:py-2 rounded-md bg-sky-600 text-white hover:opacity-90 transition text-sm md:text-base font-medium flex-1 md:flex-initial"
+                  className="px-4 py-2 md:py-2 rounded-md bg-sky-600 text-white hover:opacity-90 transition text-sm md:text-base font-medium"
                 >
                   Painel Admin
                 </button>
               )}
               <button
                 onClick={handleLogout}
-                className="px-4 py-2 md:py-2 rounded-md bg-slate-900 text-white hover:opacity-90 transition text-sm md:text-base font-medium flex-1 md:flex-initial"
+                className="px-4 py-2 md:py-2 rounded-md bg-slate-900 text-white hover:opacity-90 transition text-sm md:text-base font-medium"
               >
-                Logout
+                Sair
               </button>
             </div>
           </div>

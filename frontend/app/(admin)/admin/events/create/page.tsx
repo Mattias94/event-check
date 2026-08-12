@@ -1,16 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminEventForm from '../../../../../components/admin/AdminEventForm'
 import { createEvent } from '../../../../../lib/events'
-import { getCurrentUserId } from '../../../../../lib/auth-guard'
+import { getCurrentUserId, requireAdmin } from '../../../../../lib/auth-guard'
 import { EventCreationData } from '../../../../../lib/schemas'
 
 export default function CreateEventPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const userId = getCurrentUserId()
+    if (!userId) {
+      router.push('/login')
+      return
+    }
+
+    if (!requireAdmin(router)) {
+      return
+    }
+  }, [router])
 
   async function handleSubmit(data: EventCreationData) {
     setLoading(true)
