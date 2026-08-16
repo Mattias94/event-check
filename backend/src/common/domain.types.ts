@@ -30,6 +30,8 @@ export interface EnrollmentRecord {
   userId: string
   eventId: string
   enrolledAt: string
+  checkInToken: string
+  checkedInAt: string | null
 }
 
 export interface PasswordResetRequest {

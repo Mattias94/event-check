@@ -1,8 +1,10 @@
 "use client"
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react'
 import Input from './ui/Input'
 import Button from './ui/Button'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/Card'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -19,6 +21,7 @@ export default function LoginForm() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
@@ -30,13 +33,15 @@ export default function LoginForm() {
     setLoading(true)
     setError(null)
     try {
-      const user = await verifyCredentials(data.email, data.password)
-      if (!user) {
+      const result = await verifyCredentials(data.email, data.password)
+      if (!result) {
         setError('E-mail ou senha inválidos.')
         setLoading(false)
         return
       }
 
+      const { token, ...user } = result
+      localStorage.setItem('authToken', token)
       localStorage.setItem('currentUser', JSON.stringify(user))
 
       if (user.role === 'admin') {
@@ -52,53 +57,89 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="card p-4 md:p-6 w-full">
-      <h1 className="text-xl md:text-2xl font-semibold mb-6">Fazer Login</h1>
-      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-        <Input
-          label="E-mail"
-          name="email"
-          type="email"
-          placeholder="Digite seu e-mail"
-          {...register('email')}
-          error={errors.email?.message as string | undefined}
-        />
-        <Input
-          label="Senha"
-          name="password"
-          type="password"
-          placeholder="Digite sua senha"
-          {...register('password')}
-          error={errors.password?.message as string | undefined}
-        />
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Entrando...' : 'Login'}
-        </Button>
-      </form>
+    <Card className="w-full">
+      <CardHeader className="text-center">
+        <CardTitle className="text-xl md:text-2xl">Fazer Login</CardTitle>
+        <CardDescription>Acesse sua conta para continuar.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          <Input
+            label="E-mail"
+            name="email"
+            type="email"
+            autoComplete="email"
+            placeholder="Digite seu e-mail"
+            icon={<Mail />}
+            {...register('email')}
+            error={errors.email?.message as string | undefined}
+          />
 
-      {error && <div className="mt-4 p-3 rounded-md bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-sm">{error}</div>}
+          <div className="relative">
+            <Input
+              label="Senha"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="current-password"
+              placeholder="Digite sua senha"
+              icon={<Lock />}
+              className="pr-11"
+              {...register('password')}
+              error={errors.password?.message as string | undefined}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              className="absolute right-0 top-[26px] flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground md:h-10 md:w-10"
+            >
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          </div>
 
-      <div className="my-4 text-center text-xs md:text-sm text-slate-500">ou</div>
+          {error && (
+            <div
+              role="alert"
+              className="flex items-start gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <span>{error}</span>
+            </div>
+          )}
 
-      <div className="mt-2">
-        <button
+          <Button type="submit" className="w-full" loading={loading}>
+            {loading ? 'Entrando...' : 'Login'}
+          </Button>
+        </form>
+
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            className="text-sm font-medium text-primary hover:underline"
+            onClick={() => router.push('/forgot-password')}
+          >
+            Esqueceu a senha?
+          </button>
+        </div>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">ou</span>
+          </div>
+        </div>
+
+        <Button
           type="button"
-          className="w-full px-3 py-3 md:py-2 rounded-md border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition text-base md:text-sm font-medium"
+          variant="outline"
+          className="w-full"
           onClick={() => router.push('/register')}
         >
           Ainda não tem conta? Registre-se
-        </button>
-      </div>
-
-      <div className="mt-4">
-        <button
-          type="button"
-          className="w-full text-sm text-sky-500 hover:underline transition py-2"
-          onClick={() => router.push('/forgot-password')}
-        >
-          Esqueceu a senha?
-        </button>
-      </div>
-    </div>
+        </Button>
+      </CardContent>
+    </Card>
   )
 }

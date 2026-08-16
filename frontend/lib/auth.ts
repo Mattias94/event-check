@@ -18,15 +18,19 @@ export interface RegisterData {
 export interface RegisterResult {
   user: User
   isFirstUser: boolean
+  token: string
 }
+
+/** Usuário autenticado + token de sessão retornados pelo login. */
+export type LoginResult = User & { token: string }
 
 /**
  * Autentica o usuário contra a API. Retorna null quando as
  * credenciais são inválidas em vez de propagar o erro HTTP.
  */
-export async function verifyCredentials(email: string, password: string): Promise<User | null> {
+export async function verifyCredentials(email: string, password: string): Promise<LoginResult | null> {
   try {
-    return await api.post<User>('/auth/login', { email, password })
+    return await api.post<LoginResult>('/auth/login', { email, password })
   } catch {
     return null
   }

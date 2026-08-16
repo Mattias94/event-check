@@ -1,8 +1,10 @@
 "use client"
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { Mail, ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react'
 import Input from './ui/Input'
 import Button from './ui/Button'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/Card'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -56,41 +58,63 @@ export default function ForgotPasswordForm() {
   }
 
   return (
-    <div className="card p-4 md:p-6 w-full">
-      <h1 className="text-xl md:text-2xl font-semibold mb-2">Recuperar Senha</h1>
-      <p className="text-xs md:text-sm text-slate-500 mb-6">Informe seu e-mail para receber um link de recuperação.</p>
-      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-        <Input
-          label="E-mail"
-          name="email"
-          type="email"
-          placeholder="Digite seu e-mail"
-          {...register('email')}
-          error={errors.email?.message as string | undefined}
-        />
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Enviando...' : 'Obter Link de Recuperação'}
-        </Button>
-      </form>
+    <Card className="w-full">
+      <CardHeader className="text-center">
+        <CardTitle className="text-xl md:text-2xl">Recuperar Senha</CardTitle>
+        <CardDescription>Informe seu e-mail para receber um link de recuperação.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          <Input
+            label="E-mail"
+            name="email"
+            type="email"
+            autoComplete="email"
+            placeholder="Digite seu e-mail"
+            icon={<Mail />}
+            {...register('email')}
+            error={errors.email?.message as string | undefined}
+          />
 
-      {error && <div className="mt-4 p-3 rounded-md bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-sm">{error}</div>}
+          {error && (
+            <div
+              role="alert"
+              className="flex items-start gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <span>{error}</span>
+            </div>
+          )}
 
-      <div className="mt-4">
-        <button
-          type="button"
-          className="w-full text-xs md:text-sm text-slate-600 dark:text-slate-400 hover:underline transition py-2"
-          onClick={() => router.push('/login')}
-        >
-          Voltar ao login
-        </button>
-      </div>
+          {success && (
+            <div
+              role="status"
+              className="flex items-start gap-2 rounded-md border border-success/20 bg-success/10 p-3 text-sm text-success"
+            >
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <div>
+                <p className="font-medium">Sucesso!</p>
+                <p className="mt-1 text-xs">{success}</p>
+              </div>
+            </div>
+          )}
 
-      {success && (
-        <div className="mt-4 p-3 rounded-md bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 text-sm">
-          <p className="font-medium">✓ Sucesso!</p>
-          <p className="text-xs mt-1">{success}</p>
+          <Button type="submit" className="w-full" loading={loading}>
+            {loading ? 'Enviando...' : 'Recuperar senha'}
+          </Button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary hover:underline md:min-h-0"
+            onClick={() => router.push('/login')}
+          >
+            <ArrowLeft className="size-4" aria-hidden="true" />
+            Voltar ao login
+          </button>
         </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   )
 }

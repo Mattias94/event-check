@@ -1,5 +1,5 @@
 import { api } from './api'
-import { Event, EnrollmentRecord, EventFilters } from './types'
+import { Event, EnrollmentRecord, EventFilters, CheckInResult } from './types'
 import { EventCreationData, EventUpdateData } from './schemas'
 
 export async function getUpcomingEvents(filters?: EventFilters): Promise<Event[]> {
@@ -64,6 +64,14 @@ export async function unenrollUser(userId: string, eventId: string): Promise<{ s
   } catch (err: any) {
     return { success: false, error: err.message }
   }
+}
+
+/**
+ * Valida o QR code lido no painel admin e registra o check-in do participante.
+ * O token é o conteúdo do QR code (JWT gerado pelo backend na inscrição).
+ */
+export async function checkInEnrollment(eventId: string, token: string): Promise<CheckInResult> {
+  return api.post<CheckInResult>(`/events/${eventId}/enrollments/check-in`, { token })
 }
 
 export async function getEventsByAdmin(adminId: string): Promise<Event[]> {

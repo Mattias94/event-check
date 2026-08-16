@@ -1,4 +1,4 @@
-import { IsEmail, IsIn, IsOptional, IsString, MinLength } from 'class-validator'
+import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator'
 
 export class CreateUserDto {
   @IsString()
@@ -15,8 +15,4 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   dob?: string
-
-  @IsOptional()
-  @IsIn(['admin', 'user'])
-  role?: 'admin' | 'user'
 }

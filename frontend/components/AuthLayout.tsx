@@ -1,33 +1,33 @@
 import React from 'react'
+import { CalendarCheck2 } from 'lucide-react'
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
-      <header className="md:hidden sticky text-center top-0 z-50 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-        <div className="px-6 py-4">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Event-Check</h1>
-        </div>
-      </header>
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background p-4 py-10 md:py-12">
+      {/* Fundo decorativo sutil */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-primary/10 to-transparent"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-32 left-1/2 h-64 w-[32rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
+      />
 
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="hidden md:flex items-center justify-center p-8 auth-hero rounded-lg">
-            <div className="text-center text-white max-w-xs">
-              <h2 className="text-2xl font-semibold mb-2">Bem-vindo ao Event-Check</h2>
-              <p className="text-sm opacity-90">Crie sua conta para se inscrever em eventos e gerenciar seus ingressos.</p>
-              <div className="mt-6">
-                <svg width="100%" height="120" viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="160" height="120" rx="10" fill="#0f172a" />
-                </svg>
-              </div>
-            </div>
+      <div className="relative z-10 w-full max-w-md">
+        <div className="mb-6 flex flex-col items-center gap-3 text-center">
+          <div className="flex size-12 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+            <CalendarCheck2 className="size-6" aria-hidden="true" />
           </div>
-          <div className="p-6 flex items-center justify-center">
-            <div className="w-full max-w-md">
-              {children}
-            </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">Event-Check</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Gerencie eventos e inscrições em um só lugar.
+            </p>
           </div>
         </div>
+
+        {children}
       </div>
     </div>
   )

@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Shield } from 'lucide-react'
 import { getCurrentUser } from '../lib/auth-guard'
-import LoadingState from './LoadingState'
+import { Skeleton } from './ui/Skeleton'
 
 interface UserProtectionProps {
   children: React.ReactNode
@@ -33,7 +34,24 @@ export default function UserProtection({ children, requireUserRole = true }: Use
   }, [router, requireUserRole])
 
   if (isLoading) {
-    return <LoadingState />
+    return (
+      <div
+        className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4"
+        role="status"
+        aria-busy="true"
+        aria-live="polite"
+      >
+        <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Shield className="size-6" aria-hidden="true" />
+        </div>
+        <p className="text-sm text-muted-foreground">Verificando permissões...</p>
+        <div className="w-full max-w-xs space-y-2">
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="mx-auto h-3 w-2/3" />
+        </div>
+        <span className="sr-only">Carregando...</span>
+      </div>
+    )
   }
 
   if (!isAuthorized) {

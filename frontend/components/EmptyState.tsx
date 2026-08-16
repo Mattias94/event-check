@@ -1,5 +1,9 @@
 'use client'
 
+import type { LucideIcon } from 'lucide-react'
+import { CalendarX2, ClipboardList, Inbox, Search, UserRound, Users } from 'lucide-react'
+import { Button } from './ui/Button'
+
 interface EmptyStateProps {
   message?: string
   icon?: string
@@ -9,23 +13,35 @@ interface EmptyStateProps {
   }
 }
 
+// Mapeia os ícones (emojis legados) para ícones lucide equivalentes
+const ICON_MAP: Record<string, LucideIcon> = {
+  '📭': Inbox,
+  '📋': ClipboardList,
+  '👤': UserRound,
+  '👥': Users,
+  '🔍': Search,
+  '📅': CalendarX2,
+  '🗓️': CalendarX2,
+}
+
 export default function EmptyState({
   message = 'Nenhum resultado encontrado',
   icon = '📭',
   actionButton
 }: EmptyStateProps) {
+  const Icon = ICON_MAP[icon] ?? Inbox
+
   return (
-    <div className="flex items-center justify-center min-h-96 px-4">
-      <div className="text-center">
-        <div className="text-5xl md:text-6xl mb-4">{icon}</div>
-        <p className="text-slate-600 dark:text-slate-400 mb-4 text-sm md:text-base">{message}</p>
+    <div className="flex min-h-96 items-center justify-center px-4">
+      <div className="flex max-w-sm flex-col items-center text-center">
+        <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-muted">
+          <Icon className="size-8 text-muted-foreground" aria-hidden="true" />
+        </div>
+        <p className="text-sm text-muted-foreground md:text-base">{message}</p>
         {actionButton && (
-          <button
-            onClick={actionButton.onClick}
-            className="px-4 py-2 md:py-2 rounded-md bg-slate-900 text-white hover:opacity-90 transition text-sm md:text-base font-medium"
-          >
+          <Button onClick={actionButton.onClick} className="mt-6">
             {actionButton.label}
-          </button>
+          </Button>
         )}
       </div>
     </div>

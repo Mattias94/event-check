@@ -2,9 +2,25 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  AlertCircle,
+  CalendarDays,
+  CheckCircle2,
+  LayoutDashboard,
+  MapPin,
+  Pencil,
+  Tag,
+  Trash2,
+  Users,
+  XCircle,
+} from 'lucide-react'
 import LoadingState from '../../../../components/LoadingState'
 import ErrorState from '../../../../components/ErrorState'
 import EmptyState from '../../../../components/EmptyState'
+import { Card } from '../../../../components/ui/Card'
+import { Badge } from '../../../../components/ui/Badge'
+import Button from '../../../../components/ui/Button'
+import { Progress } from '../../../../components/ui/Progress'
 import { getEventsByAdmin, deleteEvent, cancelEvent } from '../../../../lib/events'
 import { getCurrentUserId, requireAdmin } from '../../../../lib/auth-guard'
 import { Event } from '../../../../lib/types'
@@ -13,6 +29,12 @@ interface Toast {
   id: string
   message: string
   type: 'success' | 'error'
+}
+
+function StatusBadge({ status }: { status: Event['status'] }) {
+  if (status === 'active') return <Badge variant="success">Ativo</Badge>
+  if (status === 'cancelled') return <Badge variant="destructive">Cancelado</Badge>
+  return <Badge variant="secondary">Finalizado</Badge>
 }
 
 export default function AdminEventListPage() {
@@ -53,7 +75,7 @@ export default function AdminEventListPage() {
 
   async function handleDelete(eventId: string, eventTitle: string) {
     const confirmed = confirm(
-      `Tem certeza que deseja deletar o evento "${eventTitle}"?\n\n⚠️ Esta ação não pode ser desfeita.`
+      `Tem certeza que deseja deletar o evento "${eventTitle}"?\n\nEsta ação não pode ser desfeita.`
     )
 
     if (!confirmed) return
@@ -66,7 +88,7 @@ export default function AdminEventListPage() {
       }
 
       setEvents(events.filter(e => e.id !== eventId))
-      showToast(`✅ Evento "${eventTitle}" deletado com sucesso`, 'success')
+      showToast(`Evento "${eventTitle}" deletado com sucesso`, 'success')
     } catch (err) {
       showToast('Erro ao deletar evento. Tente novamente.', 'error')
       console.error('Erro ao deletar evento:', err)
@@ -87,7 +109,7 @@ export default function AdminEventListPage() {
       const updated = await cancelEvent(eventId)
       if (updated) {
         setEvents(events.map(e => (e.id === eventId ? updated : e)))
-        showToast(`✅ Evento cancelado. ${inscritosCount} inscrito(s) notificado(s).`, 'success')
+        showToast(`Evento cancelado. ${inscritosCount} inscrito(s) notificado(s).`, 'success')
       }
     } catch (err: any) {
       showToast(err.message || 'Erro ao cancelar evento', 'error')
@@ -97,213 +119,203 @@ export default function AdminEventListPage() {
 
   function handleLogout() {
     localStorage.removeItem('currentUser')
+    localStorage.removeItem('authToken')
     router.push('/login')
   }
 
   if (loading) return <LoadingState />
   if (error) return <ErrorState message={error} onRetry={loadEvents} />
 
+  const stats = [
+    {
+      label: 'Total de Eventos',
+      value: events.length,
+      icon: CalendarDays,
+      iconClass: 'bg-primary/10 text-primary',
+    },
+    {
+      label: 'Ativos',
+      value: events.filter(e => e.status === 'active').length,
+      icon: CheckCircle2,
+      iconClass: 'bg-success/10 text-success',
+    },
+    {
+      label: 'Total de Inscritos',
+      value: events.reduce((sum, e) => sum + e.currentEnrollments, 0),
+      icon: Users,
+      iconClass: 'bg-primary/10 text-primary',
+    },
+    {
+      label: 'Cancelados',
+      value: events.filter(e => e.status === 'cancelled').length,
+      icon: XCircle,
+      iconClass: 'bg-destructive/10 text-destructive',
+    },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+    <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 md:py-8">
       {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-50 space-y-2">
+      <div className="fixed right-4 top-4 z-[60] space-y-2">
         {toasts.map(toast => (
           <div
             key={toast.id}
-            className={`px-4 py-3 rounded-lg shadow-lg text-sm font-medium ${
-              toast.type === 'success'
-                ? 'bg-green-500 text-white'
-                : 'bg-red-500 text-white'
-            }`}
+            role="status"
+            className="flex max-w-xs animate-fade-in items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-lg"
           >
-            {toast.message}
+            {toast.type === 'success' ? (
+              <CheckCircle2 className="size-4 shrink-0 text-success" aria-hidden="true" />
+            ) : (
+              <AlertCircle className="size-4 shrink-0 text-destructive" aria-hidden="true" />
+            )}
+            <span>{toast.message}</span>
           </div>
         ))}
       </div>
 
-      {/* Header */}
-      <header className="border-b border-slate-200 dark:border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Meus Eventos</h1>
-              <p className="text-slate-600 dark:text-slate-400 mt-2">Gerencie e crie seus eventos</p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => router.push('/admin/users')}
-                className="px-4 py-2 rounded-lg bg-slate-600 hover:bg-slate-700 dark:hover:bg-slate-600 text-white font-medium transition"
-              >
-                👤 Pesquisar Usuários
-              </button>
-              <button
-                onClick={() => router.push('/admin/events/create')}
-                className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-medium transition"
-              >
-                + Criar Evento
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition"
-              >
-                🚪 Sair
-              </button>
-            </div>
+      {/* Cabeçalho da página */}
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+          Meus Eventos
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground md:text-base">
+          Gerencie e crie seus eventos
+        </p>
+      </div>
+
+      {events.length === 0 ? (
+        <EmptyState
+          message="Você ainda não criou nenhum evento"
+          actionButton={{
+            label: 'Criar Seu Primeiro Evento',
+            onClick: () => router.push('/admin/events/create'),
+          }}
+        />
+      ) : (
+        <div className="space-y-6">
+          {/* Resumo */}
+          <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+            {stats.map(stat => {
+              const Icon = stat.icon
+              return (
+                <Card key={stat.label} className="p-4 md:p-5">
+                  <div className={`flex size-10 items-center justify-center rounded-lg ${stat.iconClass}`}>
+                    <Icon className="size-5" aria-hidden="true" />
+                  </div>
+                  <p className="mt-3 text-2xl font-bold text-foreground md:text-3xl">{stat.value}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+                </Card>
+              )
+            })}
           </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-8">
-        {events.length === 0 ? (
-          <EmptyState
-            message="Você ainda não criou nenhum evento"
-            icon="📋"
-            actionButton={{
-              label: '+ Criar Seu Primeiro Evento',
-              onClick: () => router.push('/admin/events/create'),
-            }}
-          />
-        ) : (
-          <div className="space-y-4">
-            {/* Summary Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <div className="card p-4">
-                <p className="text-sm text-slate-600 dark:text-slate-400">Total de Eventos</p>
-                <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">
-                  {events.length}
-                </p>
-              </div>
-              <div className="card p-4">
-                <p className="text-sm text-slate-600 dark:text-slate-400">Ativos</p>
-                <p className="text-3xl font-bold text-green-600 mt-2">
-                  {events.filter(e => e.status === 'active').length}
-                </p>
-              </div>
-              <div className="card p-4">
-                <p className="text-sm text-slate-600 dark:text-slate-400">Total de Inscritos</p>
-                <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">
-                  {events.reduce((sum, e) => sum + e.currentEnrollments, 0)}
-                </p>
-              </div>
-              <div className="card p-4">
-                <p className="text-sm text-slate-600 dark:text-slate-400">Cancelados</p>
-                <p className="text-3xl font-bold text-red-600 mt-2">
-                  {events.filter(e => e.status === 'cancelled').length}
-                </p>
-              </div>
-            </div>
-
-            {/* Events List */}
-            <div className="grid grid-cols-1 gap-4">
-              {events.map(event => (
-                <div key={event.id} className="card p-4 hover:shadow-lg transition">
-                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                    {/* Event Info */}
-                    <div className="lg:col-span-2">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-lg text-slate-900 dark:text-white line-clamp-1">
+          {/* Lista de eventos */}
+          <div className="grid grid-cols-1 gap-4">
+            {events.map(event => {
+              const ratio = event.capacity > 0 ? event.currentEnrollments / event.capacity : 0
+              return (
+                <Card key={event.id} className="p-4 transition-shadow hover:shadow-md md:p-5">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+                    {/* Informações do evento */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-lg font-semibold text-foreground line-clamp-1">
                           {event.title}
                         </h3>
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${
-                            event.status === 'active'
-                              ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200'
-                              : event.status === 'cancelled'
-                              ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200'
-                              : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200'
-                          }`}
-                        >
-                          {event.status === 'active'
-                            ? '🟢 Ativo'
-                            : event.status === 'cancelled'
-                            ? '🔴 Cancelado'
-                            : '⚫ Finalizado'}
-                        </span>
+                        <StatusBadge status={event.status} />
                       </div>
 
-                      <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
-                        <p>
-                          📅 {new Date(event.date).toLocaleDateString('pt-BR')} às{' '}
-                          {event.time}
+                      <div className="mt-2 space-y-1.5 text-sm text-muted-foreground">
+                        <p className="flex flex-wrap items-center gap-2">
+                          <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
+                          <span className="whitespace-nowrap">
+                            {new Date(event.date).toLocaleDateString('pt-BR')} às {event.time}
+                          </span>
                         </p>
-                        <p>📍 {event.location}</p>
-                        <p>📂 {event.category}</p>
+                        <p className="flex items-center gap-2">
+                          <MapPin className="size-4 shrink-0" aria-hidden="true" />
+                          <span className="truncate">{event.location}</span>
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <Tag className="size-4 shrink-0" aria-hidden="true" />
+                          {event.category}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Capacity Info */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+                    {/* Capacidade */}
+                    <div className="w-full space-y-2 lg:w-56 lg:shrink-0 lg:pt-1">
+                      <div className="flex justify-between text-xs text-muted-foreground">
                         <span>Inscritos</span>
-                        <span className="font-medium text-slate-900 dark:text-white">
+                        <span className="font-medium text-foreground">
                           {event.currentEnrollments} / {event.capacity}
                         </span>
                       </div>
-                      <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full transition-all ${
-                            event.currentEnrollments / event.capacity > 0.8
-                              ? 'bg-red-500'
-                              : event.currentEnrollments / event.capacity > 0.5
-                              ? 'bg-yellow-500'
-                              : 'bg-green-500'
-                          }`}
-                          style={{
-                            width: `${(event.currentEnrollments / event.capacity) * 100}%`,
-                          }}
-                        />
-                      </div>
+                      <Progress
+                        value={event.currentEnrollments}
+                        max={event.capacity}
+                        indicatorClassName={
+                          ratio > 0.8
+                            ? 'bg-destructive'
+                            : ratio > 0.5
+                            ? 'bg-warning'
+                            : 'bg-success'
+                        }
+                      />
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex flex-col gap-2 justify-start">
-                      <button
+                    {/* Ações */}
+                    <div className="grid w-full grid-cols-2 gap-2 lg:w-44 lg:shrink-0 lg:grid-cols-1">
+                      <Button
+                        variant="secondary"
                         onClick={() => router.push(`/admin/dashboard?eventId=${event.id}`)}
-                        className="px-3 py-2 rounded text-sm font-medium text-slate-900 dark:text-white bg-blue-100 dark:bg-blue-900/20 hover:bg-blue-200 dark:hover:bg-blue-900/40 transition"
+                        className="justify-start"
                       >
-                        📊 Dashboard
-                      </button>
-                      <button
+                        <LayoutDashboard aria-hidden="true" />
+                        Dashboard
+                      </Button>
+                      <Button
+                        variant="outline"
                         onClick={() => router.push(`/admin/events/${event.id}`)}
-                        className="px-3 py-2 rounded text-sm font-medium text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition"
+                        className="justify-start"
                       >
-                        ✏️ Editar
-                      </button>
+                        <Pencil aria-hidden="true" />
+                        Editar
+                      </Button>
 
                       {event.status === 'active' && (
-                        <button
+                        <Button
+                          variant="outline"
                           onClick={() => handleCancel(event.id, event.title)}
-                          className="px-3 py-2 rounded text-sm font-medium text-yellow-900 dark:text-yellow-200 bg-yellow-100 dark:bg-yellow-900/20 hover:bg-yellow-200 dark:hover:bg-yellow-900/40 transition"
+                          className="justify-start text-warning hover:text-warning"
                         >
-                          ⏸️ Cancelar
-                        </button>
+                          <XCircle aria-hidden="true" />
+                          Cancelar
+                        </Button>
                       )}
 
-                      <button
+                      <Button
+                        variant="outline"
                         onClick={() => handleDelete(event.id, event.title)}
                         disabled={event.currentEnrollments > 0}
-                        className={`px-3 py-2 rounded text-sm font-medium transition ${
-                          event.currentEnrollments > 0
-                            ? 'bg-red-100 dark:bg-red-900/20 text-red-400 dark:text-red-400 cursor-not-allowed'
-                            : 'text-red-900 dark:text-red-200 bg-red-100 dark:bg-red-900/20 hover:bg-red-200 dark:hover:bg-red-900/40'
-                        }`}
+                        className="justify-start text-destructive hover:text-destructive"
                         title={
                           event.currentEnrollments > 0
                             ? `${event.currentEnrollments} inscrito(s). Cancele primeiro.`
                             : 'Deletar evento'
                         }
                       >
-                        🗑️ Deletar
-                      </button>
+                        <Trash2 aria-hidden="true" />
+                        Deletar
+                      </Button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                </Card>
+              )
+            })}
           </div>
-        )}
-      </main>
+        </div>
+      )}
     </div>
   )
 }

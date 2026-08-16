@@ -1,31 +1,51 @@
-import React from 'react'
-import { clsx } from 'clsx'
+import * as React from 'react'
+import { cn } from '../../lib/utils'
 
-interface Props extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
-  name: string
   error?: string | null
+  icon?: React.ReactNode
 }
 
-const Input = React.forwardRef<HTMLInputElement, Props>(
-  ({ label, name, error, className, ...rest }, ref) => {
-    const base = 'w-full px-4 py-3 md:px-3 md:py-2 rounded-md bg-white dark:bg-slate-700 text-base md:text-sm border'
-    const border = error ? 'border-red-500' : 'border-slate-200 dark:border-slate-600'
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ label, name, error, icon, className, id, ...rest }, ref) => {
+    const inputId = id ?? name
     return (
-      <div>
-        {label && <label className="block text-sm md:text-xs font-medium mb-2 md:mb-1">{label}</label>}
-        <input
-          ref={ref}
-          name={name}
-          className={clsx(base, border, className)}
-          {...rest}
-        />
-        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      <div className="w-full">
+        {label && (
+          <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-foreground">
+            {label}
+          </label>
+        )}
+        <div className="relative">
+          {icon && (
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground [&_svg]:size-4">
+              {icon}
+            </span>
+          )}
+          <input
+            ref={ref}
+            id={inputId}
+            name={name}
+            aria-invalid={error ? true : undefined}
+            className={cn(
+              'flex h-11 w-full rounded-md border border-input bg-card px-3 py-2 text-base shadow-sm transition-colors md:h-10 md:text-sm',
+              'placeholder:text-muted-foreground',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+              'disabled:cursor-not-allowed disabled:opacity-50',
+              icon && 'pl-9',
+              error && 'border-destructive focus-visible:ring-destructive',
+              className
+            )}
+            {...rest}
+          />
+        </div>
+        {error && <p className="mt-1.5 text-sm text-destructive">{error}</p>}
       </div>
     )
   }
 )
-
 Input.displayName = 'Input'
 
+export { Input }
 export default Input

@@ -1,8 +1,38 @@
 "use client"
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import type { LucideIcon } from 'lucide-react'
+import {
+  ArrowRight,
+  BookOpen,
+  CalendarCheck2,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  HeartPulse,
+  Laptop,
+  LogOut,
+  MapPin,
+  Menu,
+  Music,
+  Palette,
+  Pencil,
+  QrCode,
+  Settings,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+  Trophy,
+  Users,
+  X,
+  XCircle,
+} from 'lucide-react'
 import { getEnrollmentsForUser, getUpcomingEvents } from '../lib/events'
 import { Event } from '../lib/types'
+import { Button } from './ui/Button'
+import { Card, CardContent } from './ui/Card'
+import { Badge } from './ui/Badge'
+import { Skeleton } from './ui/Skeleton'
 
 interface User {
   id: string
@@ -11,24 +41,25 @@ interface User {
   role?: string
 }
 
-const CATEGORY_ICONS: Record<string, string> = {
-  'Tecnologia': '💻',
-  'Negócios': '📈',
-  'Saúde': '🏥',
-  'Educação': '📚',
-  'Arte': '🎨',
-  'Música': '🎵',
-  'Esporte': '⚽',
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  'Tecnologia': Laptop,
+  'Negócios': TrendingUp,
+  'Saúde': HeartPulse,
+  'Educação': BookOpen,
+  'Arte': Palette,
+  'Música': Music,
+  'Esporte': Trophy,
 }
 
-function getCategoryIcon(category: string): string {
-  return CATEGORY_ICONS[category] || '🎉'
+function getCategoryIcon(category: string): LucideIcon {
+  return CATEGORY_ICONS[category] || Sparkles
 }
 
 export default function DashboardClient() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
   const [historyEvents, setHistoryEvents] = useState<Event[]>([])
   const [newEvents, setNewEvents] = useState<Event[]>([])
@@ -79,13 +110,21 @@ export default function DashboardClient() {
 
   const handleLogout = () => {
     localStorage.removeItem('currentUser')
+    localStorage.removeItem('authToken')
     router.push('/register')
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
-        <p className="text-slate-600 dark:text-slate-400">Carregando...</p>
+      <div className="min-h-screen bg-background px-4 py-8 md:px-6">
+        <div className="mx-auto w-full max-w-7xl space-y-6">
+          <Skeleton className="h-9 w-56" />
+          <Skeleton className="h-4 w-80 max-w-full" />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <Skeleton className="h-48 lg:col-span-2" />
+            <Skeleton className="h-48" />
+          </div>
+        </div>
       </div>
     )
   }
@@ -101,192 +140,299 @@ export default function DashboardClient() {
     .toUpperCase()
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-900 z-10">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
-          <div className="flex flex-col gap-4">
-            <div>
-              <div className="md:hidden mb-2">
-                <h1 className="text-lg font-bold flex items-center text-slate-900 dark:text-white">Event-Check</h1>
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Bem-vindo</h2>
-              <p className="text-xs md:text-base text-slate-600 dark:text-slate-400 mt-1">Aqui estão os seus eventos, {userName}.</p>
+      <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 md:px-6">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <CalendarCheck2 className="size-5" aria-hidden="true" />
             </div>
-            <div className="flex gap-2 flex-wrap justify-end">
+            <span className="truncate text-base font-semibold tracking-tight text-foreground md:text-lg">
+              Event-Check
+            </span>
+          </div>
+
+          {/* Ações - desktop */}
+          <div className="hidden items-center gap-2 sm:flex">
+            {user?.role === 'admin' && (
+              <Button variant="outline" size="sm" onClick={() => router.push('/admin/events')}>
+                <ShieldCheck aria-hidden="true" />
+                Painel Admin
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut aria-hidden="true" />
+              Sair
+            </Button>
+          </div>
+
+          {/* Menu - mobile */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-11 sm:hidden"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </Button>
+        </div>
+
+        {menuOpen && (
+          <div className="border-t bg-background px-4 py-3 sm:hidden">
+            <div className="flex flex-col gap-2">
               {user?.role === 'admin' && (
-                <button
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
                   onClick={() => router.push('/admin/events')}
-                  className="px-4 py-2 md:py-2 rounded-md bg-sky-600 text-white hover:opacity-90 transition text-sm md:text-base font-medium"
                 >
+                  <ShieldCheck aria-hidden="true" />
                   Painel Admin
-                </button>
+                </Button>
               )}
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 md:py-2 rounded-md bg-slate-900 text-white hover:opacity-90 transition text-sm md:text-base font-medium"
-              >
+              <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
+                <LogOut aria-hidden="true" />
                 Sair
-              </button>
+              </Button>
             </div>
           </div>
-        </div>
+        )}
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-          {/* Left Column - Upcoming Events & History */}
-          <div className="lg:col-span-2 space-y-6 md:space-y-8">
-            {/* Upcoming Events */}
+      <main className="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
+        {/* Boas-vindas */}
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">Bem-vindo</h1>
+          <p className="mt-1 text-sm text-muted-foreground md:text-base">
+            Aqui estão os seus eventos, {userName}.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 md:gap-8 lg:grid-cols-3">
+          {/* Coluna Esquerda - Próximos Eventos e Histórico */}
+          <div className="space-y-6 md:space-y-8 lg:col-span-2">
+            {/* Próximos Eventos */}
             <section>
-              <h2 className="text-lg md:text-xl font-semibold mb-4 text-slate-900 dark:text-white">Meus Próximos Eventos</h2>
+              <h2 className="mb-4 text-lg font-semibold text-foreground md:text-xl">
+                Meus Próximos Eventos
+              </h2>
               {upcomingEvents.length > 0 ? (
                 <div className="space-y-4">
                   {upcomingEvents.map((event) => (
-                    <div key={event.id} className="card p-4 md:p-6">
-                      <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="inline-block px-3 py-1 rounded-full text-white text-xs md:text-sm font-medium mb-3 bg-green-500">
-                            {event.title}
-                          </div>
-                          <div className="space-y-2 text-xs md:text-sm text-slate-600 dark:text-slate-400">
-                            <p className="truncate">Local: {event.location}</p>
-                            <p>Data: {new Date(event.date).toLocaleDateString('pt-BR')} às {event.time}</p>
-                            <p className="text-green-600 dark:text-green-400">Status: Confirmado (Inscrito)</p>
-                          </div>
-                        </div>
-                        <div className="flex flex-col md:flex-col items-center gap-2 md:items-end flex-shrink-0">
-                          <div className="w-20 h-20 md:w-24 md:h-24 bg-slate-100 dark:bg-slate-700 rounded-md flex items-center justify-center">
-                            <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-200 dark:bg-slate-600 rounded text-xs flex items-center justify-center text-slate-500">
-                              QR Code
+                    <Card key={event.id} className="transition-all hover:border-primary/40 hover:shadow-md">
+                      <CardContent className="p-4 pt-4 md:p-6 md:pt-6">
+                        <div className="flex flex-col gap-4 md:flex-row">
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-3 flex flex-wrap items-start gap-2">
+                              <h3 className="min-w-0 flex-1 font-semibold leading-snug text-foreground">
+                                {event.title}
+                              </h3>
+                              <Badge variant="success" className="shrink-0">
+                                <CheckCircle2 aria-hidden="true" />
+                                Inscrito
+                              </Badge>
+                            </div>
+                            <div className="space-y-2 text-sm text-muted-foreground">
+                              <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                                <span className="flex items-center gap-2 whitespace-nowrap">
+                                  <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
+                                  {new Date(event.date).toLocaleDateString('pt-BR')}
+                                </span>
+                                <span className="flex items-center gap-2 whitespace-nowrap">
+                                  <Clock className="size-4 shrink-0" aria-hidden="true" />
+                                  {event.time}
+                                </span>
+                              </p>
+                              <p className="flex items-center gap-2">
+                                <MapPin className="size-4 shrink-0" aria-hidden="true" />
+                                <span className="truncate">{event.location}</span>
+                              </p>
                             </div>
                           </div>
-                          <button
-                            onClick={() => router.push(`/events/${event.id}`)}
-                            className="px-3 py-1 rounded-md bg-slate-900 text-white text-xs md:text-sm hover:opacity-90 transition font-medium w-full md:w-auto"
-                          >
-                            Ver Detalhes
-                          </button>
+                          <div className="flex shrink-0 flex-row items-center gap-3 md:flex-col md:items-end">
+                            <div className="flex size-20 items-center justify-center rounded-lg border bg-muted md:size-24">
+                              <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                                <QrCode className="size-8 md:size-10" aria-hidden="true" />
+                                <span className="text-[10px] font-medium">QR Code</span>
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-11 flex-1 md:h-9 md:flex-none"
+                              onClick={() => router.push(`/events/${event.id}`)}
+                            >
+                              Ver Detalhes
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               ) : (
-                <div className="card p-4 md:p-6 text-center">
-                  <p className="text-slate-600 dark:text-slate-400 mb-4 text-sm md:text-base">Você ainda não está inscrito em nenhum evento futuro.</p>
-                  <button
-                    onClick={() => router.push('/events')}
-                    className="px-4 py-2 rounded-md bg-slate-900 text-white text-sm hover:opacity-90 transition font-medium w-full md:w-auto"
-                  >
-                    Descobrir Eventos
-                  </button>
-                </div>
+                <Card>
+                  <CardContent className="flex flex-col items-center p-6 pt-6 text-center md:p-8 md:pt-8">
+                    <div className="mb-4 flex size-14 items-center justify-center rounded-full bg-muted">
+                      <CalendarDays className="size-7 text-muted-foreground" aria-hidden="true" />
+                    </div>
+                    <p className="mb-4 text-sm text-muted-foreground md:text-base">
+                      Você ainda não está inscrito em nenhum evento futuro.
+                    </p>
+                    <Button onClick={() => router.push('/events')} className="w-full sm:w-auto">
+                      Descobrir Eventos
+                      <ArrowRight aria-hidden="true" />
+                    </Button>
+                  </CardContent>
+                </Card>
               )}
             </section>
 
-            {/* Event History */}
+            {/* Histórico de Eventos */}
             <section>
-              <h2 className="text-lg md:text-xl font-semibold mb-4 text-slate-900 dark:text-white">Histórico de Eventos</h2>
+              <h2 className="mb-4 text-lg font-semibold text-foreground md:text-xl">
+                Histórico de Eventos
+              </h2>
               {historyEvents.length > 0 ? (
-                <div className="card p-4 md:p-6">
-                  <div className="space-y-3">
-                    {historyEvents.map((event) => (
-                      <div
-                        key={event.id}
-                        onClick={() => router.push(`/events/${event.id}`)}
-                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-700 last:border-0 cursor-pointer"
-                      >
-                        <div className="min-w-0">
-                          <p className="font-medium text-slate-900 dark:text-white text-sm md:text-base truncate">{event.title}</p>
-                          <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">{new Date(event.date).toLocaleDateString('pt-BR')}</p>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className={event.status === 'cancelled' ? 'text-red-600' : 'text-green-600'}>
-                            {event.status === 'cancelled' ? '✕' : '✓'}
-                          </span>
-                          <span className={`text-xs md:text-sm font-medium ${event.status === 'cancelled' ? 'text-red-600' : 'text-green-600'}`}>
+                <Card>
+                  <CardContent className="p-4 pt-4 md:p-6 md:pt-6">
+                    <div className="divide-y divide-border">
+                      {historyEvents.map((event) => (
+                        <button
+                          key={event.id}
+                          type="button"
+                          onClick={() => router.push(`/events/${event.id}`)}
+                          className="flex min-h-11 w-full flex-col gap-2 py-3 text-left transition-colors first:pt-0 last:pb-0 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium text-foreground md:text-base">
+                              {event.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground md:text-sm">
+                              {new Date(event.date).toLocaleDateString('pt-BR')}
+                            </p>
+                          </div>
+                          <span
+                            className={`flex shrink-0 items-center gap-1.5 text-xs font-medium md:text-sm ${
+                              event.status === 'cancelled' ? 'text-destructive' : 'text-success'
+                            }`}
+                          >
+                            {event.status === 'cancelled' ? (
+                              <XCircle className="size-4" aria-hidden="true" />
+                            ) : (
+                              <CheckCircle2 className="size-4" aria-hidden="true" />
+                            )}
                             {event.status === 'cancelled' ? 'Cancelado' : 'Concluído'}
                           </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                        </button>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               ) : (
-                <div className="card p-4 md:p-6 text-center">
-                  <p className="text-slate-600 dark:text-slate-400 text-sm md:text-base">Nenhum evento no seu histórico ainda.</p>
-                </div>
+                <Card>
+                  <CardContent className="p-6 pt-6 text-center">
+                    <p className="text-sm text-muted-foreground md:text-base">
+                      Nenhum evento no seu histórico ainda.
+                    </p>
+                  </CardContent>
+                </Card>
               )}
             </section>
           </div>
 
-          {/* Right Column - Discover Events & Account */}
+          {/* Coluna Direita - Descobrir Eventos e Conta */}
           <div className="space-y-6 md:space-y-8">
-            {/* Discover Events */}
+            {/* Descobrir Eventos */}
             <section>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg md:text-xl font-semibold text-slate-900 dark:text-white">Descubra Novos Eventos</h2>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-foreground md:text-xl">
+                  Descubra Novos Eventos
+                </h2>
               </div>
               <div className="space-y-4">
                 {newEvents.length > 0 ? (
                   <>
-                    {newEvents.map((event) => (
-                      <div
-                        key={event.id}
-                        className="card p-4 hover:shadow-lg transition cursor-pointer h-full flex flex-col"
-                        onClick={() => router.push(`/events/${event.id}`)}
-                      >
-                        <div className="mb-3">
-                          <div className="w-full h-24 md:h-32 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 rounded-md flex items-center justify-center text-3xl md:text-4xl">
-                            {getCategoryIcon(event.category)}
-                          </div>
-                        </div>
-                        <h3 className="font-semibold text-slate-900 dark:text-white mb-2 text-sm md:text-base line-clamp-2">{event.title}</h3>
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mb-2">Data: {new Date(event.date).toLocaleDateString('pt-BR')}</p>
-                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 mb-3">Vagas Restantes: {event.capacity - event.currentEnrollments}</p>
-                        <button className="w-full px-3 py-2 rounded-md bg-slate-900 text-white text-xs md:text-sm hover:opacity-90 transition font-medium mt-auto">
-                          Ver Detalhes
-                        </button>
-                      </div>
-                    ))}
+                    {newEvents.map((event) => {
+                      const CategoryIcon = getCategoryIcon(event.category)
+                      return (
+                        <Card
+                          key={event.id}
+                          className="flex h-full cursor-pointer flex-col transition-all hover:border-primary/40 hover:shadow-md"
+                          onClick={() => router.push(`/events/${event.id}`)}
+                        >
+                          <CardContent className="flex flex-1 flex-col p-4 pt-4">
+                            <div className="mb-3 flex h-24 w-full items-center justify-center rounded-md bg-secondary md:h-28">
+                              <CategoryIcon className="size-10 text-primary md:size-12" aria-hidden="true" />
+                            </div>
+                            <h3 className="mb-2 line-clamp-2 text-sm font-semibold text-foreground md:text-base">
+                              {event.title}
+                            </h3>
+                            <div className="mb-4 space-y-1.5 text-xs text-muted-foreground md:text-sm">
+                              <p className="flex items-center gap-2">
+                                <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
+                                {new Date(event.date).toLocaleDateString('pt-BR')}
+                              </p>
+                              <p className="flex items-center gap-2">
+                                <Users className="size-4 shrink-0" aria-hidden="true" />
+                                Vagas Restantes: {event.capacity - event.currentEnrollments}
+                              </p>
+                            </div>
+                            <Button variant="secondary" size="sm" className="mt-auto h-11 w-full md:h-9">
+                              Ver Detalhes
+                              <ArrowRight aria-hidden="true" />
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
                   </>
                 ) : (
-                  <div className="card p-4 md:p-6 text-center">
-                    <p className="text-slate-600 dark:text-slate-400 mb-4 text-sm md:text-base">Novos eventos aparecerão em breve!</p>
-                    <button
-                      onClick={() => router.push('/events')}
-                      className="w-full px-3 py-2 rounded-md bg-slate-900 text-white text-sm hover:opacity-90 transition font-medium"
-                    >
-                      Ver Todos os Eventos
-                    </button>
-                  </div>
+                  <Card>
+                    <CardContent className="p-6 pt-6 text-center">
+                      <p className="mb-4 text-sm text-muted-foreground md:text-base">
+                        Novos eventos aparecerão em breve!
+                      </p>
+                      <Button onClick={() => router.push('/events')} className="w-full">
+                        Ver Todos os Eventos
+                      </Button>
+                    </CardContent>
+                  </Card>
                 )}
               </div>
             </section>
 
-            {/* Account Info */}
+            {/* Minha Conta */}
             <section>
-              <h2 className="text-lg md:text-xl font-semibold mb-4 text-slate-900 dark:text-white">Minha Conta</h2>
-              <div className="card p-4 md:p-6">
-                <div className="flex items-center gap-3 md:gap-4 mb-4">
-                  <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-sky-400 to-slate-600 flex items-center justify-center text-white text-lg md:text-2xl font-semibold flex-shrink-0">
-                    {initials}
+              <h2 className="mb-4 text-lg font-semibold text-foreground md:text-xl">Minha Conta</h2>
+              <Card>
+                <CardContent className="p-4 pt-4 md:p-6 md:pt-6">
+                  <div className="mb-4 flex items-center gap-3 md:gap-4">
+                    <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground md:size-14 md:text-xl">
+                      {initials}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-semibold text-foreground md:text-base">
+                        {userName}
+                      </h3>
+                      <p className="truncate text-xs text-muted-foreground md:text-sm">{userEmail}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-slate-900 dark:text-white text-sm md:text-base truncate">{userName}</h3>
-                    <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 truncate">{userEmail}</p>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Button variant="secondary" className="flex-1">
+                      <Pencil aria-hidden="true" />
+                      Editar
+                    </Button>
+                    <Button variant="outline" className="flex-1">
+                      <Settings aria-hidden="true" />
+                      Configurações
+                    </Button>
                   </div>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button className="flex-1 px-3 py-2 rounded-md bg-slate-900 text-white text-sm hover:opacity-90 transition font-medium">
-                    Editar
-                  </button>
-                  <button className="flex-1 px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition font-medium">
-                    Configurações
-                  </button>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </section>
           </div>
         </div>

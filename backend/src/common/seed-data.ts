@@ -1,4 +1,5 @@
 import { EnrollmentRecord, Event, PasswordResetRequest, User } from './domain.types'
+import { hashPasswordSync } from './password'
 
 export interface SeedState {
   users: User[]
@@ -14,7 +15,7 @@ export function createSeedState(): SeedState {
         id: 'admin-001',
         name: 'Admin Sistema',
         email: 'admin@test.com',
-        password: 'admin123',
+        password: hashPasswordSync('admin123'),
         dob: '1990-01-01',
         role: 'admin',
       },
@@ -22,7 +23,7 @@ export function createSeedState(): SeedState {
         id: 'user-001',
         name: 'João Silva',
         email: 'joao@test.com',
-        password: 'senha123',
+        password: hashPasswordSync('senha123'),
         dob: '1995-05-15',
         role: 'user',
       },
@@ -30,7 +31,7 @@ export function createSeedState(): SeedState {
         id: 'user-002',
         name: 'Maria Santos',
         email: 'maria@test.com',
-        password: 'senha123',
+        password: hashPasswordSync('senha123'),
         dob: '1998-03-20',
         role: 'user',
       },

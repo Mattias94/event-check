@@ -17,6 +17,14 @@ export interface EnrollmentRecord {
   userId: string
   eventId: string
   enrolledAt: string
+  checkInToken?: string
+  checkedInAt?: string | null
+}
+
+export interface CheckInResult {
+  valid: boolean
+  enrollment: EnrollmentRecord | null
+  participant: { id: string; name: string; email: string } | null
 }
 
 export interface EventFilters {

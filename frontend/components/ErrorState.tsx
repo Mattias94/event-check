@@ -1,5 +1,8 @@
 'use client'
 
+import { AlertCircle, RefreshCw } from 'lucide-react'
+import { Button } from './ui/Button'
+
 interface ErrorStateProps {
   message?: string
   onRetry?: () => void
@@ -7,17 +10,20 @@ interface ErrorStateProps {
 
 export default function ErrorState({ message = 'Ocorreu um erro ao carregar os dados', onRetry }: ErrorStateProps) {
   return (
-    <div className="flex items-center justify-center min-h-96 px-4">
-      <div className="text-center">
-        <div className="text-5xl md:text-6xl mb-4">⚠️</div>
-        <p className="text-slate-900 dark:text-white mb-4 font-medium text-sm md:text-base">{message}</p>
+    <div className="flex min-h-96 items-center justify-center px-4">
+      <div className="flex max-w-sm flex-col items-center text-center">
+        <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-destructive/10">
+          <AlertCircle className="size-8 text-destructive" aria-hidden="true" />
+        </div>
+        <p className="font-medium text-foreground md:text-base">{message}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Verifique sua conexão e tente novamente.
+        </p>
         {onRetry && (
-          <button
-            onClick={onRetry}
-            className="px-4 py-2 md:py-2 rounded-md bg-slate-900 text-white hover:opacity-90 transition text-sm md:text-base font-medium"
-          >
+          <Button variant="outline" onClick={onRetry} className="mt-6">
+            <RefreshCw aria-hidden="true" />
             Tentar Novamente
-          </button>
+          </Button>
         )}
       </div>
     </div>

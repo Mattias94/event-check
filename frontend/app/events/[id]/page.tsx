@@ -2,11 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { ArrowLeft, CalendarDays, CheckCircle2, Clock, MapPin, Tag, Users } from 'lucide-react'
 import { getEventById, getEnrollments, enrollUser, unenrollUser, isUserEnrolled } from '../../../lib/events'
 import { Event, EnrollmentRecord } from '../../../lib/types'
 import { getCurrentUserId } from '../../../lib/auth-guard'
 import LoadingState from '../../../components/LoadingState'
 import ErrorState from '../../../components/ErrorState'
+import { Button } from '../../../components/ui/Button'
+import { Card, CardContent } from '../../../components/ui/Card'
+import { Badge } from '../../../components/ui/Badge'
+import { Progress } from '../../../components/ui/Progress'
 
 export default function EventDetailPage() {
   const router = useRouter()
@@ -72,71 +77,136 @@ export default function EventDetailPage() {
   if (!event) return <ErrorState message="Não encontrado" onRetry={() => router.push('/events')} />
 
   const avail = event.capacity - event.currentEnrollments
-  const pct = (event.currentEnrollments / event.capacity) * 100
+  const isAlmostFull = avail <= Math.ceil(event.capacity * 0.2)
+  const statusVariant =
+    event.status === 'active' ? ('success' as const)
+    : event.status === 'cancelled' ? ('destructive' as const)
+    : ('secondary' as const)
+  const statusLabel =
+    event.status === 'active' ? 'Ativo' : event.status === 'cancelled' ? 'Cancelado' : 'Finalizado'
+
+  const details = [
+    { icon: CalendarDays, label: 'Data', value: new Date(event.date).toLocaleDateString('pt-BR') },
+    { icon: Clock, label: 'Hora', value: event.time },
+    { icon: MapPin, label: 'Local', value: event.location },
+    { icon: Users, label: 'Capacidade', value: String(event.capacity) },
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
-      <header className="border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10 bg-white dark:bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
-          <button onClick={() => router.push('/events')} className="px-3 md:px-4 py-2 rounded-lg bg-slate-600 hover:bg-slate-700 text-white font-medium mb-3 md:mb-4 text-sm md:text-base">
-            ← Voltar
-          </button>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">{event.title}</h1>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-7xl items-center px-4 md:h-16 md:px-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push('/events')}
+            className="-ml-2 h-11 md:h-9"
+          >
+            <ArrowLeft aria-hidden="true" />
+            Voltar
+          </Button>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+      <main className="mx-auto max-w-7xl px-4 pb-32 pt-6 md:px-6 md:pt-8 lg:pb-8">
+        {/* Hero */}
+        <div className="mb-6 md:mb-8">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <Badge variant="outline">
+              <Tag aria-hidden="true" />
+              {event.category}
+            </Badge>
+            <Badge variant={statusVariant}>{statusLabel}</Badge>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+            {event.title}
+          </h1>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 md:gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <div className="card p-4 md:p-6 space-y-4 md:space-y-6">
-              <p className="text-sm md:text-base text-slate-600 dark:text-slate-400">{event.description}</p>
+            <Card>
+              <CardContent className="space-y-6 p-4 pt-4 md:p-6 md:pt-6">
+                <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
+                  {event.description}
+                </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                <div className="p-3 md:p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                  <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">📅 Data</p>
-                  <p className="font-semibold text-sm md:text-base">{new Date(event.date).toLocaleDateString('pt-BR')}</p>
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                  {details.map(({ icon: Icon, label, value }) => (
+                    <div key={label} className="flex items-center gap-3 rounded-lg border bg-secondary/50 p-3 md:p-4">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                        <Icon className="size-4" aria-hidden="true" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground md:text-sm">{label}</p>
+                        <p className="truncate text-sm font-semibold text-foreground md:text-base">{value}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="p-3 md:p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                  <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">🕐 Hora</p>
-                  <p className="font-semibold text-sm md:text-base">{event.time}</p>
-                </div>
-                <div className="p-3 md:p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                  <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">📍 Local</p>
-                  <p className="font-semibold text-sm md:text-base">{event.location}</p>
-                </div>
-                <div className="p-3 md:p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                  <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400">👥 Capacidade</p>
-                  <p className="font-semibold text-sm md:text-base">{event.capacity}</p>
-                </div>
-              </div>
 
-              <div>
-                <h2 className="text-lg md:text-xl font-bold mb-2 md:mb-3">Inscritos: {event.currentEnrollments}/{event.capacity}</h2>
-                <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 md:h-4">
-                  <div className="h-3 md:h-4 rounded-full bg-blue-500 transition-all" style={{width: pct + '%'}} />
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground md:text-base">
+                      <Users className="size-4 text-muted-foreground" aria-hidden="true" />
+                      Inscritos
+                    </h2>
+                    <span className={`text-sm font-medium ${isAlmostFull ? 'text-destructive' : 'text-muted-foreground'}`}>
+                      {event.currentEnrollments}/{event.capacity}
+                    </span>
+                  </div>
+                  <Progress
+                    value={event.currentEnrollments}
+                    max={event.capacity}
+                    className="h-3"
+                    indicatorClassName={isAlmostFull ? 'bg-destructive' : undefined}
+                    aria-label="Ocupação de vagas"
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground md:text-sm">
+                    {avail} vaga{avail !== 1 ? 's' : ''} restante{avail !== 1 ? 's' : ''}
+                  </p>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
 
-          <div>
-            <div className="card p-4 md:p-6 sticky top-20">
+          {/* Ação de inscrição: barra fixa no mobile, card sticky no desktop */}
+          <aside>
+            <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-4 backdrop-blur lg:sticky lg:top-24 lg:rounded-lg lg:border lg:bg-card lg:p-6 lg:shadow-sm">
               {isEnrolled ? (
                 <>
-                  <div className="p-3 md:p-4 bg-green-100 dark:bg-green-900/20 rounded-lg mb-4">
-                    <p className="font-semibold text-green-800 dark:text-green-200 text-sm md:text-base">✓ Você está inscrito</p>
+                  <div className="mb-3 flex items-center gap-2 rounded-lg bg-success/10 p-3 lg:mb-4">
+                    <CheckCircle2 className="size-5 shrink-0 text-success" aria-hidden="true" />
+                    <div>
+                      <p className="text-sm font-medium text-success md:text-base">
+                        Você está inscrito
+                      </p>
+                      <p className="mt-0.5 text-xs text-success/80">
+                        Enviamos por e-mail o QR code para o check-in no dia do evento.
+                      </p>
+                    </div>
                   </div>
-                  <button onClick={handleUnenroll} disabled={enrolling} className="w-full px-3 md:px-4 py-2 md:py-3 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold text-sm md:text-base transition">
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={handleUnenroll}
+                    loading={enrolling}
+                  >
                     {enrolling ? 'Processando...' : 'Desinscrever'}
-                  </button>
+                  </Button>
                 </>
               ) : (
-                <button onClick={handleEnroll} disabled={enrolling} className="w-full px-3 md:px-4 py-2 md:py-3 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm md:text-base transition">
+                <Button
+                  size="lg"
+                  className="w-full"
+                  onClick={handleEnroll}
+                  loading={enrolling}
+                >
                   {enrolling ? 'Processando...' : 'Inscrever-se'}
-                </button>
+                </Button>
               )}
             </div>
-          </div>
+          </aside>
         </div>
       </main>
     </div>

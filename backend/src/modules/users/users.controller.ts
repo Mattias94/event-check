@@ -1,4 +1,5 @@
-import { Controller, Get, Param, Post, Query, Body } from '@nestjs/common'
+import { Controller, Get, Param, Post, Query, Body, UseGuards } from '@nestjs/common'
+import { AdminGuard } from '../../common/guards/admin.guard'
 import { CreateUserDto } from './dtos/create-user.dto'
 import { UsersService } from './users.service'
 
@@ -7,11 +8,13 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
+  @UseGuards(AdminGuard)
   listUsers() {
     return this.usersService.listUsers()
   }
 
   @Get('search')
+  @UseGuards(AdminGuard)
   searchUsers(@Query('q') q = '') {
     return this.usersService.searchUsers(q)
   }
@@ -27,6 +30,7 @@ export class UsersController {
   }
 
   @Post()
+  @UseGuards(AdminGuard)
   createUser(@Body() dto: CreateUserDto) {
     return this.usersService.createUser(dto)
   }

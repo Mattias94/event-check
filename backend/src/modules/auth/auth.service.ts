@@ -1,4 +1,6 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
+import { hashPassword, verifyPassword } from '../../common/password'
+import { signSessionToken } from '../../common/session-token'
 import { UsersRepository } from '../users/users.repository'
 import { CreateUserDto } from '../users/dtos/create-user.dto'
 import { ForgotPasswordDto } from './dtos/forgot-password.dto'
@@ -9,45 +11,49 @@ import { ResetPasswordDto } from './dtos/reset-password.dto'
 export class AuthService {
   constructor(private readonly usersRepository: UsersRepository) {}
 
-  login(dto: LoginDto) {
-    const user = this.usersRepository.findByEmail(dto.email)
-    if (!user || user.password !== dto.password) {
+  async login(dto: LoginDto) {
+    const user = await this.usersRepository.findByEmail(dto.email)
+    if (!user || !(await verifyPassword(dto.password, user.password))) {
       throw new UnauthorizedException('Credenciais inválidas')
     }
 
     const { password, ...safeUser } = user
-    return safeUser
+    const token = signSessionToken({ sub: user.id, role: user.role })
+    return { ...safeUser, token }
   }
 
-  register(dto: CreateUserDto) {
-    const existingUser = this.usersRepository.findByEmail(dto.email)
+  async register(dto: CreateUserDto) {
+    const existingUser = await this.usersRepository.findByEmail(dto.email)
     if (existingUser) {
       throw new ConflictException('Este e-mail já está registrado')
     }
 
-    const isFirstUser = this.usersRepository.findAll().length === 0
+    // O papel é decidido exclusivamente pelo servidor: o primeiro usuário
+    // do sistema vira admin, todos os demais são usuários comuns.
+    const isFirstUser = (await this.usersRepository.count()) === 0
     const role = isFirstUser ? 'admin' : 'user'
 
-    const user = this.usersRepository.create({
+    const user = await this.usersRepository.create({
       name: dto.name,
       email: dto.email,
-      password: dto.password,
+      password: await hashPassword(dto.password),
       dob: dto.dob,
       role,
     })
 
     const { password, ...safeUser } = user
-    return { user: safeUser, isFirstUser }
+    const token = signSessionToken({ sub: user.id, role: user.role })
+    return { user: safeUser, isFirstUser, token }
   }
 
-  forgotPassword(dto: ForgotPasswordDto) {
-    const user = this.usersRepository.findByEmail(dto.email)
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const user = await this.usersRepository.findByEmail(dto.email)
     if (!user) {
       throw new NotFoundException('Usuário não encontrado')
     }
 
     const token = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
-    this.usersRepository.createPasswordReset(dto.email, token)
+    await this.usersRepository.createPasswordReset(dto.email, token)
 
     return {
       message: 'Solicitação de redefinição criada',
@@ -56,14 +62,14 @@ export class AuthService {
     }
   }
 
-  resetPassword(dto: ResetPasswordDto) {
-    const reset = this.usersRepository.findPasswordReset(dto.token)
+  async resetPassword(dto: ResetPasswordDto) {
+    const reset = await this.usersRepository.findPasswordReset(dto.token)
     if (!reset) {
       throw new BadRequestException('Token inválido ou expirado')
     }
 
-    this.usersRepository.updatePassword(reset.email, dto.newPassword)
-    this.usersRepository.markPasswordResetUsed(dto.token)
+    await this.usersRepository.updatePassword(reset.email, await hashPassword(dto.newPassword))
+    await this.usersRepository.markPasswordResetUsed(dto.token)
 
     return { message: 'Senha atualizada com sucesso' }
   }

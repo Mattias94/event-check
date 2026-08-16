@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
 import AdminEventForm from '../../../../../components/admin/AdminEventForm'
+import Button from '../../../../../components/ui/Button'
 import { createEvent } from '../../../../../lib/events'
 import { getCurrentUserId, requireAdmin } from '../../../../../lib/auth-guard'
 import { EventCreationData } from '../../../../../lib/schemas'
@@ -44,22 +46,27 @@ export default function CreateEventPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
-      <header className="border-b border-slate-200 dark:border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
-          <button
-            onClick={() => router.back()}
-            className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mb-4"
-          >
-            ← Voltar
-          </button>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Criar Novo Evento</h1>
-        </div>
-      </header>
+    <div className="mx-auto w-full max-w-2xl px-4 py-6 md:px-6 md:py-8">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => router.back()}
+        className="-ml-2 mb-4 h-11 text-muted-foreground hover:text-foreground md:h-9"
+      >
+        <ArrowLeft aria-hidden="true" />
+        Voltar
+      </Button>
 
-      <main className="max-w-2xl mx-auto px-4 md:px-6 py-8">
-        <AdminEventForm onSubmit={handleSubmit} loading={loading} error={error} />
-      </main>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+          Criar Novo Evento
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground md:text-base">
+          Preencha os dados abaixo para publicar um novo evento
+        </p>
+      </div>
+
+      <AdminEventForm onSubmit={handleSubmit} loading={loading} error={error} />
     </div>
   )
 }

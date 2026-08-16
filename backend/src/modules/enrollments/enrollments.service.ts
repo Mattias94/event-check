@@ -1,5 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { EventsRepository } from '../events/events.repository'
+import { UsersRepository } from '../users/users.repository'
+import { CheckInTokenService } from '../notifications/check-in-token.service'
+import { MailService } from '../notifications/mail.service'
 import { EnrollmentsRepository } from './enrollments.repository'
 
 @Injectable()
@@ -7,10 +10,13 @@ export class EnrollmentsService {
   constructor(
     private readonly enrollmentsRepository: EnrollmentsRepository,
     private readonly eventsRepository: EventsRepository,
+    private readonly usersRepository: UsersRepository,
+    private readonly checkInTokenService: CheckInTokenService,
+    private readonly mailService: MailService,
   ) {}
 
-  listByEvent(eventId: string) {
-    const event = this.eventsRepository.findById(eventId)
+  async listByEvent(eventId: string) {
+    const event = await this.eventsRepository.findById(eventId)
     if (!event) {
       throw new NotFoundException('Evento não encontrado')
     }
@@ -18,14 +24,19 @@ export class EnrollmentsService {
     return this.enrollmentsRepository.findByEventId(eventId)
   }
 
-  isEnrolled(userId: string, eventId: string): boolean {
-    return this.enrollmentsRepository.findByUserAndEvent(userId, eventId) !== null
+  async isEnrolled(userId: string, eventId: string): Promise<boolean> {
+    return (await this.enrollmentsRepository.findByUserAndEvent(userId, eventId)) !== null
   }
 
-  enroll(userId: string, eventId: string) {
-    const event = this.eventsRepository.findById(eventId)
+  async enroll(userId: string, eventId: string) {
+    const event = await this.eventsRepository.findById(eventId)
     if (!event) {
       throw new NotFoundException('Evento não encontrado')
+    }
+
+    const user = await this.usersRepository.findById(userId)
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado')
     }
 
     if (event.status === 'cancelled') {
@@ -36,7 +47,7 @@ export class EnrollmentsService {
       throw new BadRequestException('Evento já foi finalizado')
     }
 
-    if (this.enrollmentsRepository.findByUserAndEvent(userId, eventId)) {
+    if (await this.enrollmentsRepository.findByUserAndEvent(userId, eventId)) {
       throw new BadRequestException('Você já está inscrito neste evento')
     }
 
@@ -53,27 +64,72 @@ export class EnrollmentsService {
       throw new BadRequestException('Não é possível se inscrever em eventos no passado')
     }
 
-    const enrollment = this.enrollmentsRepository.create(userId, eventId)
-    this.eventsRepository.save({
+    const enrollment = await this.enrollmentsRepository.create(userId, eventId)
+    await this.eventsRepository.save({
       ...event,
       currentEnrollments: event.currentEnrollments + 1,
     })
 
-    return enrollment
+    const qrToken = this.checkInTokenService.sign({
+      enrollmentId: enrollment.id,
+      userId,
+      eventId,
+      checkInToken: enrollment.checkInToken,
+    })
+
+    const emailSent = await this.mailService.sendEnrollmentConfirmation(user, event, qrToken)
+
+    return { ...enrollment, emailSent }
   }
 
-  unenroll(userId: string, eventId: string) {
-    const event = this.eventsRepository.findById(eventId)
+  async checkIn(eventId: string, qrToken: string) {
+    const event = await this.eventsRepository.findById(eventId)
     if (!event) {
       throw new NotFoundException('Evento não encontrado')
     }
 
-    const removed = this.enrollmentsRepository.delete(userId, eventId)
+    const payload = this.checkInTokenService.verify(qrToken)
+    if (!payload) {
+      throw new BadRequestException('QR code inválido ou adulterado')
+    }
+
+    const enrollment = await this.enrollmentsRepository.findByCheckInToken(payload.checkInToken)
+    if (!enrollment || enrollment.id !== payload.enrollmentId) {
+      throw new NotFoundException('Inscrição não encontrada para este QR code')
+    }
+
+    if (enrollment.eventId !== eventId) {
+      throw new BadRequestException('Este QR code pertence a outro evento')
+    }
+
+    if (enrollment.checkedInAt) {
+      throw new BadRequestException(
+        `Check-in já realizado em ${new Date(enrollment.checkedInAt).toLocaleString('pt-BR')}`,
+      )
+    }
+
+    const updated = await this.enrollmentsRepository.markCheckedIn(enrollment.id)
+    const user = await this.usersRepository.findById(enrollment.userId)
+
+    return {
+      valid: true,
+      enrollment: updated,
+      participant: user ? { id: user.id, name: user.name, email: user.email } : null,
+    }
+  }
+
+  async unenroll(userId: string, eventId: string) {
+    const event = await this.eventsRepository.findById(eventId)
+    if (!event) {
+      throw new NotFoundException('Evento não encontrado')
+    }
+
+    const removed = await this.enrollmentsRepository.delete(userId, eventId)
     if (!removed) {
       throw new NotFoundException('Inscrição não encontrada')
     }
 
-    this.eventsRepository.save({
+    await this.eventsRepository.save({
       ...event,
       currentEnrollments: Math.max(0, event.currentEnrollments - 1),
     })

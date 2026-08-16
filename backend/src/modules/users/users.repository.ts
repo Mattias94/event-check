@@ -1,63 +1,103 @@
 import { Injectable } from '@nestjs/common'
-import { InMemoryStore } from '../../common/in-memory-store'
 import { PasswordResetRequest, User } from '../../common/domain.types'
+import { PrismaService } from '../../common/prisma.service'
+import type { UserModel as PrismaUser, PasswordResetModel as PrismaPasswordReset } from '../../generated/prisma/models'
 
 @Injectable()
 export class UsersRepository {
-  constructor(private readonly store: InMemoryStore) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  findAll(): User[] {
-    return [...this.store.users]
-  }
-
-  findById(id: string): User | null {
-    return this.store.users.find((user) => user.id === id) ?? null
-  }
-
-  findByEmail(email: string): User | null {
-    return this.store.users.find((user) => user.email.toLowerCase() === email.toLowerCase()) ?? null
-  }
-
-  create(user: Omit<User, 'id'>): User {
-    const created: User = {
-      ...user,
-      id: Date.now().toString(),
+  private toDomain(user: PrismaUser): User {
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      password: user.password,
+      dob: user.dob ?? undefined,
+      role: user.role,
     }
-
-    this.store.users.push(created)
-    return created
   }
 
-  updatePassword(email: string, password: string): User | null {
-    const user = this.findByEmail(email)
+  private resetToDomain(reset: PrismaPasswordReset): PasswordResetRequest {
+    return {
+      email: reset.email,
+      token: reset.token,
+      createdAt: reset.createdAt.toISOString(),
+      used: reset.used,
+    }
+  }
+
+  async findAll(): Promise<User[]> {
+    const users = await this.prisma.user.findMany()
+    return users.map((user) => this.toDomain(user))
+  }
+
+  async count(): Promise<number> {
+    return this.prisma.user.count()
+  }
+
+  async findById(id: string): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({ where: { id } })
+    return user ? this.toDomain(user) : null
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    const user = await this.prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+    })
+    return user ? this.toDomain(user) : null
+  }
+
+  async create(user: Omit<User, 'id'>): Promise<User> {
+    const created = await this.prisma.user.create({
+      data: {
+        name: user.name,
+        email: user.email,
+        password: user.password,
+        dob: user.dob ?? null,
+        role: user.role,
+      },
+    })
+
+    return this.toDomain(created)
+  }
+
+  async updatePassword(email: string, password: string): Promise<User | null> {
+    const user = await this.prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+    })
     if (!user) {
       return null
     }
 
-    user.password = password
-    return user
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: { password },
+    })
+
+    return this.toDomain(updated)
   }
 
-  createPasswordReset(email: string, token: string): PasswordResetRequest {
-    const reset: PasswordResetRequest = {
-      email,
-      token,
-      createdAt: new Date().toISOString(),
-      used: false,
-    }
+  async createPasswordReset(email: string, token: string): Promise<PasswordResetRequest> {
+    const reset = await this.prisma.passwordReset.create({
+      data: { email, token },
+    })
 
-    this.store.passwordResets.push(reset)
-    return reset
+    return this.resetToDomain(reset)
   }
 
-  findPasswordReset(token: string): PasswordResetRequest | null {
-    return this.store.passwordResets.find((reset) => reset.token === token && !reset.used) ?? null
+  async findPasswordReset(token: string): Promise<PasswordResetRequest | null> {
+    const reset = await this.prisma.passwordReset.findFirst({
+      where: { token, used: false },
+    })
+
+    return reset ? this.resetToDomain(reset) : null
   }
 
-  markPasswordResetUsed(token: string): void {
-    const reset = this.store.passwordResets.find((item) => item.token === token)
-    if (reset) {
-      reset.used = true
-    }
+  async markPasswordResetUsed(token: string): Promise<void> {
+    await this.prisma.passwordReset.updateMany({
+      where: { token },
+      data: { used: true },
+    })
   }
 }

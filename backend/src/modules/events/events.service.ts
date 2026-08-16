@@ -16,8 +16,8 @@ export class EventsService {
     return this.eventsRepository.applyFilters(filters)
   }
 
-  getById(id: string): Event {
-    const event = this.eventsRepository.findById(id)
+  async getById(id: string): Promise<Event> {
+    const event = await this.eventsRepository.findById(id)
     if (!event) {
       throw new NotFoundException('Evento não encontrado')
     }
@@ -56,8 +56,8 @@ export class EventsService {
     })
   }
 
-  update(id: string, dto: UpdateEventDto) {
-    const event = this.getById(id)
+  async update(id: string, dto: UpdateEventDto) {
+    const event = await this.getById(id)
 
     if (event.status === 'cancelled') {
       throw new BadRequestException('Não é possível editar eventos cancelados')
@@ -96,21 +96,21 @@ export class EventsService {
     })
   }
 
-  delete(id: string) {
-    const event = this.getById(id)
+  async delete(id: string) {
+    const event = await this.getById(id)
     if (event.currentEnrollments > 0) {
       throw new BadRequestException(
         `Não é possível deletar este evento pois possui ${event.currentEnrollments} inscrito(s).`,
       )
     }
 
-    this.enrollmentsRepository.deleteByEventId(id)
-    this.eventsRepository.delete(id)
+    await this.enrollmentsRepository.deleteByEventId(id)
+    await this.eventsRepository.delete(id)
     return { success: true }
   }
 
-  cancel(id: string) {
-    const event = this.getById(id)
+  async cancel(id: string) {
+    const event = await this.getById(id)
 
     if (event.status === 'cancelled') {
       throw new BadRequestException('Este evento já foi cancelado')

@@ -1,4 +1,6 @@
-import { Controller, Delete, Get, Param, Post } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common'
+import { AdminGuard } from '../../common/guards/admin.guard'
+import { CheckInDto } from './dtos/check-in.dto'
 import { EnrollmentsService } from './enrollments.service'
 
 @Controller('events/:eventId/enrollments')
@@ -6,16 +8,26 @@ export class EnrollmentsController {
   constructor(private readonly enrollmentsService: EnrollmentsService) {}
 
   @Get()
+  @UseGuards(AdminGuard)
   listByEvent(@Param('eventId') eventId: string) {
     return this.enrollmentsService.listByEvent(eventId)
   }
 
+  @Post('check-in')
+  @UseGuards(AdminGuard)
+  checkIn(
+    @Param('eventId') eventId: string,
+    @Body() body: CheckInDto,
+  ) {
+    return this.enrollmentsService.checkIn(eventId, body.token)
+  }
+
   @Get(':userId')
-  isEnrolled(
+  async isEnrolled(
     @Param('eventId') eventId: string,
     @Param('userId') userId: string,
   ) {
-    return { enrolled: this.enrollmentsService.isEnrolled(userId, eventId) }
+    return { enrolled: await this.enrollmentsService.isEnrolled(userId, eventId) }
   }
 
   @Post(':userId')

@@ -1,7 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import { CalendarDays, Clock, MapPin, Tag, Users } from 'lucide-react'
 import { Event } from '../lib/types'
+import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
+import { Badge } from './ui/Badge'
+import { Progress } from './ui/Progress'
 
 interface EventCardProps {
   event: Event
@@ -11,49 +15,73 @@ export default function EventCard({ event }: EventCardProps) {
   const availableSpots = event.capacity - event.currentEnrollments
   const isAlmostFull = availableSpots <= Math.ceil(event.capacity * 0.2)
 
+  const statusVariant =
+    event.status === 'active' ? ('success' as const)
+    : event.status === 'cancelled' ? ('destructive' as const)
+    : ('secondary' as const)
+  const statusLabel =
+    event.status === 'active' ? 'Ativo' : event.status === 'cancelled' ? 'Cancelado' : 'Finalizado'
+
   return (
-    <Link href={`/events/${event.id}`}>
-      <div className="card p-4 md:p-4 hover:shadow-lg transition cursor-pointer h-full">
-        <div className="flex flex-col gap-3 mb-3">
-          <div className="flex justify-between items-start gap-2 min-h-[3rem]">
-            <h3 className="font-semibold text-slate-900 dark:text-white text-base md:text-lg line-clamp-2">{event.title}</h3>
-            <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap flex-shrink-0 ${
-              event.status === 'active'
-                ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200'
-                : event.status === 'cancelled'
-                ? 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-200'
-                : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
-            }`}>
-              {event.status === 'active' ? 'Ativo' : event.status === 'cancelled' ? 'Cancelado' : 'Finalizado'}
-            </span>
+    <Link
+      href={`/events/${event.id}`}
+      className="group block h-full rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+    >
+      <Card className="flex h-full flex-col transition-all group-hover:border-primary/40 group-hover:shadow-md">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="line-clamp-2 text-base leading-snug md:text-lg">
+              {event.title}
+            </CardTitle>
+            <Badge variant={statusVariant} className="shrink-0 whitespace-nowrap">
+              {statusLabel}
+            </Badge>
           </div>
-        </div>
+        </CardHeader>
 
-        <div className="space-y-1 md:space-y-2 text-xs md:text-sm text-slate-600 dark:text-slate-400 mb-4">
-          <p>📅 {new Date(event.date).toLocaleDateString('pt-BR')} às {event.time}</p>
-          <p>📍 {event.location}</p>
-          <p>📂 {event.category}</p>
-        </div>
-
-        <div className="mb-4">
-          <div className="flex justify-between items-center text-xs md:text-sm mb-2">
-            <span className="text-slate-600 dark:text-slate-400">Vagas</span>
-            <span className={`font-medium ${isAlmostFull ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
-              {availableSpots}/{event.capacity}
-            </span>
+        <CardContent className="flex flex-1 flex-col gap-4">
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span className="flex items-center gap-2 whitespace-nowrap">
+                <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
+                {new Date(event.date).toLocaleDateString('pt-BR')}
+              </span>
+              <span className="flex items-center gap-2 whitespace-nowrap">
+                <Clock className="size-4 shrink-0" aria-hidden="true" />
+                {event.time}
+              </span>
+            </p>
+            <p className="flex items-center gap-2">
+              <MapPin className="size-4 shrink-0" aria-hidden="true" />
+              <span className="truncate">{event.location}</span>
+            </p>
+            <p className="flex items-center gap-2">
+              <Tag className="size-4 shrink-0" aria-hidden="true" />
+              <span className="truncate">{event.category}</span>
+            </p>
           </div>
-          <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-            <div
-              className={`h-2 rounded-full transition-all ${
-                isAlmostFull ? 'bg-red-500' : 'bg-green-500'
-              }`}
-              style={{ width: `${((event.capacity - availableSpots) / event.capacity) * 100}%` }}
+
+          <p className="line-clamp-2 text-sm text-muted-foreground">{event.description}</p>
+
+          <div className="mt-auto space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <Users className="size-4" aria-hidden="true" />
+                Vagas
+              </span>
+              <span className={`font-medium ${isAlmostFull ? 'text-destructive' : 'text-success'}`}>
+                {availableSpots}/{event.capacity}
+              </span>
+            </div>
+            <Progress
+              value={event.currentEnrollments}
+              max={event.capacity}
+              indicatorClassName={isAlmostFull ? 'bg-destructive' : undefined}
+              aria-label="Ocupação de vagas"
             />
           </div>
-        </div>
-
-        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{event.description}</p>
-      </div>
+        </CardContent>
+      </Card>
     </Link>
   )
 }

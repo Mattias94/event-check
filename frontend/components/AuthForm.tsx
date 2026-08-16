@@ -1,8 +1,10 @@
 "use client"
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { User, Mail, Calendar, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react'
 import Input from './ui/Input'
 import Button from './ui/Button'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/Card'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -22,6 +24,7 @@ export default function AuthForm() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
@@ -51,8 +54,8 @@ export default function AuthForm() {
       })
 
       const successMsg = isFirstUser
-        ? '✅ Conta criada como ADMIN! Verifique seu e-mail.'
-        : '✅ Conta criada com sucesso! Verifique seu e-mail.'
+        ? 'Conta criada como ADMIN! Verifique seu e-mail.'
+        : 'Conta criada com sucesso! Verifique seu e-mail.'
       setSuccess(successMsg)
     } catch (e: any) {
       setError(e.message || 'Erro ao criar conta. Tente novamente.')
@@ -62,45 +65,117 @@ export default function AuthForm() {
   }
 
   return (
-    <div className="card p-4 md:p-6 w-full">
-      <h1 className="text-xl md:text-2xl font-semibold mb-6">Criar Conta</h1>
-      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-        <Input label="Nome Completo" name="name" placeholder="Digite seu nome completo" {...register('name')} error={errors.name?.message as string | undefined} />
-        <Input label="E-mail" name="email" type="email" placeholder="Digite seu e-mail" {...register('email')} error={errors.email?.message as string | undefined} />
-        <Input label="Data de Nascimento" name="dob" type="date" {...register('dob')} error={errors.dob?.message as string | undefined} />
-        <Input label="Senha" name="password" type="password" placeholder="Senha" {...register('password')} error={errors.password?.message as string | undefined} />
-        <Button type="submit" disabled={loading}>{loading ? 'Registrando...' : 'Registrar'}</Button>
-      </form>
+    <Card className="w-full">
+      <CardHeader className="text-center">
+        <CardTitle className="text-xl md:text-2xl">Criar Conta</CardTitle>
+        <CardDescription>Preencha seus dados para se cadastrar.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          <Input
+            label="Nome Completo"
+            name="name"
+            autoComplete="name"
+            placeholder="Digite seu nome completo"
+            icon={<User />}
+            {...register('name')}
+            error={errors.name?.message as string | undefined}
+          />
+          <Input
+            label="E-mail"
+            name="email"
+            type="email"
+            autoComplete="email"
+            placeholder="Digite seu e-mail"
+            icon={<Mail />}
+            {...register('email')}
+            error={errors.email?.message as string | undefined}
+          />
+          <Input
+            label="Data de Nascimento"
+            name="dob"
+            type="date"
+            icon={<Calendar />}
+            {...register('dob')}
+            error={errors.dob?.message as string | undefined}
+          />
 
-      {error && <div className="mt-4 p-3 rounded-md bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-sm">{error}</div>}
+          <div className="relative">
+            <Input
+              label="Senha"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
+              placeholder="Mínimo de 8 caracteres"
+              icon={<Lock />}
+              className="pr-11"
+              {...register('password')}
+              error={errors.password?.message as string | undefined}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+              className="absolute right-0 top-[26px] flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground md:h-10 md:w-10"
+            >
+              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          </div>
 
-      <div className="my-4 text-center text-xs md:text-sm text-slate-500">ou</div>
+          {error && (
+            <div
+              role="alert"
+              className="flex items-start gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <span>{error}</span>
+            </div>
+          )}
 
-      <div className="mt-2">
-        <button
+          {success && (
+            <div
+              role="status"
+              className="flex items-start gap-2 rounded-md border border-success/20 bg-success/10 p-3 text-sm text-success"
+            >
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+              <span>{success}</span>
+            </div>
+          )}
+
+          <Button type="submit" className="w-full" loading={loading}>
+            {loading ? 'Registrando...' : 'Registrar'}
+          </Button>
+        </form>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">ou</span>
+          </div>
+        </div>
+
+        <Button
           type="button"
-          className="w-full px-3 py-3 md:py-2 rounded-md border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition text-base md:text-sm font-medium"
+          variant="outline"
+          className="w-full"
           onClick={() => router.push('/login')}
         >
           Já tem uma conta? Fazer Login
-        </button>
-      </div>
+        </Button>
 
-      <div className="mt-6">
-        <h3 className="text-base md:text-lg font-medium">Esqueceu a senha?</h3>
-        <p className="text-xs md:text-sm text-slate-500 mt-1">Enviaremos um link de recuperação para o seu e-mail.</p>
-        <div className="mt-3">
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          Esqueceu a senha?{' '}
           <button
             type="button"
-            className="w-full px-3 py-3 md:py-2 rounded-md bg-sky-500 text-white hover:opacity-90 transition text-base md:text-sm font-medium"
+            className="font-medium text-primary hover:underline"
             onClick={() => router.push('/forgot-password')}
           >
             Recuperar Senha
           </button>
-        </div>
-      </div>
-
-      {success && <div className="mt-4 p-3 rounded-md bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 text-sm">{success}</div>}
-    </div>
+        </p>
+      </CardContent>
+    </Card>
   )
 }
