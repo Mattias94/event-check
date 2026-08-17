@@ -55,10 +55,12 @@ export class AuthService {
     const token = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
     await this.usersRepository.createPasswordReset(dto.email, token)
 
+    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000'
+
     return {
       message: 'Solicitação de redefinição criada',
       token,
-      resetUrl: `http://localhost:3000/reset-password?token=${token}`,
+      resetUrl: `${frontendUrl}/reset-password?token=${token}`,
     }
   }
 
