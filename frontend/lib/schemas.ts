@@ -1,5 +1,11 @@
 import { z } from 'zod'
 
+const todayString = () => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return today.toISOString().slice(0, 10)
+}
+
 export const eventCreationSchema = z.object({
   title: z.string({ required_error: 'Campo obrigatório' })
     .min(3, 'Título deve ter no mínimo 3 caracteres'),
@@ -21,10 +27,18 @@ export const eventCreationSchema = z.object({
     .min(1, 'Capacidade deve ser maior que 0'),
 })
 
-export const eventUpdateSchema = eventCreationSchema.extend({
-  capacity: z.number()
-    .min(1, 'Capacidade deve ser maior que 0'),
-})
+export function createEventUpdateSchema(currentEnrollments = 0) {
+  return eventCreationSchema.extend({
+    capacity: z.number()
+      .min(1, 'Capacidade deve ser maior que 0')
+      .min(
+        currentEnrollments,
+        `Capacidade não pode ser menor que ${currentEnrollments} inscrito(s)`,
+      ),
+  })
+}
+
+export const eventUpdateSchema = createEventUpdateSchema()
 
 export const eventFiltersSchema = z.object({
   search: z.string().optional(),
@@ -36,3 +50,5 @@ export const eventFiltersSchema = z.object({
 export type EventCreationData = z.infer<typeof eventCreationSchema>
 export type EventUpdateData = z.infer<typeof eventUpdateSchema>
 export type EventFiltersData = z.infer<typeof eventFiltersSchema>
+
+export { todayString }

@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common'
 import { AdminGuard } from '../../common/guards/admin.guard'
+import { SelfOrAdminGuard } from '../../common/guards/self-or-admin.guard'
 import { CheckInDto } from './dtos/check-in.dto'
 import { EnrollmentsService } from './enrollments.service'
 
@@ -23,6 +24,7 @@ export class EnrollmentsController {
   }
 
   @Get(':userId')
+  @UseGuards(SelfOrAdminGuard)
   async isEnrolled(
     @Param('eventId') eventId: string,
     @Param('userId') userId: string,
@@ -31,6 +33,7 @@ export class EnrollmentsController {
   }
 
   @Post(':userId')
+  @UseGuards(SelfOrAdminGuard)
   enroll(
     @Param('eventId') eventId: string,
     @Param('userId') userId: string,
@@ -39,6 +42,7 @@ export class EnrollmentsController {
   }
 
   @Delete(':userId')
+  @UseGuards(SelfOrAdminGuard)
   unenroll(
     @Param('eventId') eventId: string,
     @Param('userId') userId: string,

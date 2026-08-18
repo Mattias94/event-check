@@ -6,6 +6,7 @@ export interface User {
   email: string
   dob?: string
   role: 'admin' | 'user'
+  emailVerified?: boolean
 }
 
 export interface RegisterData {
@@ -18,35 +19,40 @@ export interface RegisterData {
 export interface RegisterResult {
   user: User
   isFirstUser: boolean
-  token: string
+  token?: string
+  emailSent?: boolean
+  message?: string
+}
+
+export interface AuthMessageResult {
+  message: string
+  emailSent?: boolean
 }
 
 /** Usuário autenticado + token de sessão retornados pelo login. */
 export type LoginResult = User & { token: string }
 
-/**
- * Autentica o usuário contra a API. Retorna null quando as
- * credenciais são inválidas em vez de propagar o erro HTTP.
- */
 export async function verifyCredentials(email: string, password: string): Promise<LoginResult | null> {
   try {
     return await api.post<LoginResult>('/auth/login', { email, password })
-  } catch {
+  } catch (err: any) {
+    if (err?.message) throw err
     return null
   }
 }
 
-/**
- * Registra um novo usuário. O backend decide se ele será admin
- * (primeiro usuário do sistema) ou usuário comum.
- */
 export async function createUser(userData: RegisterData): Promise<RegisterResult> {
   return api.post<RegisterResult>('/auth/register', userData)
 }
 
-/**
- * Busca os dados públicos de um usuário pelo ID.
- */
+export async function verifyEmail(token: string): Promise<{ message: string; user: User; token: string }> {
+  return api.post('/auth/verify-email', { token })
+}
+
+export async function resendVerificationEmail(email: string): Promise<AuthMessageResult> {
+  return api.post<AuthMessageResult>('/auth/resend-verification', { email })
+}
+
 export async function getUserById(userId: string): Promise<User | null> {
   try {
     return await api.get<User>(`/users/${userId}`)
@@ -55,20 +61,10 @@ export async function getUserById(userId: string): Promise<User | null> {
   }
 }
 
-export async function initiatePasswordReset(email: string): Promise<boolean> {
-  try {
-    await api.post('/auth/forgot-password', { email })
-    return true
-  } catch {
-    return false
-  }
+export async function initiatePasswordReset(email: string): Promise<AuthMessageResult> {
+  return api.post<AuthMessageResult>('/auth/forgot-password', { email })
 }
 
-export async function resetPassword(token: string, newPassword: string): Promise<boolean> {
-  try {
-    await api.post('/auth/reset-password', { token, newPassword })
-    return true
-  } catch {
-    return false
-  }
+export async function resetPassword(token: string, newPassword: string): Promise<AuthMessageResult> {
+  return api.post<AuthMessageResult>('/auth/reset-password', { token, newPassword })
 }

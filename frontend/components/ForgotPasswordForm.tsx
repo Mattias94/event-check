@@ -1,5 +1,5 @@
 "use client"
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mail, ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react'
 import Input from './ui/Input'
@@ -28,30 +28,15 @@ export default function ForgotPasswordForm() {
     formState: { errors }
   } = useForm<ForgotPasswordData>({ resolver: zodResolver(forgotPasswordSchema) })
 
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        router.push('/login')
-      }, 5000)
-      return () => clearTimeout(timer)
-    }
-  }, [success, router])
-
   async function onSubmit(data: ForgotPasswordData) {
     setLoading(true)
     setSuccess(null)
     setError(null)
     try {
       const result = await initiatePasswordReset(data.email)
-      if (!result) {
-        setError('E-mail não encontrado em nosso sistema.')
-        setLoading(false)
-        return
-      }
-
-      setSuccess(`Link de recuperação enviado para ${data.email}. Redirecionando para login...`)
-    } catch (e) {
-      setError('Erro ao enviar link de recuperação. Tente novamente.')
+      setSuccess(result.message || `Link de recuperação enviado para ${data.email}.`)
+    } catch (e: any) {
+      setError(e.message || 'Erro ao enviar link de recuperação. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -93,13 +78,13 @@ export default function ForgotPasswordForm() {
             >
               <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
               <div>
-                <p className="font-medium">Sucesso!</p>
+                <p className="font-medium">Verifique seu e-mail</p>
                 <p className="mt-1 text-xs">{success}</p>
               </div>
             </div>
           )}
 
-          <Button type="submit" className="w-full" loading={loading}>
+          <Button type="submit" className="w-full" loading={loading} disabled={!!success}>
             {loading ? 'Enviando...' : 'Recuperar senha'}
           </Button>
         </form>

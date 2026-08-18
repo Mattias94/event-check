@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, CalendarDays, CheckCircle2, Clock, MapPin, Tag, Users } from 'lucide-react'
-import { getEventById, getEnrollments, enrollUser, unenrollUser, isUserEnrolled } from '../../../lib/events'
-import { Event, EnrollmentRecord } from '../../../lib/types'
+import { getEventById, enrollUser, unenrollUser, isUserEnrolled } from '../../../lib/events'
+import { Event } from '../../../lib/types'
 import { getCurrentUserId } from '../../../lib/auth-guard'
 import LoadingState from '../../../components/LoadingState'
 import ErrorState from '../../../components/ErrorState'
@@ -20,6 +20,8 @@ export default function EventDetailPage() {
 
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
   const [isEnrolled, setIsEnrolled] = useState(false)
   const [enrolling, setEnrolling] = useState(false)
   const currentUserId = getCurrentUserId()
@@ -32,26 +34,39 @@ export default function EventDetailPage() {
     loadData()
   }, [currentUserId, router, eventId])
 
-  function loadData() {
+  async function loadData() {
     setLoading(true)
-    getEventById(eventId)
-      .then(async (eventData) => {
-        setEvent(eventData)
-        if (eventData && currentUserId) {
-          setIsEnrolled(await isUserEnrolled(currentUserId, eventId))
-        }
-      })
-      .finally(() => setLoading(false))
+    setLoadError(null)
+    try {
+      const eventData = await getEventById(eventId)
+      if (!eventData) {
+        setEvent(null)
+        setLoadError('Evento não encontrado')
+        return
+      }
+      setEvent(eventData)
+      if (currentUserId) {
+        setIsEnrolled(await isUserEnrolled(currentUserId, eventId))
+      }
+    } catch {
+      setEvent(null)
+      setLoadError('Erro ao carregar evento. Verifique sua conexão e tente novamente.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function handleEnroll() {
     if (!currentUserId) return
     setEnrolling(true)
+    setActionError(null)
     try {
       const result = await enrollUser(currentUserId, eventId)
       if (result.success) {
         setIsEnrolled(true)
-        loadData()
+        await loadData()
+      } else {
+        setActionError(result.error || 'Não foi possível concluir a inscrição.')
       }
     } finally {
       setEnrolling(false)
@@ -60,13 +75,16 @@ export default function EventDetailPage() {
 
   async function handleUnenroll() {
     if (!currentUserId) return
-    if (!confirm('Desinscrever?')) return
+    if (!confirm('Cancelar a inscrição?')) return
     setEnrolling(true)
+    setActionError(null)
     try {
       const result = await unenrollUser(currentUserId, eventId)
       if (result.success) {
         setIsEnrolled(false)
-        loadData()
+        await loadData()
+      } else {
+        setActionError(result.error || 'Não foi possível cancelar a inscrição.')
       }
     } finally {
       setEnrolling(false)
@@ -74,10 +92,18 @@ export default function EventDetailPage() {
   }
 
   if (loading) return <LoadingState />
-  if (!event) return <ErrorState message="Não encontrado" onRetry={() => router.push('/events')} />
+  if (loadError || !event) {
+    return (
+      <ErrorState
+        message={loadError || 'Evento não encontrado'}
+        onRetry={loadError?.includes('conexão') ? loadData : () => router.push('/events')}
+      />
+    )
+  }
 
-  const avail = event.capacity - event.currentEnrollments
+  const avail = Math.max(0, event.capacity - event.currentEnrollments)
   const isAlmostFull = avail <= Math.ceil(event.capacity * 0.2)
+  const canEnroll = event.status === 'active' && avail > 0
   const statusVariant =
     event.status === 'active' ? ('success' as const)
     : event.status === 'cancelled' ? ('destructive' as const)
@@ -109,7 +135,6 @@ export default function EventDetailPage() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 pb-32 pt-6 md:px-6 md:pt-8 lg:pb-8">
-        {/* Hero */}
         <div className="mb-6 md:mb-8">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <Badge variant="outline">
@@ -170,9 +195,12 @@ export default function EventDetailPage() {
             </Card>
           </div>
 
-          {/* Ação de inscrição: barra fixa no mobile, card sticky no desktop */}
           <aside>
             <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-4 backdrop-blur lg:sticky lg:top-24 lg:rounded-lg lg:border lg:bg-card lg:p-6 lg:shadow-sm">
+              {actionError && (
+                <p role="alert" className="mb-3 text-sm text-destructive">{actionError}</p>
+              )}
+
               {isEnrolled ? (
                 <>
                   <div className="mb-3 flex items-center gap-2 rounded-lg bg-success/10 p-3 lg:mb-4">
@@ -192,10 +220,10 @@ export default function EventDetailPage() {
                     onClick={handleUnenroll}
                     loading={enrolling}
                   >
-                    {enrolling ? 'Processando...' : 'Desinscrever'}
+                    {enrolling ? 'Processando...' : 'Cancelar inscrição'}
                   </Button>
                 </>
-              ) : (
+              ) : canEnroll ? (
                 <Button
                   size="lg"
                   className="w-full"
@@ -204,6 +232,12 @@ export default function EventDetailPage() {
                 >
                   {enrolling ? 'Processando...' : 'Inscrever-se'}
                 </Button>
+              ) : (
+                <div className="rounded-lg bg-muted p-4 text-center text-sm text-muted-foreground">
+                  {event.status !== 'active'
+                    ? 'Inscrições indisponíveis para este evento.'
+                    : 'Todas as vagas foram preenchidas.'}
+                </div>
               )}
             </div>
           </aside>

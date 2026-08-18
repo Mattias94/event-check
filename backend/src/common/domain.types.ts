@@ -9,6 +9,15 @@ export interface User {
   password: string
   dob?: string
   role: UserRole
+  emailVerified: boolean
+}
+
+export interface EmailVerificationRequest {
+  email: string
+  token: string
+  createdAt: string
+  expiresAt: string
+  used: boolean
 }
 
 export interface Event {

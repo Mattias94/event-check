@@ -21,6 +21,7 @@ async function main() {
         password: user.password,
         dob: user.dob ?? null,
         role: user.role,
+        emailVerified: true,
       },
     })
   }

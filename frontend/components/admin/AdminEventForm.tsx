@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
-import { eventCreationSchema, EventCreationData } from '../../lib/schemas'
+import { createEventUpdateSchema, eventCreationSchema, EventCreationData, todayString } from '../../lib/schemas'
 import { Event } from '../../lib/types'
 
 interface AdminEventFormProps {
@@ -13,6 +13,7 @@ interface AdminEventFormProps {
   onSubmit: (data: EventCreationData) => Promise<void>
   loading?: boolean
   error?: string | null
+  readOnly?: boolean
 }
 
 const CATEGORIES = ['Tecnologia', 'Negócios', 'Educação', 'Networking', 'Saúde', 'Outras']
@@ -22,8 +23,15 @@ export default function AdminEventForm({
   onSubmit,
   loading = false,
   error = null,
+  readOnly = false,
 }: AdminEventFormProps) {
   const [success, setSuccess] = useState<string | null>(null)
+  const minDate = todayString()
+
+  const schema = useMemo(
+    () => (initialData ? createEventUpdateSchema(initialData.currentEnrollments) : eventCreationSchema),
+    [initialData],
+  )
 
   const {
     register,
@@ -31,7 +39,7 @@ export default function AdminEventForm({
     formState: { errors },
     watch,
   } = useForm<EventCreationData>({
-    resolver: zodResolver(eventCreationSchema),
+    resolver: zodResolver(schema),
     defaultValues: initialData ? {
       title: initialData.title,
       description: initialData.description,
@@ -44,6 +52,9 @@ export default function AdminEventForm({
   })
 
   const capacityValue = watch('capacity')
+  const capacityInvalid = Boolean(
+    initialData && typeof capacityValue === 'number' && capacityValue < initialData.currentEnrollments,
+  )
 
   async function handleFormSubmit(data: EventCreationData) {
     setSuccess(null)
@@ -62,11 +73,18 @@ export default function AdminEventForm({
         {initialData ? 'Editar Evento' : 'Criar Novo Evento'}
       </h1>
 
+      {readOnly && (
+        <div className="mb-4 rounded-md border border-warning/30 bg-warning/10 p-3 text-sm text-foreground">
+          Este evento está {initialData?.status === 'cancelled' ? 'cancelado' : 'finalizado'} e não pode ser editado.
+        </div>
+      )}
+
       <form className="space-y-4" onSubmit={handleSubmit(handleFormSubmit)}>
         <Input
           label="Título do Evento"
           name="title"
           placeholder="Digite o título"
+          disabled={readOnly}
           {...register('title')}
           error={errors.title?.message as string | undefined}
         />
@@ -75,8 +93,9 @@ export default function AdminEventForm({
           <label className="block text-sm md:text-xs font-medium mb-2 md:mb-1">Descrição</label>
           <textarea
             {...register('description')}
+            disabled={readOnly}
             placeholder="Digite uma descrição detalhada do evento"
-            className="w-full px-4 py-3 md:px-3 md:py-2 rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-base md:text-sm"
+            className="w-full px-4 py-3 md:px-3 md:py-2 rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-base md:text-sm disabled:opacity-50"
             rows={4}
           />
           {errors.description && (
@@ -88,7 +107,8 @@ export default function AdminEventForm({
           <label className="block text-sm md:text-xs font-medium mb-2 md:mb-1">Categoria</label>
           <select
             {...register('category')}
-            className="w-full px-4 py-3 md:px-3 md:py-2 rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-base md:text-sm"
+            disabled={readOnly}
+            className="w-full px-4 py-3 md:px-3 md:py-2 rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-base md:text-sm disabled:opacity-50"
           >
             <option value="">Selecione uma categoria</option>
             {CATEGORIES.map(cat => (
@@ -107,6 +127,8 @@ export default function AdminEventForm({
             label="Data"
             name="date"
             type="date"
+            min={minDate}
+            disabled={readOnly}
             {...register('date')}
             error={errors.date?.message as string | undefined}
           />
@@ -115,6 +137,7 @@ export default function AdminEventForm({
             label="Horário"
             name="time"
             type="time"
+            disabled={readOnly}
             {...register('time')}
             error={errors.time?.message as string | undefined}
           />
@@ -124,6 +147,7 @@ export default function AdminEventForm({
           label="Localização"
           name="location"
           placeholder="Digite o local do evento"
+          disabled={readOnly}
           {...register('location')}
           error={errors.location?.message as string | undefined}
         />
@@ -132,13 +156,14 @@ export default function AdminEventForm({
           label="Capacidade (número de vagas)"
           name="capacity"
           type="number"
+          disabled={readOnly}
           {...register('capacity', { valueAsNumber: true })}
           error={errors.capacity?.message as string | undefined}
         />
 
-        {initialData && capacityValue < initialData.currentEnrollments && (
+        {capacityInvalid && (
           <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-sm">
-            ⚠️ Capacidade não pode ser menor que inscritos atuais ({initialData.currentEnrollments})
+            ⚠️ Capacidade não pode ser menor que inscritos atuais ({initialData?.currentEnrollments})
           </div>
         )}
 
@@ -155,11 +180,13 @@ export default function AdminEventForm({
           </div>
         )}
 
-        <div className="flex gap-3">
-          <Button type="submit" disabled={loading}>
-            {loading ? 'Salvando...' : initialData ? 'Atualizar Evento' : 'Criar Evento'}
-          </Button>
-        </div>
+        {!readOnly && (
+          <div className="flex gap-3">
+            <Button type="submit" disabled={loading || capacityInvalid}>
+              {loading ? 'Salvando...' : initialData ? 'Atualizar Evento' : 'Criar Evento'}
+            </Button>
+          </div>
+        )}
       </form>
     </div>
   )

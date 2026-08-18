@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
 import LoadingState from '../../../../components/LoadingState'
+import Button from '../../../../components/ui/Button'
 import EmptyState from '../../../../components/EmptyState'
-import { getAllUniqueUserIds, getUserEnrollmentStats, searchUsers } from '../../../../lib/events'
+import { getAllUniqueUserIds, getUserEnrollmentStats, searchUsers, EnrolledUserSummary } from '../../../../lib/events'
 import { getCurrentUserId, requireAdmin } from '../../../../lib/auth-guard'
 
 interface UserEnrollment {
@@ -18,14 +20,16 @@ interface UserEnrollment {
 
 interface UserDetail {
   userId: string
+  userName: string
+  userEmail: string
   totalEnrollments: number
   enrollments: UserEnrollment[]
 }
 
 export default function AdminUsersPage() {
   const router = useRouter()
-  const [allUsers, setAllUsers] = useState<string[]>([])
-  const [filteredUsers, setFilteredUsers] = useState<string[]>([])
+  const [allUsers, setAllUsers] = useState<EnrolledUserSummary[]>([])
+  const [filteredUsers, setFilteredUsers] = useState<EnrolledUserSummary[]>([])
   const [selectedUser, setSelectedUser] = useState<UserDetail | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
@@ -61,10 +65,12 @@ export default function AdminUsersPage() {
     }
   }
 
-  async function handleSelectUser(userId: string) {
-    const stats = await getUserEnrollmentStats(userId)
+  async function handleSelectUser(user: EnrolledUserSummary) {
+    const stats = await getUserEnrollmentStats(user.id)
     setSelectedUser({
-      userId,
+      userId: user.id,
+      userName: user.name,
+      userEmail: user.email,
       totalEnrollments: stats.totalEnrollments,
       enrollments: stats.enrollments,
     })
@@ -73,31 +79,29 @@ export default function AdminUsersPage() {
   if (loading) return <LoadingState />
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
-      {/* Header */}
-      <header className="border-b border-slate-200 dark:border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Pesquisar Usuários</h1>
-              <p className="text-slate-600 dark:text-slate-400 mt-2">
-                Visualize inscrições e histórico de eventos
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => router.push('/admin/events')}
-                className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-medium transition"
-              >
-                ← Voltar para Eventos
-              </button>
-            </div>
-          </div>
+    <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 md:py-8">
+      {/* Cabeçalho da página */}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between md:mb-8">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+            Pesquisar Usuários
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground md:text-base">
+            Visualize inscrições e histórico de eventos
+          </p>
         </div>
-      </header>
+        <Button
+          variant="outline"
+          onClick={() => router.push('/admin/events')}
+          className="w-full shrink-0 sm:w-auto"
+        >
+          <ArrowLeft aria-hidden="true" />
+          Voltar para Meus Eventos
+        </Button>
+      </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-8">
+      <main>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Search Panel */}
           <div className="lg:col-span-1">
@@ -108,7 +112,7 @@ export default function AdminUsersPage() {
 
               <input
                 type="text"
-                placeholder="Digite o ID ou email do usuário"
+                placeholder="Digite o nome ou e-mail do usuário"
                 value={searchQuery}
                 onChange={e => handleSearch(e.target.value)}
                 className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 mb-4"
@@ -120,17 +124,24 @@ export default function AdminUsersPage() {
                     Nenhum usuário encontrado
                   </p>
                 ) : (
-                  filteredUsers.map(userId => (
+                  filteredUsers.map(user => (
                     <button
-                      key={userId}
-                      onClick={() => handleSelectUser(userId)}
+                      key={user.id}
+                      onClick={() => handleSelectUser(user)}
                       className={`w-full text-left px-3 py-2 rounded-md transition ${
-                        selectedUser?.userId === userId
+                        selectedUser?.userId === user.id
                           ? 'bg-slate-900 dark:bg-slate-700 text-white'
                           : 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600'
                       }`}
                     >
-                      <div className="text-sm font-medium truncate">{userId}</div>
+                      <div className="text-sm font-medium truncate">{user.name}</div>
+                      <div className={`text-xs truncate ${
+                        selectedUser?.userId === user.id
+                          ? 'text-slate-300'
+                          : 'text-slate-500 dark:text-slate-400'
+                      }`}>
+                        {user.email}
+                      </div>
                     </button>
                   ))
                 )}
@@ -155,8 +166,11 @@ export default function AdminUsersPage() {
               <div className="card p-6">
                 <div className="mb-6">
                   <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {selectedUser.userId}
+                    {selectedUser.userName}
                   </h2>
+                  <p className="text-slate-600 dark:text-slate-400 mt-1">
+                    {selectedUser.userEmail}
+                  </p>
                   <p className="text-slate-600 dark:text-slate-400 mt-1">
                     Total de inscrições: <span className="font-semibold">{selectedUser.totalEnrollments}</span>
                   </p>

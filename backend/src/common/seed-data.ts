@@ -18,6 +18,7 @@ export function createSeedState(): SeedState {
         password: hashPasswordSync('admin123'),
         dob: '1990-01-01',
         role: 'admin',
+        emailVerified: true,
       },
       {
         id: 'user-001',
@@ -26,6 +27,7 @@ export function createSeedState(): SeedState {
         password: hashPasswordSync('senha123'),
         dob: '1995-05-15',
         role: 'user',
+        emailVerified: true,
       },
       {
         id: 'user-002',
@@ -34,6 +36,7 @@ export function createSeedState(): SeedState {
         password: hashPasswordSync('senha123'),
         dob: '1998-03-20',
         role: 'user',
+        emailVerified: true,
       },
     ],
     events: [

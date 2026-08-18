@@ -1,4 +1,5 @@
 import { api } from './api'
+import { getUserById } from './auth'
 import { Event, EnrollmentRecord, EventFilters, CheckInResult } from './types'
 import { EventCreationData, EventUpdateData } from './schemas'
 
@@ -15,8 +16,11 @@ export async function getUpcomingEvents(filters?: EventFilters): Promise<Event[]
 export async function getEventById(id: string): Promise<Event | null> {
   try {
     return await api.get<Event>(`/events/${id}`)
-  } catch {
-    return null
+  } catch (err: any) {
+    if (err?.message?.includes('404') || err?.message?.toLowerCase().includes('não encontrado')) {
+      return null
+    }
+    throw err
   }
 }
 
@@ -96,10 +100,48 @@ export async function getEnrollmentsForUser(userId: string): Promise<Event[]> {
 }
 
 /**
- * Recupera todos os IDs de usuários únicos com inscrições
+ * Resumo de usuário com inscrições (para busca no painel admin).
  */
-export async function getAllUniqueUserIds(): Promise<string[]> {
-  return api.get<string[]>('/users/search')
+export interface EnrolledUserSummary {
+  id: string
+  name: string
+  email: string
+}
+
+/** Normaliza resposta da API (objetos ou IDs legados) com nome/e-mail do cadastro. */
+async function enrichUserSummaries(raw: unknown): Promise<EnrolledUserSummary[]> {
+  if (!Array.isArray(raw)) return []
+
+  return Promise.all(
+    raw.map(async (item) => {
+      if (typeof item === 'object' && item !== null && 'id' in item) {
+        const summary = item as EnrolledUserSummary
+        if (summary.name) return summary
+        const user = await getUserById(summary.id)
+        return {
+          id: summary.id,
+          name: user?.name ?? summary.id,
+          email: user?.email ?? '—',
+        }
+      }
+
+      const id = String(item)
+      const user = await getUserById(id)
+      return {
+        id,
+        name: user?.name ?? id,
+        email: user?.email ?? '—',
+      }
+    }),
+  )
+}
+
+/**
+ * Recupera todos os usuários únicos com inscrições
+ */
+export async function getAllUniqueUserIds(): Promise<EnrolledUserSummary[]> {
+  const raw = await api.get<unknown>('/users/search')
+  return enrichUserSummaries(raw)
 }
 
 /**
@@ -120,8 +162,9 @@ export async function getUserEnrollmentStats(userId: string) {
 }
 
 /**
- * Busca usuários por ID (parcial)
+ * Busca usuários por nome, e-mail ou ID
  */
-export async function searchUsers(query: string): Promise<string[]> {
-  return api.get<string[]>(`/users/search${api.buildQuery({ q: query })}`)
+export async function searchUsers(query: string): Promise<EnrolledUserSummary[]> {
+  const raw = await api.get<unknown>(`/users/search${api.buildQuery({ q: query })}`)
+  return enrichUserSummaries(raw)
 }

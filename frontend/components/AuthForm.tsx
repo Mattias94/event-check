@@ -1,7 +1,7 @@
 "use client"
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { User, Mail, Calendar, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { User, Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react'
 import Input from './ui/Input'
 import Button from './ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/Card'
@@ -32,31 +32,37 @@ export default function AuthForm() {
     formState: { errors }
   } = useForm<RegisterData>({ resolver: zodResolver(registerSchema) })
 
-  useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => {
-        router.push('/login')
-      }, 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [success, router])
-
   async function onSubmit(data: RegisterData) {
     setLoading(true)
     setSuccess(null)
     setError(null)
     try {
-      const { isFirstUser } = await createUser({
+      const result = await createUser({
         name: data.name,
         email: data.email,
         password: data.password,
         dob: data.dob,
       })
 
-      const successMsg = isFirstUser
-        ? 'Conta criada como ADMIN! Verifique seu e-mail.'
-        : 'Conta criada com sucesso! Verifique seu e-mail.'
+      if (result.token) {
+        localStorage.setItem('authToken', result.token)
+        localStorage.setItem('currentUser', JSON.stringify(result.user))
+      }
+
+      const successMsg = result.message ?? 'Conta criada com sucesso! Você já pode fazer login.'
       setSuccess(successMsg)
+
+      if (result.token && result.isFirstUser) {
+        setTimeout(() => router.push('/admin/events'), 2000)
+        return
+      }
+
+      if (result.token && result.user.role === 'user') {
+        setTimeout(() => router.push('/dashboard'), 2000)
+        return
+      }
+
+      setTimeout(() => router.push('/login'), 4000)
     } catch (e: any) {
       setError(e.message || 'Erro ao criar conta. Tente novamente.')
     } finally {
@@ -95,7 +101,7 @@ export default function AuthForm() {
             label="Data de Nascimento"
             name="dob"
             type="date"
-            icon={<Calendar />}
+            className="date-input"
             {...register('dob')}
             error={errors.dob?.message as string | undefined}
           />

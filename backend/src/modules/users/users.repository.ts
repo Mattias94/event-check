@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import { PasswordResetRequest, User } from '../../common/domain.types'
+import { PasswordResetRequest, User, EmailVerificationRequest } from '../../common/domain.types'
 import { PrismaService } from '../../common/prisma.service'
-import type { UserModel as PrismaUser, PasswordResetModel as PrismaPasswordReset } from '../../generated/prisma/models'
+import type { UserModel as PrismaUser, PasswordResetModel as PrismaPasswordReset, EmailVerificationModel as PrismaEmailVerification } from '../../generated/prisma/models'
 
 @Injectable()
 export class UsersRepository {
@@ -15,6 +15,7 @@ export class UsersRepository {
       password: user.password,
       dob: user.dob ?? undefined,
       role: user.role,
+      emailVerified: user.emailVerified,
     }
   }
 
@@ -24,6 +25,16 @@ export class UsersRepository {
       token: reset.token,
       createdAt: reset.createdAt.toISOString(),
       used: reset.used,
+    }
+  }
+
+  private verificationToDomain(verification: PrismaEmailVerification): EmailVerificationRequest {
+    return {
+      email: verification.email,
+      token: verification.token,
+      createdAt: verification.createdAt.toISOString(),
+      expiresAt: verification.expiresAt.toISOString(),
+      used: verification.used,
     }
   }
 
@@ -56,10 +67,55 @@ export class UsersRepository {
         password: user.password,
         dob: user.dob ?? null,
         role: user.role,
+        emailVerified: user.emailVerified,
       },
     })
 
     return this.toDomain(created)
+  }
+
+  async markEmailVerified(email: string): Promise<User | null> {
+    const user = await this.prisma.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+    })
+    if (!user) {
+      return null
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerified: true },
+    })
+
+    return this.toDomain(updated)
+  }
+
+  async createEmailVerification(email: string, token: string, expiresAt: Date): Promise<EmailVerificationRequest> {
+    await this.prisma.emailVerification.updateMany({
+      where: { email, used: false },
+      data: { used: true },
+    })
+
+    const verification = await this.prisma.emailVerification.create({
+      data: { email, token, expiresAt },
+    })
+
+    return this.verificationToDomain(verification)
+  }
+
+  async findEmailVerification(token: string): Promise<EmailVerificationRequest | null> {
+    const verification = await this.prisma.emailVerification.findFirst({
+      where: { token, used: false },
+    })
+
+    return verification ? this.verificationToDomain(verification) : null
+  }
+
+  async markEmailVerificationUsed(token: string): Promise<void> {
+    await this.prisma.emailVerification.updateMany({
+      where: { token },
+      data: { used: true },
+    })
   }
 
   async updatePassword(email: string, password: string): Promise<User | null> {

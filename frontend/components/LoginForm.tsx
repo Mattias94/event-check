@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { verifyCredentials } from '../lib/auth'
+import { verifyCredentials, resendVerificationEmail } from '../lib/auth'
 
 const loginSchema = z.object({
   email: z.string({ required_error: 'Campo obrigatório' }).email('E-mail inválido'),
@@ -21,6 +21,9 @@ export default function LoginForm() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [resendMessage, setResendMessage] = useState<string | null>(null)
+  const [resending, setResending] = useState(false)
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
 
   const {
@@ -32,6 +35,8 @@ export default function LoginForm() {
   async function onSubmit(data: LoginData) {
     setLoading(true)
     setError(null)
+    setResendMessage(null)
+    setPendingEmail(null)
     try {
       const result = await verifyCredentials(data.email, data.password)
       if (!result) {
@@ -49,10 +54,28 @@ export default function LoginForm() {
       } else {
         router.push('/dashboard')
       }
-    } catch (e) {
-      setError('Erro ao fazer login. Tente novamente.')
+    } catch (e: any) {
+      const message = e.message || 'Erro ao fazer login. Tente novamente.'
+      setError(message)
+      if (message.toLowerCase().includes('não verificado')) {
+        setPendingEmail(data.email)
+      }
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleResendVerification() {
+    if (!pendingEmail) return
+    setResending(true)
+    setResendMessage(null)
+    try {
+      const result = await resendVerificationEmail(pendingEmail)
+      setResendMessage(result.message)
+    } catch (e: any) {
+      setResendMessage(e.message || 'Não foi possível reenviar o e-mail.')
+    } finally {
+      setResending(false)
     }
   }
 
@@ -103,7 +126,27 @@ export default function LoginForm() {
               className="flex items-start gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
             >
               <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-              <span>{error}</span>
+              <div className="space-y-2">
+                <span>{error}</span>
+                {pendingEmail && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    loading={resending}
+                    onClick={handleResendVerification}
+                  >
+                    Reenviar e-mail de verificação
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {resendMessage && (
+            <div role="status" className="rounded-md border border-success/20 bg-success/10 p-3 text-sm text-success">
+              {resendMessage}
             </div>
           )}
 

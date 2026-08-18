@@ -65,4 +65,23 @@
     @apply bg-background text-foreground antialiased;
     -webkit-tap-highlight-color: transparent;
   }
+
+  input[type='date'],
+  input[type='time'] {
+    min-width: 0;
+    max-width: 100%;
+    appearance: auto;
+    -webkit-appearance: auto;
+  }
+
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='time']::-webkit-calendar-picker-indicator {
+    margin-left: 0.25rem;
+    cursor: pointer;
+  }
+
+  .date-input {
+    display: block;
+    width: 100%;
+  }
 }

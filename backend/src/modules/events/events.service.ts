@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { Event, EventFilters } from '../../common/domain.types'
 import { EnrollmentsRepository } from '../enrollments/enrollments.repository'
+import { MailService } from '../notifications/mail.service'
+import { UsersRepository } from '../users/users.repository'
 import { EventsRepository } from './events.repository'
 import { CreateEventDto } from './dtos/create-event.dto'
 import { UpdateEventDto } from './dtos/update-event.dto'
@@ -10,6 +12,8 @@ export class EventsService {
   constructor(
     private readonly eventsRepository: EventsRepository,
     private readonly enrollmentsRepository: EnrollmentsRepository,
+    private readonly usersRepository: UsersRepository,
+    private readonly mailService: MailService,
   ) {}
 
   list(filters?: EventFilters) {
@@ -120,9 +124,21 @@ export class EventsService {
       throw new BadRequestException('Não é possível cancelar eventos já finalizados')
     }
 
-    return this.eventsRepository.save({
+    const updated = await this.eventsRepository.save({
       ...event,
       status: 'cancelled',
     })
+
+    const enrollments = await this.enrollmentsRepository.findByEventId(id)
+    await Promise.all(
+      enrollments.map(async (enrollment) => {
+        const user = await this.usersRepository.findById(enrollment.userId)
+        if (user) {
+          await this.mailService.sendEventCancellation(user, updated)
+        }
+      }),
+    )
+
+    return updated
   }
 }

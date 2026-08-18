@@ -38,14 +38,24 @@ export class UsersService {
     return Array.from(new Set(enrollments.map((enrollment) => enrollment.userId))).sort()
   }
 
-  async searchUsers(query: string): Promise<string[]> {
-    const allUserIds = await this.getAllUniqueUserIds()
+  async searchUsers(query: string): Promise<{ id: string; name: string; email: string }[]> {
+    const enrolledUserIds = new Set(await this.getAllUniqueUserIds())
+    const enrolledUsers = (await this.usersRepository.findAll())
+      .filter((user) => enrolledUserIds.has(user.id))
+      .map((user) => ({ id: user.id, name: user.name, email: user.email }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+
     if (!query.trim()) {
-      return allUserIds
+      return enrolledUsers
     }
 
     const lowerQuery = query.toLowerCase()
-    return allUserIds.filter((userId) => userId.toLowerCase().includes(lowerQuery))
+    return enrolledUsers.filter(
+      (user) =>
+        user.name.toLowerCase().includes(lowerQuery) ||
+        user.email.toLowerCase().includes(lowerQuery) ||
+        user.id.toLowerCase().includes(lowerQuery),
+    )
   }
 
   async createUser(dto: CreateUserDto): Promise<Omit<User, 'password'>> {
@@ -62,6 +72,7 @@ export class UsersService {
       password: await hashPassword(dto.password),
       dob: dto.dob,
       role: 'user',
+      emailVerified: false,
     })
 
     return this.withoutPassword(user)

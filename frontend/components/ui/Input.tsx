@@ -33,7 +33,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               'placeholder:text-muted-foreground',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
               'disabled:cursor-not-allowed disabled:opacity-50',
-              icon && 'pl-9',
+              icon && rest.type !== 'date' && rest.type !== 'time' && 'pl-9',
+              (rest.type === 'date' || rest.type === 'time') && 'date-input min-w-0 pr-3',
               error && 'border-destructive focus-visible:ring-destructive',
               className
             )}

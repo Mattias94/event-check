@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft, CalendarPlus, UserCheck, Users } from 'lucide-react'
+import { ArrowLeft, CalendarPlus, Trash2, UserCheck, Users, XCircle } from 'lucide-react'
 import AdminEventForm from '../../../../../components/admin/AdminEventForm'
 import QrCheckInScanner from '../../../../../components/admin/QrCheckInScanner'
 import LoadingState from '../../../../../components/LoadingState'
@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../../../compone
 import { Badge } from '../../../../../components/ui/Badge'
 import Button from '../../../../../components/ui/Button'
 import { Progress } from '../../../../../components/ui/Progress'
-import { getEventById, updateEvent, getEnrollments } from '../../../../../lib/events'
+import { getEventById, updateEvent, getEnrollments, deleteEvent, cancelEvent } from '../../../../../lib/events'
 import { Event, EnrollmentRecord } from '../../../../../lib/types'
 import { EventCreationData } from '../../../../../lib/schemas'
 import { getCurrentUserId, requireAdmin } from '../../../../../lib/auth-guard'
@@ -32,6 +32,7 @@ export default function EventDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
     const userId = getCurrentUserId()
@@ -44,20 +45,26 @@ export default function EventDetailPage() {
       return
     }
 
-    getEventById(eventId)
-      .then(async (eventData) => {
-        if (!eventData) {
-          setError('Evento não encontrado')
-          return
-        }
-        setEvent(eventData)
-
-        const enrollmentData = await getEnrollments(eventId)
-        setEnrollments(enrollmentData)
-      })
-      .catch(() => setError('Erro ao carregar evento'))
-      .finally(() => setLoading(false))
+    loadEvent()
   }, [eventId, router])
+
+  async function loadEvent() {
+    setLoading(true)
+    try {
+      const eventData = await getEventById(eventId)
+      if (!eventData) {
+        setError('Evento não encontrado')
+        return
+      }
+      setEvent(eventData)
+      const enrollmentData = await getEnrollments(eventId)
+      setEnrollments(enrollmentData)
+    } catch {
+      setError('Erro ao carregar evento')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   async function handleUpdate(data: EventCreationData) {
     setSubmitError(null)
@@ -77,13 +84,55 @@ export default function EventDetailPage() {
     try {
       const enrollmentData = await getEnrollments(eventId)
       setEnrollments(enrollmentData)
+      const eventData = await getEventById(eventId)
+      if (eventData) setEvent(eventData)
     } catch {
       // mantém a lista atual se a atualização falhar
     }
   }
 
+  async function handleCancel() {
+    if (!event) return
+    const confirmed = confirm(
+      `Cancelar "${event.title}"?\n\n${event.currentEnrollments} inscrito(s) receberão e-mail de cancelamento.`,
+    )
+    if (!confirmed) return
+
+    setActionLoading(true)
+    try {
+      const updated = await cancelEvent(eventId)
+      if (updated) setEvent(updated)
+    } catch (err: any) {
+      alert(err.message || 'Erro ao cancelar evento')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  async function handleDelete() {
+    if (!event) return
+    const confirmed = confirm(`Deletar "${event.title}"?\n\nEsta ação não pode ser desfeita.`)
+    if (!confirmed) return
+
+    setActionLoading(true)
+    try {
+      const result = await deleteEvent(eventId)
+      if (!result.success) {
+        alert(result.error || 'Erro ao deletar evento')
+        return
+      }
+      router.push('/admin/events')
+    } catch (err: any) {
+      alert(err.message || 'Erro ao deletar evento')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   if (loading) return <LoadingState />
-  if (error || !event) return <ErrorState message={error || 'Evento não encontrado'} />
+  if (error || !event) return <ErrorState message={error || 'Evento não encontrado'} onRetry={loadEvent} />
+
+  const isReadOnly = event.status !== 'active'
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-6 md:py-8">
@@ -97,11 +146,36 @@ export default function EventDetailPage() {
         Voltar
       </Button>
 
-      <div className="mb-6 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-          {event.title}
-        </h1>
-        <StatusBadge status={event.status} />
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+            {event.title}
+          </h1>
+          <StatusBadge status={event.status} />
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {event.status === 'active' && (
+            <Button variant="outline" onClick={handleCancel} disabled={actionLoading}>
+              <XCircle aria-hidden="true" />
+              Cancelar
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={handleDelete}
+            disabled={actionLoading || event.currentEnrollments > 0}
+            className="text-destructive hover:text-destructive"
+            title={
+              event.currentEnrollments > 0
+                ? `${event.currentEnrollments} inscrito(s). Cancele primeiro ou aguarde desinscrições.`
+                : 'Deletar evento'
+            }
+          >
+            <Trash2 aria-hidden="true" />
+            Deletar
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
@@ -110,14 +184,13 @@ export default function EventDetailPage() {
             initialData={event}
             onSubmit={handleUpdate}
             error={submitError}
+            readOnly={isReadOnly}
           />
         </div>
 
         <div className="space-y-4 md:space-y-6">
-          {/* Check-in por QR code */}
           <QrCheckInScanner eventId={eventId} onCheckInSuccess={refreshEnrollments} />
 
-          {/* Inscritos */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
@@ -154,7 +227,6 @@ export default function EventDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Informações */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Informações</CardTitle>
