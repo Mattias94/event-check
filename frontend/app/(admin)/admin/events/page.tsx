@@ -9,11 +9,13 @@ import {
   LayoutDashboard,
   MapPin,
   Pencil,
+  QrCode,
   Tag,
   Trash2,
   Users,
   XCircle,
 } from 'lucide-react'
+import EventCoverImage from '../../../../components/EventCoverImage'
 import LoadingState from '../../../../components/LoadingState'
 import ErrorState from '../../../../components/ErrorState'
 import EmptyState from '../../../../components/EmptyState'
@@ -214,8 +216,11 @@ export default function AdminEventListPage() {
             {events.map(event => {
               const ratio = event.capacity > 0 ? event.currentEnrollments / event.capacity : 0
               return (
-                <Card key={event.id} className="p-4 transition-shadow hover:shadow-md md:p-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+                <Card key={event.id} className="overflow-hidden p-0 transition-shadow hover:shadow-md">
+                  {event.coverImageUrl && (
+                    <EventCoverImage src={event.coverImageUrl} maxHeightClass="max-h-40 sm:max-h-44" />
+                  )}
+                  <div className="flex flex-col gap-4 p-4 md:p-5 lg:flex-row lg:items-start">
                     {/* Informações do evento */}
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
@@ -265,14 +270,22 @@ export default function AdminEventListPage() {
                     </div>
 
                     {/* Ações */}
-                    <div className="grid w-full grid-cols-2 gap-2 lg:w-44 lg:shrink-0 lg:grid-cols-1">
+                    <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:w-44 lg:shrink-0 lg:grid-cols-1">
                       <Button
                         variant="secondary"
                         onClick={() => router.push(`/admin/dashboard?eventId=${event.id}`)}
-                        className="justify-start"
+                        className="h-11 justify-start sm:h-10"
                       >
                         <LayoutDashboard aria-hidden="true" />
                         Dashboard
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => router.push(`/admin/events/${event.id}/check-in`)}
+                        className="justify-start"
+                      >
+                        <QrCode aria-hidden="true" />
+                        Ler QR Code
                       </Button>
                       <Button
                         variant="outline"

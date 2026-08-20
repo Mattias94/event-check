@@ -5,8 +5,16 @@ export interface User {
   name: string
   email: string
   dob?: string
+  phone?: string | null
+  avatarUrl?: string | null
   role: 'admin' | 'user'
   emailVerified?: boolean
+}
+
+export interface UpdateProfileData {
+  name?: string
+  phone?: string | null
+  avatarUrl?: string | null
 }
 
 export interface RegisterData {
@@ -67,4 +75,8 @@ export async function initiatePasswordReset(email: string): Promise<AuthMessageR
 
 export async function resetPassword(token: string, newPassword: string): Promise<AuthMessageResult> {
   return api.post<AuthMessageResult>('/auth/reset-password', { token, newPassword })
+}
+
+export async function updateUserProfile(userId: string, data: UpdateProfileData): Promise<User> {
+  return api.patch<User>(`/users/${userId}`, data)
 }

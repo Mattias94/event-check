@@ -14,6 +14,8 @@ export class UsersRepository {
       email: user.email,
       password: user.password,
       dob: user.dob ?? undefined,
+      phone: user.phone ?? null,
+      avatarUrl: user.avatarUrl ?? null,
       role: user.role,
       emailVerified: user.emailVerified,
     }
@@ -66,6 +68,8 @@ export class UsersRepository {
         email: user.email,
         password: user.password,
         dob: user.dob ?? null,
+        phone: user.phone ?? null,
+        avatarUrl: user.avatarUrl ?? null,
         role: user.role,
         emailVerified: user.emailVerified,
       },
@@ -155,5 +159,26 @@ export class UsersRepository {
       where: { token },
       data: { used: true },
     })
+  }
+
+  async updateProfile(
+    id: string,
+    data: { name?: string; phone?: string | null; avatarUrl?: string | null },
+  ): Promise<User | null> {
+    const existing = await this.prisma.user.findUnique({ where: { id } })
+    if (!existing) {
+      return null
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: {
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.phone !== undefined ? { phone: data.phone } : {}),
+        ...(data.avatarUrl !== undefined ? { avatarUrl: data.avatarUrl } : {}),
+      },
+    })
+
+    return this.toDomain(updated)
   }
 }

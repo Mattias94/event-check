@@ -22,7 +22,18 @@ export class EnrollmentsService {
       throw new NotFoundException('Evento não encontrado')
     }
 
-    return this.enrollmentsRepository.findByEventId(eventId)
+    const enrollments = await this.enrollmentsRepository.findByEventId(eventId)
+
+    return Promise.all(
+      enrollments.map(async (enrollment) => {
+        const user = await this.usersRepository.findById(enrollment.userId)
+        return {
+          ...enrollment,
+          userName: user?.name ?? enrollment.userId,
+          userEmail: user?.email ?? '—',
+        }
+      }),
+    )
   }
 
   /**

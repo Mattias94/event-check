@@ -55,6 +55,7 @@ export class EventsService {
       time: dto.time,
       location: dto.location,
       capacity: dto.capacity,
+      coverImageUrl: dto.coverImageUrl ?? null,
       status: dto.status ?? 'active',
       createdBy: dto.createdBy,
     })
@@ -97,6 +98,7 @@ export class EventsService {
       time: dto.time ?? event.time,
       location: dto.location ?? event.location,
       capacity: dto.capacity ?? event.capacity,
+      coverImageUrl: dto.coverImageUrl !== undefined ? dto.coverImageUrl : event.coverImageUrl,
     })
   }
 

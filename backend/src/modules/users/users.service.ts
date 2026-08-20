@@ -5,6 +5,7 @@ import { EnrollmentsRepository } from '../enrollments/enrollments.repository'
 import { EventsRepository } from '../events/events.repository'
 import { UsersRepository } from './users.repository'
 import { CreateUserDto } from './dtos/create-user.dto'
+import { UpdateProfileDto } from './dtos/update-profile.dto'
 
 @Injectable()
 export class UsersService {
@@ -106,6 +107,50 @@ export class UsersService {
     if (!updated) {
       throw new NotFoundException('Usuário não encontrado')
     }
+  }
+
+  async updateProfile(id: string, dto: UpdateProfileDto): Promise<Omit<User, 'password'>> {
+    const user = await this.usersRepository.findById(id)
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado')
+    }
+
+    if (dto.phone !== undefined && dto.phone !== null && dto.phone.trim() !== '') {
+      const digits = dto.phone.replace(/\D/g, '')
+      if (digits.length < 10 || digits.length > 11) {
+        throw new BadRequestException('Telefone inválido. Use DDD + número (10 ou 11 dígitos).')
+      }
+    }
+
+    const formattedPhone =
+      dto.phone === undefined
+        ? undefined
+        : dto.phone?.trim()
+          ? this.formatPhoneBR(dto.phone)
+          : null
+
+    const updated = await this.usersRepository.updateProfile(id, {
+      name: dto.name?.trim() ?? undefined,
+      phone: formattedPhone,
+      avatarUrl: dto.avatarUrl,
+    })
+
+    if (!updated) {
+      throw new NotFoundException('Usuário não encontrado')
+    }
+
+    return this.withoutPassword(updated)
+  }
+
+  private formatPhoneBR(raw: string): string {
+    const digits = raw.replace(/\D/g, '')
+    if (digits.length === 11) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
+    }
+    if (digits.length === 10) {
+      return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`
+    }
+    return raw.trim()
   }
 
   private withoutPassword(user: User): Omit<User, 'password'> {

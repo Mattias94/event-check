@@ -1,8 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { ImagePlus, X } from 'lucide-react'
+import EventCoverImage from '../EventCoverImage'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
 import { createEventUpdateSchema, eventCreationSchema, EventCreationData, todayString } from '../../lib/schemas'
@@ -17,6 +19,8 @@ interface AdminEventFormProps {
 }
 
 const CATEGORIES = ['Tecnologia', 'Negócios', 'Educação', 'Networking', 'Saúde', 'Outras']
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 export default function AdminEventForm({
   initialData,
@@ -26,6 +30,9 @@ export default function AdminEventForm({
   readOnly = false,
 }: AdminEventFormProps) {
   const [success, setSuccess] = useState<string | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(initialData?.coverImageUrl ?? null)
+  const [coverError, setCoverError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const minDate = todayString()
 
   const schema = useMemo(
@@ -36,6 +43,7 @@ export default function AdminEventForm({
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
     watch,
   } = useForm<EventCreationData>({
@@ -48,7 +56,10 @@ export default function AdminEventForm({
       time: initialData.time,
       location: initialData.location,
       capacity: initialData.capacity,
-    } : undefined,
+      coverImageUrl: initialData.coverImageUrl ?? null,
+    } : {
+      coverImageUrl: null,
+    },
   })
 
   const capacityValue = watch('capacity')
@@ -56,10 +67,46 @@ export default function AdminEventForm({
     initialData && typeof capacityValue === 'number' && capacityValue < initialData.currentEnrollments,
   )
 
+  function handleCoverFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setCoverError(null)
+
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      setCoverError('Formato inválido. Use JPEG, PNG ou WebP.')
+      event.target.value = ''
+      return
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      setCoverError('Imagem muito grande. Máximo de 2 MB.')
+      event.target.value = ''
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      setCoverPreview(dataUrl)
+      setValue('coverImageUrl', dataUrl)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  function handleRemoveCover() {
+    setCoverPreview(null)
+    setValue('coverImageUrl', null)
+    setCoverError(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
   async function handleFormSubmit(data: EventCreationData) {
     setSuccess(null)
     try {
-      await onSubmit(data)
+      await onSubmit({ ...data, coverImageUrl: coverPreview })
       setSuccess(initialData ? 'Evento atualizado com sucesso!' : 'Evento criado com sucesso!')
       setTimeout(() => setSuccess(null), 4000)
     } catch (err: any) {
@@ -160,6 +207,68 @@ export default function AdminEventForm({
           {...register('capacity', { valueAsNumber: true })}
           error={errors.capacity?.message as string | undefined}
         />
+
+        <div>
+          <label className="block text-sm md:text-xs font-medium mb-2 md:mb-1">
+            Imagem de capa
+          </label>
+
+          {coverPreview ? (
+            <div className="relative overflow-hidden rounded-md border border-slate-200 dark:border-slate-600">
+              <EventCoverImage src={coverPreview} maxHeightClass="max-h-56" />
+              {!readOnly && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRemoveCover}
+                  className="absolute right-2 top-2 bg-background/90"
+                >
+                  <X aria-hidden="true" />
+                  Remover
+                </Button>
+              )}
+            </div>
+          ) : (
+            !readOnly && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-200 px-4 py-8 text-center transition-colors hover:border-primary/50 dark:border-slate-600"
+              >
+                <ImagePlus className="size-8 text-muted-foreground" aria-hidden="true" />
+                <span className="text-sm text-muted-foreground">
+                  Clique para enviar uma imagem (JPEG, PNG ou WebP — máx. 2 MB)
+                </span>
+              </button>
+            )
+          )}
+
+          {!readOnly && coverPreview && (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="mt-2 inline-flex items-center gap-2 text-sm text-primary hover:underline"
+            >
+              <ImagePlus className="size-4" aria-hidden="true" />
+              Trocar imagem
+            </button>
+          )}
+
+          {!readOnly && (
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="sr-only"
+              onChange={handleCoverFileChange}
+            />
+          )}
+
+          {coverError && (
+            <p className="mt-1 text-sm text-red-600">{coverError}</p>
+          )}
+        </div>
 
         {capacityInvalid && (
           <div className="p-3 rounded-md bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 text-sm">

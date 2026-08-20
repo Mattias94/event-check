@@ -34,4 +34,8 @@ export class UpdateEventDto {
   @IsInt()
   @Min(1)
   capacity?: number
+
+  @IsOptional()
+  @IsString()
+  coverImageUrl?: string | null
 }

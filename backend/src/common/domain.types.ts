@@ -8,6 +8,8 @@ export interface User {
   email: string
   password: string
   dob?: string
+  phone?: string | null
+  avatarUrl?: string | null
   role: UserRole
   emailVerified: boolean
 }
@@ -29,6 +31,7 @@ export interface Event {
   time: string
   location: string
   capacity: number
+  coverImageUrl?: string | null
   currentEnrollments: number
   status: EventStatus
   createdBy: string
@@ -41,6 +44,11 @@ export interface EnrollmentRecord {
   enrolledAt: string
   checkInToken: string
   checkedInAt: string | null
+}
+
+export interface EnrollmentWithUser extends EnrollmentRecord {
+  userName: string
+  userEmail: string
 }
 
 export interface PasswordResetRequest {

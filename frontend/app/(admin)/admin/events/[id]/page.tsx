@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, CalendarPlus, Trash2, UserCheck, Users, XCircle } from 'lucide-react'
 import AdminEventForm from '../../../../../components/admin/AdminEventForm'
-import QrCheckInScanner from '../../../../../components/admin/QrCheckInScanner'
 import LoadingState from '../../../../../components/LoadingState'
 import ErrorState from '../../../../../components/ErrorState'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../../components/ui/Card'
@@ -12,7 +11,7 @@ import { Badge } from '../../../../../components/ui/Badge'
 import Button from '../../../../../components/ui/Button'
 import { Progress } from '../../../../../components/ui/Progress'
 import { getEventById, updateEvent, getEnrollments, deleteEvent, cancelEvent } from '../../../../../lib/events'
-import { Event, EnrollmentRecord } from '../../../../../lib/types'
+import { Event, EnrollmentWithUser } from '../../../../../lib/types'
 import { EventCreationData } from '../../../../../lib/schemas'
 import { getCurrentUserId, requireAdmin } from '../../../../../lib/auth-guard'
 
@@ -28,7 +27,7 @@ export default function EventDetailPage() {
   const eventId = params.id as string
 
   const [event, setEvent] = useState<Event | null>(null)
-  const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>([])
+  const [enrollments, setEnrollments] = useState<EnrollmentWithUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -77,17 +76,6 @@ export default function EventDetailPage() {
       setEvent(updated)
     } catch (err: any) {
       setSubmitError(err.message || 'Erro ao atualizar evento')
-    }
-  }
-
-  async function refreshEnrollments() {
-    try {
-      const enrollmentData = await getEnrollments(eventId)
-      setEnrollments(enrollmentData)
-      const eventData = await getEventById(eventId)
-      if (eventData) setEvent(eventData)
-    } catch {
-      // mantém a lista atual se a atualização falhar
     }
   }
 
@@ -189,8 +177,6 @@ export default function EventDetailPage() {
         </div>
 
         <div className="space-y-4 md:space-y-6">
-          <QrCheckInScanner eventId={eventId} onCheckInSuccess={refreshEnrollments} />
-
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
@@ -206,8 +192,13 @@ export default function EventDetailPage() {
                   {enrollments.map(enrollment => (
                     <div key={enrollment.id} className="rounded-md bg-muted p-3 text-sm">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="truncate font-medium text-foreground">
-                          ID: {enrollment.userId}
+                        <div className="min-w-0">
+                          <div className="truncate font-medium text-foreground">
+                            {enrollment.userName}
+                          </div>
+                          <div className="truncate text-xs text-muted-foreground">
+                            {enrollment.userEmail}
+                          </div>
                         </div>
                         {enrollment.checkedInAt ? (
                           <Badge variant="success">Check-in feito</Badge>

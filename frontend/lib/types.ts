@@ -7,6 +7,7 @@ export interface Event {
   time: string
   location: string
   capacity: number
+  coverImageUrl?: string | null
   currentEnrollments: number
   status: 'active' | 'cancelled' | 'finished'
   createdBy: string
@@ -19,6 +20,11 @@ export interface EnrollmentRecord {
   enrolledAt: string
   checkInToken?: string
   checkedInAt?: string | null
+}
+
+export interface EnrollmentWithUser extends EnrollmentRecord {
+  userName: string
+  userEmail: string
 }
 
 export interface CheckInResult {

@@ -25,6 +25,8 @@ model User {
   email         String       @unique
   password      String
   dob           String?
+  phone         String?
+  avatarUrl     String?      @db.Text
   role          UserRole     @default(user)
   emailVerified Boolean      @default(false)
   createdAt     DateTime     @default(now())
@@ -51,6 +53,7 @@ model Event {
   time               String
   location           String
   capacity           Int
+  coverImageUrl      String?      @db.Text
   currentEnrollments Int          @default(0)
   status             EventStatus  @default(active)
   createdBy          String

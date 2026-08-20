@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { getEventById, getEnrollments, getEventsByAdmin } from '../../../../lib/events'
-import { getUserById } from '../../../../lib/auth'
-import { Event, EnrollmentRecord } from '../../../../lib/types'
+import { getEventById, getEnrollments, getEventsByAdmin, unenrollUser } from '../../../../lib/events'
+import { Event, EnrollmentWithUser } from '../../../../lib/types'
 import { getCurrentUserId, requireAdmin } from '../../../../lib/auth-guard'
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import {
@@ -25,10 +24,7 @@ import Button from '../../../../components/ui/Button'
 import Input from '../../../../components/ui/Input'
 import { Skeleton } from '../../../../components/ui/Skeleton'
 
-interface EnrollmentWithDetails extends EnrollmentRecord {
-  userName: string
-  userEmail: string
-}
+interface EnrollmentWithDetails extends EnrollmentWithUser {}
 
 // Paleta categórica fixa (validada para daltonismo)
 const CHART_BLUE = '#2a78d6'
@@ -62,6 +58,7 @@ export default function AdminDashboardPage() {
   const [event, setEvent] = useState<Event | null>(null)
   const [enrollments, setEnrollments] = useState<EnrollmentWithDetails[]>([])
   const [loading, setLoading] = useState(true)
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filteredEnrollments, setFilteredEnrollments] = useState<EnrollmentWithDetails[]>([])
   const [proximosEventos, setProximosEventos] = useState<Event[]>([])
@@ -100,18 +97,8 @@ export default function AdminDashboardPage() {
       setEvent(eventData)
 
       const enrollmentData = await getEnrollments(eventId!)
-      const enriched = await Promise.all(
-        enrollmentData.map(async (enrollment): Promise<EnrollmentWithDetails> => {
-          const user = await getUserById(enrollment.userId)
-          return {
-            ...enrollment,
-            userName: user?.name || enrollment.userId,
-            userEmail: user?.email || '—',
-          }
-        })
-      )
-      setEnrollments(enriched)
-      setFilteredEnrollments(enriched)
+      setEnrollments(enrollmentData)
+      setFilteredEnrollments(enrollmentData)
 
       const adminId = getCurrentUserId()
       if (adminId) {
@@ -131,30 +118,78 @@ export default function AdminDashboardPage() {
     router.push('/login')
   }
 
-  function exportToCSV() {
-    if (filteredEnrollments.length === 0) return
-
-    const headers = ['Nome', 'E-mail', 'Status', 'Hora Check-in', 'Ações']
-    const data = filteredEnrollments.map((enrollment) => [
-      enrollment.userName,
-      enrollment.userEmail,
-      'Confirmado',
-      new Date(enrollment.enrolledAt).toLocaleTimeString('pt-BR'),
-      'Visualizar | Cancelar | Exportar'
-    ])
-
-    const csv = [
-      headers.join(','),
-      ...data.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n')
-
-    const blob = new Blob([csv], { type: 'text/csv' })
+  function downloadCSV(filename: string, rows: string[][]) {
+    const csv = rows.map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `inscritos-${event?.id}.csv`
+    a.download = filename
     a.click()
     window.URL.revokeObjectURL(url)
+  }
+
+  function exportToCSV() {
+    if (filteredEnrollments.length === 0) return
+
+    const rows = [
+      ['Nome', 'E-mail', 'Status', 'Data Inscrição', 'Check-in'],
+      ...filteredEnrollments.map((enrollment) => [
+        enrollment.userName,
+        enrollment.userEmail,
+        enrollment.checkedInAt ? 'Check-in feito' : 'Confirmado',
+        new Date(enrollment.enrolledAt).toLocaleString('pt-BR'),
+        enrollment.checkedInAt
+          ? new Date(enrollment.checkedInAt).toLocaleString('pt-BR')
+          : '—',
+      ]),
+    ]
+
+    downloadCSV(`inscritos-${event?.id ?? 'evento'}.csv`, rows)
+  }
+
+  function exportEnrollmentToCSV(enrollment: EnrollmentWithDetails) {
+    const rows = [
+      ['Nome', 'E-mail', 'Status', 'Data Inscrição', 'Check-in'],
+      [
+        enrollment.userName,
+        enrollment.userEmail,
+        enrollment.checkedInAt ? 'Check-in feito' : 'Confirmado',
+        new Date(enrollment.enrolledAt).toLocaleString('pt-BR'),
+        enrollment.checkedInAt
+          ? new Date(enrollment.checkedInAt).toLocaleString('pt-BR')
+          : '—',
+      ],
+    ]
+
+    downloadCSV(`inscrito-${enrollment.userName.replace(/\s+/g, '-').toLowerCase()}.csv`, rows)
+  }
+
+  async function handleCancelEnrollment(enrollment: EnrollmentWithDetails) {
+    if (!eventId) return
+
+    const confirmed = confirm(
+      `Cancelar inscrição de "${enrollment.userName}"?\n\nA vaga será liberada no evento.`,
+    )
+    if (!confirmed) return
+
+    setActionLoadingId(enrollment.id)
+    try {
+      const result = await unenrollUser(enrollment.userId, eventId)
+      if (!result.success) {
+        alert(result.error || 'Erro ao cancelar inscrição')
+        return
+      }
+
+      const updated = enrollments.filter((item) => item.id !== enrollment.id)
+      setEnrollments(updated)
+      setFilteredEnrollments(updated)
+
+      const eventData = await getEventById(eventId)
+      if (eventData) setEvent(eventData)
+    } finally {
+      setActionLoadingId(null)
+    }
   }
 
   if (loading) {
@@ -387,8 +422,8 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Tabela (desktop) */}
-            <div className="hidden md:block">
-              <table className="w-full text-sm">
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full min-w-[640px] text-sm">
                 <thead>
                   <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
                     <th className="py-3 pr-3 font-medium">Nome</th>
@@ -420,12 +455,21 @@ export default function AdminDashboardPage() {
                           {new Date(enrollment.enrolledAt).toLocaleTimeString('pt-BR')}
                         </td>
                         <td className="py-3">
-                          <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm">Ver</Button>
-                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                          <div className="flex flex-wrap items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-9 text-destructive hover:text-destructive"
+                              disabled={actionLoadingId === enrollment.id}
+                              onClick={() => void handleCancelEnrollment(enrollment)}
+                            >
                               Cancelar
                             </Button>
-                            <Button variant="ghost" size="sm" className="hidden lg:inline-flex">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => exportEnrollmentToCSV(enrollment)}
+                            >
                               Exportar
                             </Button>
                           </div>
@@ -460,13 +504,22 @@ export default function AdminDashboardPage() {
                       Check-in às {new Date(enrollment.enrolledAt).toLocaleTimeString('pt-BR')}
                     </p>
                     <div className="mt-2 flex gap-2">
-                      <Button variant="outline" size="sm" className="h-11 flex-1">Ver</Button>
                       <Button
                         variant="outline"
                         size="sm"
                         className="h-11 flex-1 text-destructive hover:text-destructive"
+                        disabled={actionLoadingId === enrollment.id}
+                        onClick={() => void handleCancelEnrollment(enrollment)}
                       >
                         Cancelar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-11 flex-1"
+                        onClick={() => exportEnrollmentToCSV(enrollment)}
+                      >
+                        Exportar
                       </Button>
                     </div>
                   </div>

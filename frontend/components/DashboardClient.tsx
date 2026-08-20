@@ -18,7 +18,6 @@ import {
   Palette,
   Pencil,
   QrCode,
-  Settings,
   ShieldCheck,
   Sparkles,
   TrendingUp,
@@ -26,20 +25,17 @@ import {
   Users,
   X,
   XCircle,
+  Phone,
 } from 'lucide-react'
 import { getEnrollmentsForUser, getUpcomingEvents } from '../lib/events'
+import { User, getUserById } from '../lib/auth'
+import { displayPhone } from '../lib/phone'
 import { Event } from '../lib/types'
 import { Button } from './ui/Button'
 import { Card, CardContent } from './ui/Card'
 import { Badge } from './ui/Badge'
 import { Skeleton } from './ui/Skeleton'
-
-interface User {
-  id: string
-  name: string
-  email: string
-  role?: string
-}
+import ProfileEditDialog from './ProfileEditDialog'
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   'Tecnologia': Laptop,
@@ -63,6 +59,7 @@ export default function DashboardClient() {
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
   const [historyEvents, setHistoryEvents] = useState<Event[]>([])
   const [newEvents, setNewEvents] = useState<Event[]>([])
+  const [profileOpen, setProfileOpen] = useState(false)
 
   useEffect(() => {
     const currentUser = localStorage.getItem('currentUser')
@@ -70,9 +67,15 @@ export default function DashboardClient() {
       router.push('/login')
       return
     }
-    const parsedUser = JSON.parse(currentUser)
+    const parsedUser = JSON.parse(currentUser) as User
     setUser(parsedUser)
     loadEvents(parsedUser.id)
+    void getUserById(parsedUser.id).then((fresh) => {
+      if (fresh) {
+        setUser(fresh)
+        localStorage.setItem('currentUser', JSON.stringify(fresh))
+      }
+    })
     setLoading(false)
   }, [router])
 
@@ -131,12 +134,13 @@ export default function DashboardClient() {
 
   if (!user) return null
 
-  const userName = user.name.toUpperCase()
+  const userName = user.name
   const userEmail = user.email
   const initials = userName
     .split(' ')
     .map((n) => n[0])
     .join('')
+    .slice(0, 2)
     .toUpperCase()
 
   return (
@@ -411,32 +415,50 @@ export default function DashboardClient() {
               <Card>
                 <CardContent className="p-4 pt-4 md:p-6 md:pt-6">
                   <div className="mb-4 flex items-center gap-3 md:gap-4">
-                    <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground md:size-14 md:text-xl">
-                      {initials}
-                    </div>
+                    {user.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={user.avatarUrl}
+                        alt=""
+                        className="size-12 shrink-0 rounded-full object-cover object-center ring-2 ring-border md:size-14"
+                      />
+                    ) : (
+                      <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-lg font-semibold text-primary-foreground md:size-14 md:text-xl">
+                        {initials}
+                      </div>
+                    )}
                     <div className="min-w-0">
                       <h3 className="truncate text-sm font-semibold text-foreground md:text-base">
                         {userName}
                       </h3>
                       <p className="truncate text-xs text-muted-foreground md:text-sm">{userEmail}</p>
+                      {user.phone && (
+                        <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground md:text-sm">
+                          <Phone className="size-3.5 shrink-0" aria-hidden="true" />
+                          {displayPhone(user.phone)}
+                        </p>
+                      )}
                     </div>
                   </div>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <Button variant="secondary" className="flex-1">
-                      <Pencil aria-hidden="true" />
-                      Editar
-                    </Button>
-                    <Button variant="outline" className="flex-1">
-                      <Settings aria-hidden="true" />
-                      Configurações
-                    </Button>
-                  </div>
+                  <Button variant="secondary" className="h-11 w-full sm:h-10" onClick={() => setProfileOpen(true)}>
+                    <Pencil aria-hidden="true" />
+                    Editar
+                  </Button>
                 </CardContent>
               </Card>
             </section>
           </div>
         </div>
       </main>
+
+      {user && (
+        <ProfileEditDialog
+          user={user}
+          open={profileOpen}
+          onClose={() => setProfileOpen(false)}
+          onSaved={(updated) => setUser(updated)}
+        />
+      )}
     </div>
   )
 }

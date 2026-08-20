@@ -6,6 +6,7 @@ import { ArrowLeft, CalendarDays, CheckCircle2, Clock, MapPin, Tag, Users } from
 import { getEventById, enrollUser, unenrollUser, isUserEnrolled } from '../../../lib/events'
 import { Event } from '../../../lib/types'
 import { getCurrentUserId } from '../../../lib/auth-guard'
+import EventCoverImage from '../../../components/EventCoverImage'
 import LoadingState from '../../../components/LoadingState'
 import ErrorState from '../../../components/ErrorState'
 import { Button } from '../../../components/ui/Button'
@@ -136,6 +137,9 @@ export default function EventDetailPage() {
 
       <main className="mx-auto max-w-7xl px-4 pb-32 pt-6 md:px-6 md:pt-8 lg:pb-8">
         <div className="mb-6 md:mb-8">
+          {event.coverImageUrl && (
+            <EventCoverImage src={event.coverImageUrl} className="mb-4 rounded-lg" />
+          )}
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <Badge variant="outline">
               <Tag aria-hidden="true" />

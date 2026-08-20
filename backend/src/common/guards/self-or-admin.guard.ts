@@ -33,7 +33,7 @@ export class SelfOrAdminGuard implements CanActivate {
       throw new UnauthorizedException('Sessão inválida ou expirada')
     }
 
-    const targetUserId = request.params.userId
+    const targetUserId = request.params.userId ?? request.params.id
     if (payload.role !== 'admin' && targetUserId && payload.sub !== targetUserId) {
       throw new ForbiddenException('Você não pode acessar inscrições de outro usuário')
     }

@@ -25,6 +25,7 @@ export const eventCreationSchema = z.object({
     .min(3, 'Localização deve ter no mínimo 3 caracteres'),
   capacity: z.number({ required_error: 'Campo obrigatório' })
     .min(1, 'Capacidade deve ser maior que 0'),
+  coverImageUrl: z.string().nullable().optional(),
 })
 
 export function createEventUpdateSchema(currentEnrollments = 0) {

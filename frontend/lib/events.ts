@@ -1,6 +1,6 @@
 import { api } from './api'
 import { getUserById } from './auth'
-import { Event, EnrollmentRecord, EventFilters, CheckInResult } from './types'
+import { Event, EnrollmentRecord, EnrollmentWithUser, EventFilters, CheckInResult } from './types'
 import { EventCreationData, EventUpdateData } from './schemas'
 
 export async function getUpcomingEvents(filters?: EventFilters): Promise<Event[]> {
@@ -44,8 +44,8 @@ export async function cancelEvent(eventId: string): Promise<Event | null> {
   return api.post<Event>(`/events/${eventId}/cancel`)
 }
 
-export async function getEnrollments(eventId: string): Promise<EnrollmentRecord[]> {
-  return api.get<EnrollmentRecord[]>(`/events/${eventId}/enrollments`)
+export async function getEnrollments(eventId: string): Promise<EnrollmentWithUser[]> {
+  return api.get<EnrollmentWithUser[]>(`/events/${eventId}/enrollments`)
 }
 
 export async function isUserEnrolled(userId: string, eventId: string): Promise<boolean> {

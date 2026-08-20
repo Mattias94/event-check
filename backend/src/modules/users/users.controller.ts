@@ -1,6 +1,8 @@
-import { Controller, Get, Param, Post, Query, Body, UseGuards } from '@nestjs/common'
+import { Controller, Get, Param, Patch, Post, Query, Body, UseGuards } from '@nestjs/common'
 import { AdminGuard } from '../../common/guards/admin.guard'
+import { SelfOrAdminGuard } from '../../common/guards/self-or-admin.guard'
 import { CreateUserDto } from './dtos/create-user.dto'
+import { UpdateProfileDto } from './dtos/update-profile.dto'
 import { UsersService } from './users.service'
 
 @Controller('users')
@@ -33,5 +35,11 @@ export class UsersController {
   @UseGuards(AdminGuard)
   createUser(@Body() dto: CreateUserDto) {
     return this.usersService.createUser(dto)
+  }
+
+  @Patch(':id')
+  @UseGuards(SelfOrAdminGuard)
+  updateProfile(@Param('id') id: string, @Body() dto: UpdateProfileDto) {
+    return this.usersService.updateProfile(id, dto)
   }
 }

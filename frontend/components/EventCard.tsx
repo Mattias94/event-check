@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { CalendarDays, Clock, MapPin, Tag, Users } from 'lucide-react'
+import EventCoverImage from './EventCoverImage'
 import { Event } from '../lib/types'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
 import { Badge } from './ui/Badge'
@@ -27,7 +28,10 @@ export default function EventCard({ event }: EventCardProps) {
       href={`/events/${event.id}`}
       className="group block h-full rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
-      <Card className="flex h-full flex-col transition-all group-hover:border-primary/40 group-hover:shadow-md">
+      <Card className="flex h-full flex-col overflow-hidden transition-all group-hover:border-primary/40 group-hover:shadow-md">
+        {event.coverImageUrl && (
+          <EventCoverImage src={event.coverImageUrl} maxHeightClass="max-h-44 sm:max-h-48" />
+        )}
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="line-clamp-2 text-base leading-snug md:text-lg">

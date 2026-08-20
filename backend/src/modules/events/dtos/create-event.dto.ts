@@ -34,4 +34,8 @@ export class CreateEventDto {
   @IsOptional()
   @IsString()
   status?: 'active' | 'cancelled' | 'finished'
+
+  @IsOptional()
+  @IsString()
+  coverImageUrl?: string | null
 }
