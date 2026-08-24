@@ -140,17 +140,43 @@ export class EnrollmentsRepository {
   }
 
   async markCheckedIn(enrollmentId: string): Promise<EnrollmentRecord | null> {
+    const result = await this.markCheckedInIdempotent(enrollmentId)
+    return result?.enrollment ?? null
+  }
+
+  /**
+   * Registra check-in de forma idempotente: se já existir, devolve o registro
+   * existente sem alterar checkedInAt.
+   */
+  async markCheckedInIdempotent(
+    enrollmentId: string,
+  ): Promise<{ enrollment: EnrollmentRecord; newlyCheckedIn: boolean } | null> {
     const existing = await this.prisma.enrollment.findUnique({ where: { id: enrollmentId } })
     if (!existing) {
       return null
     }
 
-    const updated = await this.prisma.enrollment.update({
-      where: { id: enrollmentId },
+    if (existing.checkedInAt) {
+      return {
+        enrollment: this.toDomain(existing),
+        newlyCheckedIn: false,
+      }
+    }
+
+    const claimed = await this.prisma.enrollment.updateMany({
+      where: { id: enrollmentId, checkedInAt: null },
       data: { checkedInAt: new Date() },
     })
 
-    return this.toDomain(updated)
+    const current = await this.prisma.enrollment.findUnique({ where: { id: enrollmentId } })
+    if (!current) {
+      return null
+    }
+
+    return {
+      enrollment: this.toDomain(current),
+      newlyCheckedIn: claimed.count > 0,
+    }
   }
 
   async delete(userId: string, eventId: string): Promise<boolean> {

@@ -49,6 +49,14 @@ export async function verifyCredentials(email: string, password: string): Promis
   }
 }
 
+export async function logoutSession(): Promise<void> {
+  try {
+    await api.post('/auth/logout')
+  } catch {
+    // limpa sessão local mesmo se a API falhar
+  }
+}
+
 export async function createUser(userData: RegisterData): Promise<RegisterResult> {
   return api.post<RegisterResult>('/auth/register', userData)
 }

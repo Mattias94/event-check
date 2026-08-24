@@ -40,7 +40,7 @@ export default function LoginForm() {
     try {
       const result = await verifyCredentials(data.email, data.password)
       if (!result) {
-        setError('E-mail ou senha inválidos.')
+        setError('E-mail ou senha incorretos.')
         setLoading(false)
         return
       }

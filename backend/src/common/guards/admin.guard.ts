@@ -1,27 +1,27 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common'
-import { SessionTokenPayload, verifySessionToken } from '../session-token'
+import { SessionTokenPayload, extractSessionToken, verifySessionToken } from '../session-token'
 
 interface AuthenticatedRequest {
   headers: Record<string, string | undefined>
+  cookies?: Record<string, string>
   user?: SessionTokenPayload
 }
 
 /**
- * Protege rotas exclusivas de ADMIN. Exige o header
- * `Authorization: Bearer <token>` com o JWT de sessão emitido no login
- * e verifica se o papel embutido no token é `admin`.
+ * Protege rotas exclusivas de ADMIN. Aceita JWT no header Authorization
+ * ou no cookie httpOnly emitido no login.
  */
 @Injectable()
 export class AdminGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>()
-    const header = request.headers.authorization
+    const token = extractSessionToken(request)
 
-    if (!header?.startsWith('Bearer ')) {
+    if (!token) {
       throw new UnauthorizedException('Autenticação necessária')
     }
 
-    const payload = verifySessionToken(header.slice('Bearer '.length))
+    const payload = verifySessionToken(token)
     if (!payload) {
       throw new UnauthorizedException('Sessão inválida ou expirada')
     }

@@ -29,6 +29,8 @@ export interface EnrollmentWithUser extends EnrollmentRecord {
 
 export interface CheckInResult {
   valid: boolean
+  alreadyCheckedIn?: boolean
+  message?: string
   enrollment: EnrollmentRecord | null
   participant: { id: string; name: string; email: string } | null
 }

@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react'
 import AdminProtection from '../../components/AdminProtection'
+import { logoutSession } from '../../lib/auth'
 import { Badge } from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
 
@@ -76,7 +77,8 @@ function AdminShell({ children }: { children: ReactNode }) {
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  function handleLogout() {
+  async function handleLogout() {
+    await logoutSession()
     localStorage.removeItem('currentUser')
     localStorage.removeItem('authToken')
     router.push('/login')

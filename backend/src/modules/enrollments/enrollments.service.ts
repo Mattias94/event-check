@@ -138,32 +138,63 @@ export class EnrollmentsService {
       throw new NotFoundException('Evento não encontrado')
     }
 
+    if (event.status === 'cancelled') {
+      throw new BadRequestException('Evento cancelado. Check-in não permitido.')
+    }
+
+    if (event.status === 'finished') {
+      throw new BadRequestException('Evento finalizado. Check-in não permitido.')
+    }
+
     const payload = this.checkInTokenService.verify(qrToken)
     if (!payload) {
-      throw new BadRequestException('QR code inválido ou adulterado')
+      throw new BadRequestException('QR code inválido')
     }
 
-    const enrollment = await this.enrollmentsRepository.findByCheckInToken(payload.checkInToken)
-    if (!enrollment || enrollment.id !== payload.enrollmentId) {
-      throw new NotFoundException('Inscrição não encontrada para este QR code')
-    }
-
-    if (enrollment.eventId !== eventId) {
+    if (payload.eventId !== eventId) {
       throw new BadRequestException('Este QR code pertence a outro evento')
     }
 
-    if (enrollment.checkedInAt) {
-      throw new BadRequestException(
-        `Check-in já realizado em ${new Date(enrollment.checkedInAt).toLocaleString('pt-BR')}`,
-      )
+    const enrollment = await this.enrollmentsRepository.findByCheckInToken(payload.checkInToken)
+    if (!enrollment) {
+      throw new BadRequestException('QR code inválido ou inscrição cancelada')
     }
 
-    const updated = await this.enrollmentsRepository.markCheckedIn(enrollment.id)
+    if (
+      enrollment.id !== payload.enrollmentId ||
+      enrollment.userId !== payload.userId ||
+      enrollment.eventId !== payload.eventId
+    ) {
+      throw new BadRequestException('QR code inválido')
+    }               
+
     const user = await this.usersRepository.findById(enrollment.userId)
+
+    const result = await this.enrollmentsRepository.markCheckedInIdempotent(enrollment.id)
+    if (!result) {
+      throw new NotFoundException('Inscrição não encontrada para este QR code')
+    }
+
+    const checkedInAt = result.enrollment.checkedInAt
+    const formattedTime = checkedInAt
+      ? new Date(checkedInAt).toLocaleString('pt-BR')
+      : null
+
+    if (!result.newlyCheckedIn && checkedInAt) {
+      return {
+        valid: true,
+        alreadyCheckedIn: true,
+        message: `Check-in já realizado em ${formattedTime}`,
+        enrollment: result.enrollment,
+        participant: user ? { id: user.id, name: user.name, email: user.email } : null,
+      }
+    }
 
     return {
       valid: true,
-      enrollment: updated,
+      alreadyCheckedIn: false,
+      message: 'Check-in realizado com sucesso!',
+      enrollment: result.enrollment,
       participant: user ? { id: user.id, name: user.name, email: user.email } : null,
     }
   }

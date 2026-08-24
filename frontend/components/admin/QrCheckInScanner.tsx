@@ -1,41 +1,94 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Html5Qrcode } from 'html5-qrcode'
-import { CheckCircle2, QrCode, ScanLine, XCircle } from 'lucide-react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode'
+import { CheckCircle2, Keyboard, QrCode, ScanLine, XCircle } from 'lucide-react'
 import Button from '../ui/Button'
+import Input from '../ui/Input'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card'
 import { checkInEnrollment } from '../../lib/events'
 import { CheckInResult } from '../../lib/types'
 
-const SCANNER_ELEMENT_ID = 'qr-check-in-scanner'
-
 interface ScanFeedback {
-  status: 'success' | 'error'
+  status: 'success' | 'warning' | 'error'
   message: string
   participant?: CheckInResult['participant']
 }
 
 interface QrCheckInScannerProps {
   eventId: string
-  /** Chamado após um check-in bem-sucedido para a página atualizar a lista de inscritos. */
   onCheckInSuccess?: () => void
 }
 
+function isSecureCameraContext(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.isSecureContext || window.location.hostname === 'localhost'
+}
+
+async function resolveCameraId(): Promise<string | { facingMode: 'user' | 'environment' }> {
+  try {
+    const cameras = await Html5Qrcode.getCameras()
+    if (cameras.length === 0) {
+      return { facingMode: 'user' }
+    }
+
+    const backCamera = cameras.find((camera) =>
+      /back|rear|environment|traseira|trás/i.test(camera.label),
+    )
+    if (backCamera) return backCamera.id
+
+    const frontCamera = cameras.find((camera) =>
+      /front|user|face|frontal/i.test(camera.label),
+    )
+    if (frontCamera) return frontCamera.id
+
+    return cameras[0].id
+  } catch {
+    return { facingMode: 'user' }
+  }
+}
+
+function formatCameraError(error: unknown): string {
+  const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase()
+
+  if (!isSecureCameraContext()) {
+    return 'A câmera só funciona em HTTPS ou localhost. Acesse o site por uma conexão segura.'
+  }
+  if (message.includes('notallowed') || message.includes('permission')) {
+    return 'Permissão de câmera negada. Autorize o acesso nas configurações do navegador e tente novamente.'
+  }
+  if (message.includes('notfound') || message.includes('no camera')) {
+    return 'Nenhuma câmera encontrada neste dispositivo. Use a opção de colar o código manualmente.'
+  }
+  if (message.includes('notreadable') || message.includes('in use')) {
+    return 'A câmera está em uso por outro aplicativo. Feche outros apps e tente novamente.'
+  }
+
+  return 'Não foi possível abrir a câmera. Tente novamente ou cole o código manualmente.'
+}
+
 export default function QrCheckInScanner({ eventId, onCheckInSuccess }: QrCheckInScannerProps) {
+  const reactId = useId().replace(/:/g, '')
+  const scannerElementId = `qr-check-in-scanner-${reactId}`
+
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const processingRef = useRef(false)
   const [scanning, setScanning] = useState(false)
   const [starting, setStarting] = useState(false)
   const [feedback, setFeedback] = useState<ScanFeedback | null>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [manualToken, setManualToken] = useState('')
+  const [showManualInput, setShowManualInput] = useState(false)
+  const [manualLoading, setManualLoading] = useState(false)
 
   const stopScanner = useCallback(async () => {
     const scanner = scannerRef.current
     scannerRef.current = null
     if (scanner) {
       try {
-        await scanner.stop()
+        if (scanner.getState() === Html5QrcodeScannerState.SCANNING) {
+          await scanner.stop()
+        }
         scanner.clear()
       } catch {
         // scanner já estava parado
@@ -50,52 +103,99 @@ export default function QrCheckInScanner({ eventId, onCheckInSuccess }: QrCheckI
     }
   }, [stopScanner])
 
-  async function handleDecoded(decodedText: string) {
-    if (processingRef.current) return
+  async function submitToken(token: string) {
+    const trimmed = token.trim()
+    if (!trimmed || processingRef.current) return
+
     processingRef.current = true
+    setCameraError(null)
 
     await stopScanner()
 
     try {
-      const result = await checkInEnrollment(eventId, decodedText)
+      const result = await checkInEnrollment(eventId, trimmed)
       setFeedback({
-        status: 'success',
-        message: 'Check-in realizado com sucesso!',
+        status: result.alreadyCheckedIn ? 'warning' : 'success',
+        message:
+          result.message ||
+          (result.alreadyCheckedIn
+            ? 'Check-in já havia sido registrado.'
+            : 'Check-in realizado com sucesso!'),
         participant: result.participant,
       })
-      onCheckInSuccess?.()
-    } catch (err: any) {
+      setManualToken('')
+      setShowManualInput(false)
+      if (!result.alreadyCheckedIn) {
+        onCheckInSuccess?.()
+      }
+    } catch (err: unknown) {
       setFeedback({
         status: 'error',
-        message: err.message || 'Não foi possível validar o QR code',
+        message: err instanceof Error ? err.message : 'Não foi possível validar o QR code',
       })
     } finally {
       processingRef.current = false
     }
   }
 
+  async function handleDecoded(decodedText: string) {
+    if (processingRef.current) return
+    await submitToken(decodedText)
+  }
+
   async function startScanner() {
     setFeedback(null)
     setCameraError(null)
+    setShowManualInput(false)
     setStarting(true)
 
+    // O container PRECISA estar visível antes do html5-qrcode iniciar.
+    setScanning(true)
+
     try {
-      const scanner = new Html5Qrcode(SCANNER_ELEMENT_ID)
+      if (!isSecureCameraContext()) {
+        throw new Error('insecure-context')
+      }
+
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      })
+
+      const scanner = new Html5Qrcode(scannerElementId, /* verbose= */ false)
       scannerRef.current = scanner
+
+      const camera = await resolveCameraId()
+      const viewportWidth = Math.min(window.innerWidth - 48, 320)
+
       await scanner.start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 220, height: 220 } },
+        camera,
+        {
+          fps: 10,
+          qrbox: { width: viewportWidth * 0.75, height: viewportWidth * 0.75 },
+          aspectRatio: 1,
+        },
         (decodedText) => void handleDecoded(decodedText),
         () => {
-          // frames sem QR code são esperados; nada a fazer
+          // frames sem QR code são esperados
         },
       )
-      setScanning(true)
-    } catch {
+    } catch (error) {
       scannerRef.current = null
-      setCameraError('Não foi possível acessar a câmera. Verifique as permissões do navegador.')
+      setScanning(false)
+      setCameraError(formatCameraError(error))
+      setShowManualInput(true)
     } finally {
       setStarting(false)
+    }
+  }
+
+  async function handleManualSubmit(event: React.FormEvent) {
+    event.preventDefault()
+    setManualLoading(true)
+    try {
+      await submitToken(manualToken)
+    } finally {
+      setManualLoading(false)
     }
   }
 
@@ -108,19 +208,30 @@ export default function QrCheckInScanner({ eventId, onCheckInSuccess }: QrCheckI
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Container sempre no DOM; visibilidade controlada por CSS, nunca display:none durante start */}
         <div
-          id={SCANNER_ELEMENT_ID}
-          className={`overflow-hidden rounded-md bg-muted ${scanning ? '' : 'hidden'}`}
-        />
+          className={`overflow-hidden rounded-md bg-black ${scanning ? 'block min-h-[240px] sm:min-h-[280px]' : 'hidden'}`}
+        >
+          <div id={scannerElementId} className="w-full [&_video]:!w-full [&_video]:!object-cover" />
+        </div>
 
         {!scanning && !feedback && (
           <p className="text-sm text-muted-foreground">
-            Aponte a câmera para o QR code recebido por e-mail pelo participante para validar a inscrição.
+            Toque em &quot;Iniciar leitura&quot; e aponte a câmera para o QR code enviado por e-mail
+            ao participante. Em notebook, use a webcam frontal.
+          </p>
+        )}
+
+        {starting && (
+          <p className="text-sm text-muted-foreground" role="status">
+            Solicitando acesso à câmera…
           </p>
         )}
 
         {cameraError && (
-          <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{cameraError}</p>
+          <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+            {cameraError}
+          </p>
         )}
 
         {feedback && (
@@ -129,13 +240,15 @@ export default function QrCheckInScanner({ eventId, onCheckInSuccess }: QrCheckI
             className={`flex items-start gap-3 rounded-md p-3 text-sm ${
               feedback.status === 'success'
                 ? 'bg-emerald-50 text-emerald-800'
-                : 'bg-destructive/10 text-destructive'
+                : feedback.status === 'warning'
+                  ? 'bg-amber-50 text-amber-900'
+                  : 'bg-destructive/10 text-destructive'
             }`}
           >
-            {feedback.status === 'success' ? (
-              <CheckCircle2 className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-            ) : (
+            {feedback.status === 'error' ? (
               <XCircle className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+            ) : (
+              <CheckCircle2 className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
             )}
             <div>
               <p className="font-medium">{feedback.message}</p>
@@ -150,14 +263,47 @@ export default function QrCheckInScanner({ eventId, onCheckInSuccess }: QrCheckI
         )}
 
         {scanning ? (
-          <Button variant="outline" className="w-full" onClick={() => void stopScanner()}>
+          <Button variant="outline" className="h-11 w-full" onClick={() => void stopScanner()}>
             Parar leitura
           </Button>
         ) : (
-          <Button className="w-full" onClick={() => void startScanner()} disabled={starting}>
+          <Button className="h-11 w-full" onClick={() => void startScanner()} disabled={starting}>
             <ScanLine aria-hidden="true" />
             {starting ? 'Abrindo câmera...' : feedback ? 'Ler próximo QR code' : 'Iniciar leitura'}
           </Button>
+        )}
+
+        {!scanning && (
+          <div className="space-y-2 border-t pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 w-full"
+              onClick={() => setShowManualInput((value) => !value)}
+            >
+              <Keyboard aria-hidden="true" />
+              {showManualInput ? 'Ocultar código manual' : 'Colar código manualmente'}
+            </Button>
+
+            {showManualInput && (
+              <form className="space-y-3" onSubmit={handleManualSubmit}>
+                <Input
+                  label="Código do QR Code"
+                  name="manualToken"
+                  value={manualToken}
+                  onChange={(event) => setManualToken(event.target.value)}
+                  placeholder="Cole aqui o conteúdo lido do QR code"
+                />
+                <Button
+                  type="submit"
+                  className="h-11 w-full"
+                  disabled={manualLoading || !manualToken.trim()}
+                >
+                  {manualLoading ? 'Validando...' : 'Validar código'}
+                </Button>
+              </form>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

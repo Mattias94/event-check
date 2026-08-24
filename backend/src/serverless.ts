@@ -1,9 +1,10 @@
 import 'dotenv/config'
 import 'reflect-metadata'
 import type { IncomingMessage, ServerResponse } from 'http'
-import { ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
+import { NestExpressApplication } from '@nestjs/platform-express'
 import { AppModule } from './app.module'
+import { configureApp } from './common/app-config'
 
 /**
  * Entrada serverless (Vercel). Cria o app Nest uma única vez por instância
@@ -15,16 +16,8 @@ let cachedServer: ExpressInstance | undefined
 
 async function getServer(): Promise<ExpressInstance> {
   if (!cachedServer) {
-    const app = await NestFactory.create(AppModule)
-    app.enableCors()
-    app.setGlobalPrefix('api')
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        transform: true,
-        forbidUnknownValues: true,
-      }),
-    )
+    const app = await NestFactory.create<NestExpressApplication>(AppModule)
+    configureApp(app)
     await app.init()
     cachedServer = app.getHttpAdapter().getInstance() as ExpressInstance
   }

@@ -10,6 +10,19 @@ export interface CheckInTokenPayload {
 
 const DEFAULT_SECRET = 'event-check-dev-secret'
 
+function isValidPayload(decoded: jwt.JwtPayload): decoded is jwt.JwtPayload & CheckInTokenPayload {
+  return (
+    typeof decoded.enrollmentId === 'string' &&
+    typeof decoded.userId === 'string' &&
+    typeof decoded.eventId === 'string' &&
+    typeof decoded.checkInToken === 'string' &&
+    decoded.enrollmentId.length > 0 &&
+    decoded.userId.length > 0 &&
+    decoded.eventId.length > 0 &&
+    decoded.checkInToken.length > 0
+  )
+}
+
 @Injectable()
 export class CheckInTokenService {
   private readonly secret = process.env.QR_TOKEN_SECRET ?? DEFAULT_SECRET
@@ -24,7 +37,18 @@ export class CheckInTokenService {
       if (typeof decoded === 'string') {
         return null
       }
-      return decoded as unknown as CheckInTokenPayload
+
+      const payload = decoded as jwt.JwtPayload
+      if (!isValidPayload(payload)) {
+        return null
+      }
+
+      return {
+        enrollmentId: payload.enrollmentId,
+        userId: payload.userId,
+        eventId: payload.eventId,
+        checkInToken: payload.checkInToken,
+      }
     } catch {
       return null
     }

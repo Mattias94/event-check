@@ -28,7 +28,7 @@ import {
   Phone,
 } from 'lucide-react'
 import { getEnrollmentsForUser, getUpcomingEvents } from '../lib/events'
-import { User, getUserById } from '../lib/auth'
+import { User, getUserById, logoutSession } from '../lib/auth'
 import { displayPhone } from '../lib/phone'
 import { Event } from '../lib/types'
 import { Button } from './ui/Button'
@@ -111,7 +111,8 @@ export default function DashboardClient() {
     )
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logoutSession()
     localStorage.removeItem('currentUser')
     localStorage.removeItem('authToken')
     router.push('/register')

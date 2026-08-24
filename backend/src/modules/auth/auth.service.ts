@@ -23,7 +23,7 @@ export class AuthService {
   async login(dto: LoginDto) {
     const user = await this.usersRepository.findByEmail(dto.email)
     if (!user || !(await verifyPassword(dto.password, user.password))) {
-      throw new UnauthorizedException('Credenciais inválidas')
+      throw new UnauthorizedException('E-mail ou senha incorretos.')
     }
 
     if (this.emailVerificationRequired && !user.emailVerified) {
