@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import { getEnrollmentsForUser, getUpcomingEvents } from '../lib/events'
 import { User, getUserById, logoutSession } from '../lib/auth'
+import { getCurrentUser } from '../lib/auth-guard'
 import { displayPhone } from '../lib/phone'
 import { Event } from '../lib/types'
 import { Button } from './ui/Button'
@@ -62,12 +63,11 @@ export default function DashboardClient() {
   const [profileOpen, setProfileOpen] = useState(false)
 
   useEffect(() => {
-    const currentUser = localStorage.getItem('currentUser')
-    if (!currentUser) {
+    const parsedUser = getCurrentUser()
+    if (!parsedUser) {
       router.push('/login')
       return
     }
-    const parsedUser = JSON.parse(currentUser) as User
     setUser(parsedUser)
     loadEvents(parsedUser.id)
     void getUserById(parsedUser.id).then((fresh) => {
@@ -80,8 +80,8 @@ export default function DashboardClient() {
   }, [router])
 
   function loadEvents(userId: string) {
-    Promise.all([getEnrollmentsForUser(userId), getUpcomingEvents()]).then(
-      ([enrolledEvents, allUpcoming]) => {
+    Promise.all([getEnrollmentsForUser(userId), getUpcomingEvents()])
+      .then(([enrolledEvents, allUpcoming]) => {
         const today = new Date()
         today.setHours(0, 0, 0, 0)
 
@@ -107,8 +107,12 @@ export default function DashboardClient() {
         setUpcomingEvents(upcoming)
         setHistoryEvents(history)
         setNewEvents(discover)
-      }
-    )
+      })
+      .catch(() => {
+        setUpcomingEvents([])
+        setHistoryEvents([])
+        setNewEvents([])
+      })
   }
 
   const handleLogout = async () => {

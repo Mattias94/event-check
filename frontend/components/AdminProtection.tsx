@@ -19,11 +19,13 @@ export default function AdminProtection({ children }: AdminProtectionProps) {
     const user = getCurrentUser()
 
     if (!user) {
+      setIsLoading(false)
       router.replace('/login')
       return
     }
 
     if (user.role !== 'admin') {
+      setIsLoading(false)
       router.replace('/dashboard')
       return
     }

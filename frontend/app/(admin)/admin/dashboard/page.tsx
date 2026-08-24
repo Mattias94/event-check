@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getEventById, getEnrollments, getEventsByAdmin, unenrollUser } from '../../../../lib/events'
 import { Event, EnrollmentWithUser } from '../../../../lib/types'
@@ -51,6 +51,25 @@ const CHART_TOOLTIP_LABEL: React.CSSProperties = {
 }
 
 export default function AdminDashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 md:py-8" role="status" aria-busy="true">
+          <Skeleton className="mb-6 h-9 w-64" />
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((item) => (
+              <Skeleton key={item} className="h-28 rounded-lg" />
+            ))}
+          </div>
+        </div>
+      }
+    >
+      <AdminDashboardContent />
+    </Suspense>
+  )
+}
+
+function AdminDashboardContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const eventId = searchParams.get('eventId')
@@ -327,7 +346,8 @@ export default function AdminDashboardPage() {
             <CardTitle className="text-base md:text-lg">Status dos Inscritos</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
+            <div className="h-[280px] w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={pieData}
@@ -352,6 +372,7 @@ export default function AdminDashboardPage() {
                 />
               </PieChart>
             </ResponsiveContainer>
+            </div>
             <div className="mt-2 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
               {pieData.map(entry => (
                 <div key={entry.name} className="flex items-center gap-2">
@@ -374,7 +395,8 @@ export default function AdminDashboardPage() {
             <CardTitle className="text-base md:text-lg">Taxa de Ocupação e Check-in</CardTitle>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <div className="h-[300px] w-full min-w-0">
+              <ResponsiveContainer width="100%" height="100%">
               <LineChart data={lineChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
                 <XAxis dataKey="time" axisLine={false} tickLine={false} tick={AXIS_TICK} />
@@ -394,6 +416,7 @@ export default function AdminDashboardPage() {
                 <Line type="monotone" dataKey="checkInsRealizados" stroke={CHART_TEAL} strokeWidth={2} dot={false} name="Check-Ins Realizados" />
               </LineChart>
             </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </div>

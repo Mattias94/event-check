@@ -20,11 +20,13 @@ export default function UserProtection({ children, requireUserRole = true }: Use
     const user = getCurrentUser()
 
     if (!user) {
+      setIsLoading(false)
       router.replace('/login')
       return
     }
 
     if (requireUserRole && user.role === 'admin') {
+      setIsLoading(false)
       router.replace('/admin/events')
       return
     }

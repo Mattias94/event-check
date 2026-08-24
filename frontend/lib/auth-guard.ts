@@ -4,8 +4,16 @@ import { User } from './auth'
 
 export function getCurrentUser(): User | null {
   if (typeof window === 'undefined') return null
-  const userJson = localStorage.getItem('currentUser')
-  return userJson ? JSON.parse(userJson) : null
+
+  try {
+    const userJson = localStorage.getItem('currentUser')
+    if (!userJson) return null
+    return JSON.parse(userJson) as User
+  } catch {
+    localStorage.removeItem('currentUser')
+    localStorage.removeItem('authToken')
+    return null
+  }
 }
 
 export function isAdmin(): boolean {
@@ -22,7 +30,7 @@ export function isAuthenticated(): boolean {
   return getCurrentUser() !== null
 }
 
-export function requireAuth(router: any): boolean {
+export function requireAuth(router: { push: (path: string) => void }): boolean {
   if (!isAuthenticated()) {
     router.push('/login')
     return false
@@ -30,7 +38,7 @@ export function requireAuth(router: any): boolean {
   return true
 }
 
-export function requireAdmin(router: any): boolean {
+export function requireAdmin(router: { push: (path: string) => void }): boolean {
   if (!isAdmin()) {
     router.push('/dashboard')
     return false

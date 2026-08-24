@@ -3,7 +3,24 @@
  * Centraliza a URL base, tratamento de erros e parsing de resposta.
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+const PRODUCTION_API_URL = 'https://event-check-backend.vercel.app/api'
+const LOCAL_API_URL = 'http://localhost:3001/api'
+
+function resolveApiUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL
+  }
+
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return LOCAL_API_URL
+    }
+    return PRODUCTION_API_URL
+  }
+
+  return PRODUCTION_API_URL
+}
 
 /** Token de sessão (JWT) emitido pelo backend no login/registro. */
 function getAuthToken(): string | null {
@@ -13,15 +30,23 @@ function getAuthToken(): string | null {
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const token = getAuthToken()
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options?.headers,
-    },
-  })
+  const apiUrl = resolveApiUrl()
+
+  let response: Response
+  try {
+    response = await fetch(`${apiUrl}${path}`, {
+      ...options,
+      // Auth via Bearer no header; omit evita bloqueio cross-site no Safari mobile
+      credentials: 'omit',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options?.headers,
+      },
+    })
+  } catch {
+    throw new Error('Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.')
+  }
 
   if (!response.ok) {
     let message = `Erro na requisição (${response.status})`
