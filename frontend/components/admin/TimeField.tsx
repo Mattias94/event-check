@@ -62,7 +62,7 @@ const TimeField = forwardRef<HTMLInputElement, TimeFieldProps>(
         <fieldset className="w-full min-w-0 border-0 p-0">
           <legend className={formLabelClassName}>Horário</legend>
           <div className="grid min-w-0 grid-cols-2 gap-2 sm:gap-3" role="group" aria-describedby={describedBy}>
-            <div className="min-w-0 overflow-hidden">
+            <div className="min-w-0">
               <label htmlFor={hourId} className="sr-only">
                 Hora
               </label>
@@ -83,7 +83,7 @@ const TimeField = forwardRef<HTMLInputElement, TimeFieldProps>(
                 ))}
               </select>
             </div>
-            <div className="min-w-0 overflow-hidden">
+            <div className="min-w-0">
               <label htmlFor={minuteId} className="sr-only">
                 Minuto
               </label>

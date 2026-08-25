@@ -10,10 +10,10 @@ export const formControlClassName = cn(
   'md:min-h-0 md:h-11 md:py-2 md:text-sm',
 )
 
-/** Select nativo — evita overflow do texto selecionado no mobile. */
+/** Select nativo — uma única seta do navegador, sem ícone duplicado. */
 export const selectControlClassName = cn(
   formControlClassName,
-  'cursor-pointer truncate appearance-none bg-no-repeat pr-10',
+  'cursor-pointer truncate pr-8',
 )
 
 export const formLabelClassName = 'mb-1.5 block text-sm font-medium text-foreground'

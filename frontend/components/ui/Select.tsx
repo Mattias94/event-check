@@ -1,8 +1,6 @@
 import * as React from 'react'
-import { ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import {
-  formControlClassName,
   formErrorClassName,
   formHintClassName,
   formLabelClassName,
@@ -34,29 +32,23 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             )}
           </label>
         )}
-        <div className="relative min-w-0 overflow-hidden">
-          <select
-            ref={ref}
-            id={selectId}
-            name={name}
-            required={required}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={describedBy}
-            aria-required={required || undefined}
-            className={cn(
-              selectControlClassName,
-              error && 'border-destructive focus-visible:ring-destructive',
-              className,
-            )}
-            {...rest}
-          >
-            {children}
-          </select>
-          <ChevronDown
-            className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
-        </div>
+        <select
+          ref={ref}
+          id={selectId}
+          name={name}
+          required={required}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
+          aria-required={required || undefined}
+          className={cn(
+            selectControlClassName,
+            error && 'border-destructive focus-visible:ring-destructive',
+            className,
+          )}
+          {...rest}
+        >
+          {children}
+        </select>
         {hint && !error && (
           <p id={hintId} className={formHintClassName}>
             {hint}

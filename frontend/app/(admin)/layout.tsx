@@ -25,16 +25,20 @@ const NAV_ITEMS = [
   { href: '/admin/events/create', label: 'Criar evento', icon: CalendarPlus },
 ]
 
-function Brand() {
+function Brand({ showBadge = true, className }: { showBadge?: boolean; className?: string }) {
   return (
-    <div className="flex min-w-0 items-center gap-2">
+    <div className={cn('flex min-w-0 items-center gap-2', className)}>
       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
         <CalendarCheck2 className="size-5" aria-hidden="true" />
       </span>
-      <span className="truncate text-base font-bold tracking-tight text-foreground">
+      <span className="truncate text-sm font-bold tracking-tight text-foreground sm:text-base">
         Event-Check
       </span>
-      <Badge variant="secondary" className="shrink-0">Admin</Badge>
+      {showBadge && (
+        <Badge variant="secondary" className="shrink-0 text-xs">
+          Admin
+        </Badge>
+      )}
     </div>
   )
 }
@@ -154,12 +158,12 @@ function AdminShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Header mobile */}
-      <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b bg-card px-4 lg:hidden">
+      <header className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b bg-card px-3 sm:gap-3 sm:px-4 lg:hidden">
         <Button
           ref={menuButtonRef}
           variant="ghost"
           size="icon"
-          className="h-11 w-11 shrink-0"
+          className="size-11 shrink-0"
           onClick={() => setMobileOpen(true)}
           aria-label="Abrir menu de navegação"
           aria-expanded={mobileOpen}
@@ -167,7 +171,7 @@ function AdminShell({ children }: { children: ReactNode }) {
         >
           <Menu aria-hidden="true" />
         </Button>
-        <Brand />
+        <Brand showBadge={false} className="flex-1" />
       </header>
 
       {/* Drawer mobile */}
@@ -186,12 +190,12 @@ function AdminShell({ children }: { children: ReactNode }) {
             aria-label="Menu de navegação"
             className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r bg-card shadow-xl"
           >
-            <div className="flex h-14 shrink-0 items-center justify-between border-b px-4">
-              <Brand />
+            <div className="flex h-14 shrink-0 items-center gap-2 border-b px-3 sm:px-4">
+              <Brand showBadge={false} className="min-w-0 flex-1" />
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-11 w-11"
+                className="size-11 shrink-0"
                 data-close-menu
                 onClick={() => {
                   setMobileOpen(false)

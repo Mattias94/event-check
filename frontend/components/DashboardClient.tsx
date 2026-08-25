@@ -148,18 +148,18 @@ export default function DashboardClient() {
     <div className="min-h-screen overflow-x-clip bg-background">
       {/* Header */}
       <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 md:px-6">
-          <div className="flex min-w-0 items-center gap-2.5">
+        <div className="mx-auto flex h-14 min-h-14 max-w-7xl items-center justify-between gap-2 px-3 sm:h-16 sm:gap-3 sm:px-4 md:px-6">
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <CalendarCheck2 className="size-5" aria-hidden="true" />
             </div>
-            <span className="truncate text-base font-semibold tracking-tight text-foreground md:text-lg">
+            <span className="truncate text-sm font-semibold tracking-tight text-foreground sm:text-base md:text-lg">
               Event-Check
             </span>
           </div>
 
           {/* Ações - desktop */}
-          <div className="hidden items-center gap-2 sm:flex">
+          <div className="hidden shrink-0 items-center gap-2 sm:flex">
             {user?.role === 'admin' && (
               <Button variant="outline" size="sm" onClick={() => router.push('/admin/events')}>
                 <ShieldCheck aria-hidden="true" />
@@ -176,7 +176,7 @@ export default function DashboardClient() {
           <Button
             variant="ghost"
             size="icon"
-            className="size-11 sm:hidden"
+            className="size-11 shrink-0 sm:hidden"
             onClick={() => setMenuOpen((open) => !open)}
             aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
             aria-expanded={menuOpen}
