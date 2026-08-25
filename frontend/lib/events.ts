@@ -1,6 +1,7 @@
 import { api } from './api'
 import { getUserById } from './auth'
 import { Event, EnrollmentRecord, EnrollmentWithUser, EventFilters, CheckInResult } from './types'
+import { mergeEventCategories } from './event-categories'
 import { EventCreationData, EventUpdateData } from './schemas'
 
 export async function getUpcomingEvents(filters?: EventFilters): Promise<Event[]> {
@@ -83,7 +84,12 @@ export async function getEventsByAdmin(adminId: string): Promise<Event[]> {
 }
 
 export async function getCategories(): Promise<string[]> {
-  return api.get<string[]>('/events/categories')
+  try {
+    const fromApi = await api.get<string[]>('/events/categories')
+    return mergeEventCategories(fromApi)
+  } catch {
+    return mergeEventCategories()
+  }
 }
 
 /**

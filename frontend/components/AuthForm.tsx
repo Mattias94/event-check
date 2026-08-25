@@ -106,27 +106,26 @@ export default function AuthForm() {
             error={errors.dob?.message as string | undefined}
           />
 
-          <div className="relative">
-            <Input
-              label="Senha"
-              name="password"
-              type={showPassword ? 'text' : 'password'}
-              autoComplete="new-password"
-              placeholder="Mínimo de 8 caracteres"
-              icon={<Lock />}
-              className="pr-11"
-              {...register('password')}
-              error={errors.password?.message as string | undefined}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-              className="absolute right-0 top-[26px] flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground md:h-10 md:w-10"
-            >
-              {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            </button>
-          </div>
+          <Input
+            label="Senha"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="new-password"
+            placeholder="Mínimo de 8 caracteres"
+            icon={<Lock />}
+            {...register('password')}
+            error={errors.password?.message as string | undefined}
+            endAdornment={
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                className="flex h-full w-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            }
+          />
 
           {error && (
             <div

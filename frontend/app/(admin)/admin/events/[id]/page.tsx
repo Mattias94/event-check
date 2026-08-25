@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft, CalendarPlus, Trash2, UserCheck, Users, XCircle } from 'lucide-react'
+import { CalendarPlus, Trash2, UserCheck, Users, XCircle } from 'lucide-react'
 import AdminEventForm from '../../../../../components/admin/AdminEventForm'
 import LoadingState from '../../../../../components/LoadingState'
 import ErrorState from '../../../../../components/ErrorState'
@@ -124,25 +124,15 @@ export default function EventDetailPage() {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-6 md:py-8">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => router.push('/admin/events')}
-        className="-ml-2 mb-4 h-11 text-muted-foreground hover:text-foreground md:h-9"
-      >
-        <ArrowLeft aria-hidden="true" />
-        Voltar
-      </Button>
-
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <h1 className="min-w-0 break-words text-2xl font-bold tracking-tight text-foreground md:text-3xl">
             {event.title}
           </h1>
           <StatusBadge status={event.status} />
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex shrink-0 flex-wrap gap-2">
           {event.status === 'active' && (
             <Button variant="outline" onClick={handleCancel} disabled={actionLoading}>
               <XCircle aria-hidden="true" />
@@ -167,7 +157,7 @@ export default function EventDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
-        <div className="lg:col-span-2">
+        <div className="min-w-0 lg:col-span-2">
           <AdminEventForm
             initialData={event}
             onSubmit={handleUpdate}
@@ -201,9 +191,9 @@ export default function EventDetailPage() {
                           </div>
                         </div>
                         {enrollment.checkedInAt ? (
-                          <Badge variant="success">Check-in feito</Badge>
+                          <Badge variant="success" className="shrink-0">Check-in feito</Badge>
                         ) : (
-                          <Badge variant="secondary">Aguardando</Badge>
+                          <Badge variant="secondary" className="shrink-0">Aguardando</Badge>
                         )}
                       </div>
                       <div className="mt-0.5 text-xs text-muted-foreground">

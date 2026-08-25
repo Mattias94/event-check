@@ -147,7 +147,7 @@ export default function EventDetailPage() {
             </Badge>
             <Badge variant={statusVariant}>{statusLabel}</Badge>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+          <h1 className="break-words text-2xl font-bold tracking-tight text-foreground md:text-3xl">
             {event.title}
           </h1>
         </div>
@@ -160,7 +160,7 @@ export default function EventDetailPage() {
                   {event.description}
                 </p>
 
-                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
                   {details.map(({ icon: Icon, label, value }) => (
                     <div key={label} className="flex items-center gap-3 rounded-lg border bg-secondary/50 p-3 md:p-4">
                       <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">

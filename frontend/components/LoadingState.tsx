@@ -5,7 +5,7 @@ import { Skeleton } from './ui/Skeleton'
 export default function LoadingState() {
   return (
     <div
-      className="min-h-screen bg-background px-4 py-8 md:px-6"
+      className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 md:py-8"
       role="status"
       aria-busy="true"
       aria-live="polite"

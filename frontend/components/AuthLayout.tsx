@@ -3,7 +3,7 @@ import { CalendarCheck2 } from 'lucide-react'
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background p-4 py-10 md:py-12">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-x-clip bg-background p-4 py-10 md:py-12">
       {/* Fundo decorativo sutil */}
       <div
         aria-hidden="true"
@@ -11,7 +11,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-32 left-1/2 h-64 w-[32rem] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
+        className="pointer-events-none absolute -top-32 left-1/2 h-64 w-[min(32rem,100vw)] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"
       />
 
       <div className="relative z-10 w-full max-w-md">

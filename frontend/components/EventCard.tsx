@@ -33,8 +33,8 @@ export default function EventCard({ event }: EventCardProps) {
           <EventCoverImage src={event.coverImageUrl} maxHeightClass="max-h-44 sm:max-h-48" />
         )}
         <CardHeader className="pb-3">
-          <div className="flex items-start justify-between gap-2">
-            <CardTitle className="line-clamp-2 text-base leading-snug md:text-lg">
+          <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+            <CardTitle className="min-w-0 flex-1 line-clamp-2 text-base leading-snug md:text-lg">
               {event.title}
             </CardTitle>
             <Badge variant={statusVariant} className="shrink-0 whitespace-nowrap">

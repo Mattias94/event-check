@@ -50,13 +50,17 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     let message = `Erro na requisição (${response.status})`
-    try {
-      const body = await response.json()
-      if (body?.message) {
-        message = Array.isArray(body.message) ? body.message.join(', ') : body.message
+    if (response.status === 413) {
+      message = 'Imagem muito grande. Tente uma foto com resolução menor.'
+    } else {
+      try {
+        const body = await response.json()
+        if (body?.message) {
+          message = Array.isArray(body.message) ? body.message.join(', ') : body.message
+        }
+      } catch {
+        // resposta sem corpo JSON, mantém mensagem padrão
       }
-    } catch {
-      // resposta sem corpo JSON, mantém mensagem padrão
     }
     throw new Error(message)
   }

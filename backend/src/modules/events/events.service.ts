@@ -4,6 +4,7 @@ import { EnrollmentsRepository } from '../enrollments/enrollments.repository'
 import { MailService } from '../notifications/mail.service'
 import { UsersRepository } from '../users/users.repository'
 import { EventsRepository } from './events.repository'
+import { mergeEventCategories } from '../../common/event-categories'
 import { CreateEventDto } from './dtos/create-event.dto'
 import { UpdateEventDto } from './dtos/update-event.dto'
 
@@ -33,8 +34,9 @@ export class EventsService {
     return this.eventsRepository.findByAdmin(adminId)
   }
 
-  categories() {
-    return this.eventsRepository.findCategories()
+  async categories() {
+    const fromDb = await this.eventsRepository.findCategories()
+    return mergeEventCategories(fromDb)
   }
 
   create(dto: CreateEventDto) {

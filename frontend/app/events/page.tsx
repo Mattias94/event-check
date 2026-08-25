@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Search } from 'lucide-react'
+import { DEFAULT_EVENT_CATEGORIES } from '../../lib/event-categories'
 import { getUpcomingEvents, getCategories } from '../../lib/events'
 import { Event, EventFilters } from '../../lib/types'
 import UserProtection from '../../components/UserProtection'
@@ -23,7 +24,7 @@ function EventsPageContent() {
   const [selectedCategory, setSelectedCategory] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [categories, setCategories] = useState<string[]>([])
+  const [categories, setCategories] = useState<string[]>([...DEFAULT_EVENT_CATEGORIES])
 
   const hasActiveFilters = Boolean(searchQuery.trim() || selectedCategory || startDate || endDate)
 
@@ -60,6 +61,7 @@ function EventsPageContent() {
       setCategories(cats)
     } catch (err) {
       console.error('Erro ao carregar categorias:', err)
+      setCategories([...DEFAULT_EVENT_CATEGORIES])
     }
   }
 
@@ -76,7 +78,7 @@ function EventsPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen overflow-x-clip bg-background">
       <header className="border-b bg-card">
         <div className="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
           <Button
@@ -108,13 +110,13 @@ function EventsPageContent() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <div className="sm:w-56">
+              <div className="w-full min-w-0">
                 <Select
                   aria-label="Filtrar por categoria"
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
                 >
-                  <option value="">Todas as categorias</option>
+                  <option value="">Todas</option>
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
@@ -122,7 +124,7 @@ function EventsPageContent() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <Input
                 type="date"
                 label="Data inicial"

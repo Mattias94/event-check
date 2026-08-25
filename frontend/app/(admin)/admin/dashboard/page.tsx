@@ -8,7 +8,6 @@ import { getCurrentUserId, requireAdmin } from '../../../../lib/auth-guard'
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import {
   AlertCircle,
-  ArrowLeft,
   CalendarDays,
   Clock,
   FileDown,
@@ -243,10 +242,7 @@ function AdminDashboardContent() {
           <AlertCircle className="size-6" aria-hidden="true" />
         </div>
         <p className="font-medium text-foreground">Evento não encontrado</p>
-        <Button variant="outline" onClick={() => router.push('/admin/events')}>
-          <ArrowLeft aria-hidden="true" />
-          Voltar para Meus Eventos
-        </Button>
+        <p className="text-sm text-muted-foreground">Use o menu lateral para acessar seus eventos.</p>
       </div>
     )
   }
@@ -300,9 +296,9 @@ function AdminDashboardContent() {
   ]
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 md:py-8">
+    <div className="mx-auto w-full min-w-0 max-w-7xl px-4 py-6 md:px-6 md:py-8">
       {/* Cabeçalho da página */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between md:mb-8">
+      <div className="mb-6 md:mb-8">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
             Visão Geral do Evento
@@ -311,14 +307,6 @@ function AdminDashboardContent() {
             {event.title} — {new Date(event.date).toLocaleDateString('pt-BR')}
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => router.push('/admin/events')}
-          className="w-full shrink-0 sm:w-auto"
-        >
-          <ArrowLeft aria-hidden="true" />
-          Voltar para Meus Eventos
-        </Button>
       </div>
 
       {/* Stat tiles */}
@@ -331,7 +319,7 @@ function AdminDashboardContent() {
                 <Icon className="size-5" aria-hidden="true" />
               </div>
               <p className="mt-3 text-2xl font-bold text-foreground md:text-3xl">{stat.value}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+              <p className="mt-1 text-xs text-muted-foreground sm:text-sm">{stat.label}</p>
               <p className="mt-0.5 truncate text-xs text-muted-foreground">{stat.helper}</p>
             </Card>
           )
@@ -407,8 +395,9 @@ function AdminDashboardContent() {
                   labelStyle={CHART_TOOLTIP_LABEL}
                 />
                 <Legend
+                  wrapperStyle={{ paddingTop: 8 }}
                   formatter={(value: string) => (
-                    <span style={{ color: '#64748b', fontSize: 12 }}>{value}</span>
+                    <span style={{ color: '#64748b', fontSize: 11 }}>{value}</span>
                   )}
                 />
                 <Line type="monotone" dataKey="capacidadeTotal" stroke={CHART_BLUE} strokeWidth={2} dot={false} name="Capacidade Total" />
@@ -469,8 +458,8 @@ function AdminDashboardContent() {
                         key={enrollment.id}
                         className="border-b transition-colors hover:bg-muted/50"
                       >
-                        <td className="py-3 pr-3 font-medium text-foreground">{enrollment.userName}</td>
-                        <td className="py-3 pr-3 text-muted-foreground">{enrollment.userEmail}</td>
+                        <td className="max-w-[10rem] truncate py-3 pr-3 font-medium text-foreground">{enrollment.userName}</td>
+                        <td className="max-w-[12rem] truncate py-3 pr-3 text-muted-foreground">{enrollment.userEmail}</td>
                         <td className="py-3 pr-3">
                           <Badge variant="success">Confirmado</Badge>
                         </td>

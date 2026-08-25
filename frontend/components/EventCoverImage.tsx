@@ -4,6 +4,7 @@ import { cn } from '../lib/utils'
 
 interface EventCoverImageProps {
   src: string
+  alt?: string
   className?: string
   /** Limita altura em telas maiores sem distorcer a imagem */
   maxHeightClass?: string
@@ -11,6 +12,7 @@ interface EventCoverImageProps {
 
 export default function EventCoverImage({
   src,
+  alt = '',
   className,
   maxHeightClass = 'max-h-44 sm:max-h-52 md:max-h-64',
 }: EventCoverImageProps) {
@@ -26,7 +28,7 @@ export default function EventCoverImage({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
-        alt=""
+        alt={alt}
         className="absolute inset-0 h-full w-full object-cover object-center"
         loading="lazy"
         decoding="async"

@@ -1,34 +1,52 @@
 import * as React from 'react'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import {
+  formControlClassName,
+  formErrorClassName,
+  formHintClassName,
+  formLabelClassName,
+  selectControlClassName,
+} from '../../lib/form-styles'
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string
   error?: string | null
+  hint?: string
 }
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, name, error, className, id, children, ...rest }, ref) => {
-    const inputId = id ?? name
+  ({ label, name, error, hint, className, id, required, children, ...rest }, ref) => {
+    const selectId = id ?? name
+    const errorId = error && selectId ? `${selectId}-error` : undefined
+    const hintId = hint && selectId ? `${selectId}-hint` : undefined
+    const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined
+
     return (
-      <div className="w-full">
+      <div className="w-full min-w-0">
         {label && (
-          <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-foreground">
+          <label htmlFor={selectId} className={formLabelClassName}>
             {label}
+            {required && (
+              <span className="ml-0.5 text-destructive" aria-hidden="true">
+                *
+              </span>
+            )}
           </label>
         )}
-        <div className="relative">
+        <div className="relative min-w-0 overflow-hidden">
           <select
             ref={ref}
-            id={inputId}
+            id={selectId}
             name={name}
+            required={required}
             aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy}
+            aria-required={required || undefined}
             className={cn(
-              'flex h-11 w-full appearance-none rounded-md border border-input bg-card px-3 py-2 pr-9 text-base shadow-sm transition-colors md:h-10 md:text-sm',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-              'disabled:cursor-not-allowed disabled:opacity-50',
+              selectControlClassName,
               error && 'border-destructive focus-visible:ring-destructive',
-              className
+              className,
             )}
             {...rest}
           >
@@ -39,10 +57,19 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             aria-hidden="true"
           />
         </div>
-        {error && <p className="mt-1.5 text-sm text-destructive">{error}</p>}
+        {hint && !error && (
+          <p id={hintId} className={formHintClassName}>
+            {hint}
+          </p>
+        )}
+        {error && (
+          <p id={errorId} role="alert" className={formErrorClassName}>
+            {error}
+          </p>
+        )}
       </div>
     )
-  }
+  },
 )
 Select.displayName = 'Select'
 

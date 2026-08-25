@@ -16,13 +16,13 @@ import {
   XCircle,
 } from 'lucide-react'
 import EventCoverImage from '../../../../components/EventCoverImage'
+import EventOccupancyPieChart from '../../../../components/admin/EventOccupancyPieChart'
 import LoadingState from '../../../../components/LoadingState'
 import ErrorState from '../../../../components/ErrorState'
 import EmptyState from '../../../../components/EmptyState'
 import { Card } from '../../../../components/ui/Card'
 import { Badge } from '../../../../components/ui/Badge'
 import Button from '../../../../components/ui/Button'
-import { Progress } from '../../../../components/ui/Progress'
 import { getEventsByAdmin, deleteEvent, cancelEvent } from '../../../../lib/events'
 import { getCurrentUserId, requireAdmin } from '../../../../lib/auth-guard'
 import { Event } from '../../../../lib/types'
@@ -119,12 +119,6 @@ export default function AdminEventListPage() {
     }
   }
 
-  function handleLogout() {
-    localStorage.removeItem('currentUser')
-    localStorage.removeItem('authToken')
-    router.push('/login')
-  }
-
   if (loading) return <LoadingState />
   if (error) return <ErrorState message={error} onRetry={loadEvents} />
 
@@ -157,13 +151,18 @@ export default function AdminEventListPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-6 md:py-8">
-      {/* Toast Container */}
-      <div className="fixed right-4 top-4 z-[60] space-y-2">
+      {/* Toasts */}
+      <div
+        className="fixed right-4 top-16 z-[60] space-y-2 lg:top-4"
+        aria-live="polite"
+        aria-relevant="additions"
+        aria-atomic="true"
+      >
         {toasts.map(toast => (
           <div
             key={toast.id}
             role="status"
-            className="flex max-w-xs animate-fade-in items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-lg"
+            className="flex max-w-[calc(100vw-2rem)] animate-fade-in items-center gap-2 rounded-lg border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-lg sm:max-w-xs"
           >
             {toast.type === 'success' ? (
               <CheckCircle2 className="size-4 shrink-0 text-success" aria-hidden="true" />
@@ -205,76 +204,72 @@ export default function AdminEventListPage() {
                     <Icon className="size-5" aria-hidden="true" />
                   </div>
                   <p className="mt-3 text-2xl font-bold text-foreground md:text-3xl">{stat.value}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+                  <p className="mt-1 text-xs text-muted-foreground sm:text-sm">{stat.label}</p>
                 </Card>
               )
             })}
           </div>
 
           {/* Lista de eventos */}
-          <div className="grid grid-cols-1 gap-4">
+          <ul className="grid grid-cols-1 gap-5" aria-label="Lista de eventos">
             {events.map(event => {
-              const ratio = event.capacity > 0 ? event.currentEnrollments / event.capacity : 0
+              const titleId = `event-title-${event.id}`
               return (
-                <Card key={event.id} className="overflow-hidden p-0 transition-shadow hover:shadow-md">
+                <li key={event.id}>
+                <Card className="overflow-hidden p-0 transition-shadow hover:shadow-md">
+                <article aria-labelledby={titleId}>
                   {event.coverImageUrl && (
-                    <EventCoverImage src={event.coverImageUrl} maxHeightClass="max-h-40 sm:max-h-44" />
+                    <EventCoverImage
+                      src={event.coverImageUrl}
+                      maxHeightClass="max-h-44 sm:max-h-52 md:max-h-56"
+                      alt={`Capa do evento ${event.title}`}
+                    />
                   )}
-                  <div className="flex flex-col gap-4 p-4 md:p-5 lg:flex-row lg:items-start">
+                  <div className="grid min-h-0 grid-cols-1 gap-5 p-5 md:p-6 md:grid-cols-2 xl:grid-cols-3 xl:items-stretch xl:gap-0">
                     {/* Informações do evento */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-lg font-semibold text-foreground line-clamp-1">
+                    <div className="flex min-w-0 flex-col items-center justify-center px-2 text-center md:px-4 xl:px-6">
+                      <div className="flex w-full max-w-md flex-col items-center gap-2">
+                        <h2 id={titleId} className="line-clamp-2 text-lg font-semibold text-foreground md:text-xl">
                           {event.title}
-                        </h3>
+                        </h2>
                         <StatusBadge status={event.status} />
                       </div>
 
-                      <div className="mt-2 space-y-1.5 text-sm text-muted-foreground">
-                        <p className="flex flex-wrap items-center gap-2">
+                      <dl className="mt-4 w-full max-w-md space-y-2.5 text-sm text-muted-foreground">
+                        <div className="flex items-center justify-center gap-2">
+                          <dt className="sr-only">Data e horário</dt>
                           <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
-                          <span className="whitespace-nowrap">
+                          <dd>
                             {new Date(event.date).toLocaleDateString('pt-BR')} às {event.time}
-                          </span>
-                        </p>
-                        <p className="flex items-center gap-2">
+                          </dd>
+                        </div>
+                        <div className="flex items-center justify-center gap-2">
+                          <dt className="sr-only">Local</dt>
                           <MapPin className="size-4 shrink-0" aria-hidden="true" />
-                          <span className="truncate">{event.location}</span>
-                        </p>
-                        <p className="flex items-center gap-2">
+                          <dd className="line-clamp-2">{event.location}</dd>
+                        </div>
+                        <div className="flex items-center justify-center gap-2">
+                          <dt className="sr-only">Categoria</dt>
                           <Tag className="size-4 shrink-0" aria-hidden="true" />
-                          {event.category}
-                        </p>
-                      </div>
+                          <dd>{event.category}</dd>
+                        </div>
+                      </dl>
                     </div>
 
-                    {/* Capacidade */}
-                    <div className="w-full space-y-2 lg:w-56 lg:shrink-0 lg:pt-1">
-                      <div className="flex justify-between text-xs text-muted-foreground">
-                        <span>Inscritos</span>
-                        <span className="font-medium text-foreground">
-                          {event.currentEnrollments} / {event.capacity}
-                        </span>
-                      </div>
-                      <Progress
-                        value={event.currentEnrollments}
-                        max={event.capacity}
-                        indicatorClassName={
-                          ratio > 0.8
-                            ? 'bg-destructive'
-                            : ratio > 0.5
-                            ? 'bg-warning'
-                            : 'bg-success'
-                        }
-                      />
+                    {/* Gráfico de ocupação */}
+                    <div className="flex w-full min-w-0 flex-1 items-center justify-center border-y border-border py-4 md:py-5 xl:border-x xl:border-y-0 xl:px-4 xl:py-6">
+                      <EventOccupancyPieChart event={event} />
                     </div>
 
                     {/* Ações */}
-                    <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:w-44 lg:shrink-0 lg:grid-cols-1">
+                    <div
+                      className="flex w-full flex-col justify-center gap-2 px-2 md:col-span-2 xl:col-span-1 xl:px-4"
+                      aria-label={`Ações do evento ${event.title}`}
+                    >
                       <Button
                         variant="secondary"
                         onClick={() => router.push(`/admin/dashboard?eventId=${event.id}`)}
-                        className="h-11 justify-start sm:h-10"
+                        className="h-11 w-full justify-center sm:h-10"
                       >
                         <LayoutDashboard aria-hidden="true" />
                         Dashboard
@@ -282,7 +277,7 @@ export default function AdminEventListPage() {
                       <Button
                         variant="secondary"
                         onClick={() => router.push(`/admin/events/${event.id}/check-in`)}
-                        className="justify-start"
+                        className="w-full justify-center"
                       >
                         <QrCode aria-hidden="true" />
                         Ler QR Code
@@ -290,7 +285,7 @@ export default function AdminEventListPage() {
                       <Button
                         variant="outline"
                         onClick={() => router.push(`/admin/events/${event.id}`)}
-                        className="justify-start"
+                        className="w-full justify-center"
                       >
                         <Pencil aria-hidden="true" />
                         Editar
@@ -300,7 +295,7 @@ export default function AdminEventListPage() {
                         <Button
                           variant="outline"
                           onClick={() => handleCancel(event.id, event.title)}
-                          className="justify-start text-warning hover:text-warning"
+                          className="w-full justify-center text-warning hover:text-warning"
                         >
                           <XCircle aria-hidden="true" />
                           Cancelar
@@ -311,7 +306,7 @@ export default function AdminEventListPage() {
                         variant="outline"
                         onClick={() => handleDelete(event.id, event.title)}
                         disabled={event.currentEnrollments > 0}
-                        className="justify-start text-destructive hover:text-destructive"
+                        className="w-full justify-center text-destructive hover:text-destructive"
                         title={
                           event.currentEnrollments > 0
                             ? `${event.currentEnrollments} inscrito(s). Cancele primeiro.`
@@ -323,10 +318,12 @@ export default function AdminEventListPage() {
                       </Button>
                     </div>
                   </div>
+                </article>
                 </Card>
+                </li>
               )
             })}
-          </div>
+          </ul>
         </div>
       )}
     </div>

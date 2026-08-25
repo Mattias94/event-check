@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
 import AdminEventForm from '../../../../../components/admin/AdminEventForm'
-import Button from '../../../../../components/ui/Button'
 import { createEvent } from '../../../../../lib/events'
 import { getCurrentUserId, requireAdmin } from '../../../../../lib/auth-guard'
 import { EventCreationData } from '../../../../../lib/schemas'
@@ -46,17 +44,7 @@ export default function CreateEventPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-6 md:px-6 md:py-8">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => router.back()}
-        className="-ml-2 mb-4 h-11 text-muted-foreground hover:text-foreground md:h-9"
-      >
-        <ArrowLeft aria-hidden="true" />
-        Voltar
-      </Button>
-
+    <div className="mx-auto w-full min-w-0 max-w-2xl px-4 py-6 md:px-6 md:py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
           Criar Novo Evento

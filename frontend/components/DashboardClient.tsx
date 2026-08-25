@@ -14,14 +14,11 @@ import {
   LogOut,
   MapPin,
   Menu,
-  Music,
-  Palette,
   Pencil,
   QrCode,
   ShieldCheck,
   Sparkles,
   TrendingUp,
-  Trophy,
   Users,
   X,
   XCircle,
@@ -41,11 +38,10 @@ import ProfileEditDialog from './ProfileEditDialog'
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   'Tecnologia': Laptop,
   'Negócios': TrendingUp,
-  'Saúde': HeartPulse,
   'Educação': BookOpen,
-  'Arte': Palette,
-  'Música': Music,
-  'Esporte': Trophy,
+  'Networking': Users,
+  'Saúde': HeartPulse,
+  'Outras': Sparkles,
 }
 
 function getCategoryIcon(category: string): LucideIcon {
@@ -149,7 +145,7 @@ export default function DashboardClient() {
     .toUpperCase()
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen overflow-x-clip bg-background">
       {/* Header */}
       <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 md:px-6">
@@ -236,7 +232,7 @@ export default function DashboardClient() {
                         <div className="flex flex-col gap-4 md:flex-row">
                           <div className="min-w-0 flex-1">
                             <div className="mb-3 flex flex-wrap items-start gap-2">
-                              <h3 className="min-w-0 flex-1 font-semibold leading-snug text-foreground">
+                              <h3 className="min-w-0 flex-1 line-clamp-2 font-semibold leading-snug text-foreground">
                                 {event.title}
                               </h3>
                               <Badge variant="success" className="shrink-0">
@@ -261,8 +257,8 @@ export default function DashboardClient() {
                               </p>
                             </div>
                           </div>
-                          <div className="flex shrink-0 flex-row items-center gap-3 md:flex-col md:items-end">
-                            <div className="flex size-20 items-center justify-center rounded-lg border bg-muted md:size-24">
+                          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center md:w-auto md:flex-col md:items-end">
+                            <div className="mx-auto flex size-20 shrink-0 items-center justify-center rounded-lg border bg-muted sm:mx-0 md:size-24">
                               <div className="flex flex-col items-center gap-1 text-muted-foreground">
                                 <QrCode className="size-8 md:size-10" aria-hidden="true" />
                                 <span className="text-[10px] font-medium">QR Code</span>

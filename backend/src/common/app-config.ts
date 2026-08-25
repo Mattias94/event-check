@@ -2,6 +2,8 @@ import { ValidationPipe } from '@nestjs/common'
 import { NestExpressApplication } from '@nestjs/platform-express'
 import cookieParser from 'cookie-parser'
 
+const JSON_BODY_LIMIT = '10mb'
+
 function isAllowedOrigin(origin: string): boolean {
   const configured = [
     process.env.CORS_ORIGIN,
@@ -35,6 +37,9 @@ function isAllowedOrigin(origin: string): boolean {
 }
 
 export function configureApp(app: NestExpressApplication): void {
+  app.useBodyParser('json', { limit: JSON_BODY_LIMIT })
+  app.useBodyParser('urlencoded', { limit: JSON_BODY_LIMIT, extended: true })
+
   app.enableCors({
     origin(origin, callback) {
       if (!origin || isAllowedOrigin(origin)) {

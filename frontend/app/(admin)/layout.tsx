@@ -1,22 +1,23 @@
 'use client'
 
-import { ReactNode, useState } from 'react'
+import { ReactNode, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   CalendarCheck2,
   CalendarDays,
   CalendarPlus,
-  ChevronRight,
   LogOut,
   Menu,
   Users,
   X,
 } from 'lucide-react'
 import AdminProtection from '../../components/AdminProtection'
+import SkipLink from '../../components/SkipLink'
 import { logoutSession } from '../../lib/auth'
 import { Badge } from '../../components/ui/Badge'
 import Button from '../../components/ui/Button'
+import { cn } from '../../lib/utils'
 
 const NAV_ITEMS = [
   { href: '/admin/events', label: 'Eventos', icon: CalendarDays },
@@ -33,7 +34,7 @@ function Brand() {
       <span className="truncate text-base font-bold tracking-tight text-foreground">
         Event-Check
       </span>
-      <Badge variant="secondary">Admin</Badge>
+      <Badge variant="secondary" className="shrink-0">Admin</Badge>
     </div>
   )
 }
@@ -41,8 +42,6 @@ function Brand() {
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname()
 
-  // Destaca apenas o item mais específico (ex.: em /admin/events/create,
-  // acende "Criar evento" e não "Eventos").
   const activeHref = NAV_ITEMS
     .filter(item => pathname === item.href || pathname.startsWith(`${item.href}/`))
     .sort((a, b) => b.href.length - a.href.length)[0]?.href
@@ -58,11 +57,13 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             href={item.href}
             onClick={onNavigate}
             aria-current={active ? 'page' : undefined}
-            className={`flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+            className={cn(
+              'flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
               active
                 ? 'bg-accent text-accent-foreground'
-                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-            }`}
+                : 'text-foreground/80 hover:bg-accent/50 hover:text-foreground',
+            )}
           >
             <Icon className="size-5 shrink-0" aria-hidden="true" />
             {item.label}
@@ -73,9 +74,42 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   )
 }
 
+function SidebarContent({
+  onNavigate,
+  onLogout,
+  hideBrand = false,
+}: {
+  onNavigate?: () => void
+  onLogout: () => void
+  hideBrand?: boolean
+}) {
+  return (
+    <>
+      {!hideBrand && (
+        <div className="flex h-16 shrink-0 items-center border-b px-4">
+          <Brand />
+        </div>
+      )}
+      <NavLinks onNavigate={onNavigate} />
+      <div className="mt-auto border-t p-3">
+        <Button
+          variant="ghost"
+          onClick={onLogout}
+          className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
+        >
+          <LogOut aria-hidden="true" />
+          Sair
+        </Button>
+      </div>
+    </>
+  )
+}
+
 function AdminShell({ children }: { children: ReactNode }) {
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const drawerRef = useRef<HTMLElement>(null)
 
   async function handleLogout() {
     await logoutSession()
@@ -84,55 +118,59 @@ function AdminShell({ children }: { children: ReactNode }) {
     router.push('/login')
   }
 
-  const logoutSection = (
-    <div className="border-t p-3">
-      <Button
-        variant="ghost"
-        onClick={handleLogout}
-        className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
-      >
-        <LogOut aria-hidden="true" />
-        Sair
-      </Button>
-    </div>
-  )
+  useEffect(() => {
+    if (!mobileOpen) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const closeButton = drawerRef.current?.querySelector<HTMLButtonElement>('[data-close-menu]')
+    closeButton?.focus()
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setMobileOpen(false)
+        menuButtonRef.current?.focus()
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [mobileOpen])
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Sidebar (desktop) — fica recolhida na borda esquerda e desliza
-          para dentro quando o mouse passa por cima (ou ao navegar por teclado) */}
-      <div className="group fixed inset-y-0 left-0 z-30 hidden lg:block">
-        <aside className="flex h-full w-60 -translate-x-[calc(100%-0.875rem)] flex-col border-r bg-card transition-transform duration-300 ease-out group-focus-within:translate-x-0 group-focus-within:shadow-xl group-hover:translate-x-0 group-hover:shadow-xl">
-          <div className="flex h-16 items-center border-b px-4">
-            <Brand />
-          </div>
-          <NavLinks />
-          {logoutSection}
-        </aside>
-        {/* Alça visível enquanto a sidebar está recolhida */}
-        <div
-          className="pointer-events-none absolute inset-y-0 left-0 flex w-3.5 items-center justify-center transition-opacity duration-200 group-focus-within:opacity-0 group-hover:opacity-0"
-          aria-hidden="true"
-        >
-          <ChevronRight className="size-3.5 text-muted-foreground" />
-        </div>
-      </div>
+    <div className="min-h-screen overflow-x-clip bg-background">
+      <SkipLink href="#admin-main-content">Ir para o conteúdo principal</SkipLink>
 
-      {/* Header (mobile) */}
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-card px-4 lg:hidden">
-        <Brand />
+      {/* Sidebar fixa — sempre visível no desktop */}
+      <aside
+        className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r bg-card shadow-sm lg:flex"
+        aria-label="Menu lateral do painel admin"
+      >
+        <SidebarContent onLogout={handleLogout} />
+      </aside>
+
+      {/* Header mobile */}
+      <header className="sticky top-0 z-40 flex h-14 items-center gap-3 border-b bg-card px-4 lg:hidden">
         <Button
+          ref={menuButtonRef}
           variant="ghost"
           size="icon"
-          className="h-11 w-11"
+          className="h-11 w-11 shrink-0"
           onClick={() => setMobileOpen(true)}
-          aria-label="Abrir menu"
+          aria-label="Abrir menu de navegação"
+          aria-expanded={mobileOpen}
+          aria-controls="admin-mobile-menu"
         >
           <Menu aria-hidden="true" />
         </Button>
+        <Brand />
       </header>
 
-      {/* Drawer (mobile) */}
+      {/* Drawer mobile */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
@@ -140,28 +178,47 @@ function AdminShell({ children }: { children: ReactNode }) {
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />
-          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] animate-fade-in flex-col border-r bg-card shadow-lg">
-            <div className="flex h-14 items-center justify-between border-b px-4">
+          <aside
+            ref={drawerRef}
+            id="admin-mobile-menu"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu de navegação"
+            className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r bg-card shadow-xl"
+          >
+            <div className="flex h-14 shrink-0 items-center justify-between border-b px-4">
               <Brand />
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-11 w-11"
-                onClick={() => setMobileOpen(false)}
-                aria-label="Fechar menu"
+                data-close-menu
+                onClick={() => {
+                  setMobileOpen(false)
+                  menuButtonRef.current?.focus()
+                }}
+                aria-label="Fechar menu de navegação"
               >
                 <X aria-hidden="true" />
               </Button>
             </div>
-            <NavLinks onNavigate={() => setMobileOpen(false)} />
-            {logoutSection}
-          </div>
+            <SidebarContent
+              hideBrand
+              onNavigate={() => setMobileOpen(false)}
+              onLogout={() => {
+                setMobileOpen(false)
+                void handleLogout()
+              }}
+            />
+          </aside>
         </div>
       )}
 
-      {/* Conteúdo — ocupa a tela toda; a sidebar recolhida deixa só a alça na borda */}
-      <div className="lg:pl-4">
-        <main className="min-h-screen">{children}</main>
+      {/* Conteúdo principal — deslocado pela largura da sidebar no desktop */}
+      <div className="min-w-0 lg:pl-60">
+        <main id="admin-main-content" tabIndex={-1} className="min-h-screen min-w-0 outline-none">
+          {children}
+        </main>
       </div>
     </div>
   )
