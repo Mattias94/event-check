@@ -32,7 +32,7 @@ export const eventCreationSchema = z.object({
       return selectedDate >= today
     }, 'Data não pode ser no passado'),
   time: z.string({ required_error: 'Selecione um horário' })
-    .regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Formato deve ser HH:MM')
+    .regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Use o formato HH:MM (24 horas, ex.: 14:30)')
     .transform((value) => value.slice(0, 5)),
   location: z.string({ required_error: 'Campo obrigatório' })
     .min(3, 'Localização deve ter no mínimo 3 caracteres'),
