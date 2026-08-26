@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Event" ADD COLUMN "latitude" DOUBLE PRECISION;
+ALTER TABLE "Event" ADD COLUMN "longitude" DOUBLE PRECISION;
+ALTER TABLE "Event" ADD COLUMN "placeId" TEXT;

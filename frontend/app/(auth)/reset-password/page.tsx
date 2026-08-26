@@ -3,11 +3,17 @@
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
-import { Lock, ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { Lock, ArrowLeft } from 'lucide-react'
 import AuthLayout from '../../../components/AuthLayout'
 import Input from '../../../components/ui/Input'
 import Button from '../../../components/ui/Button'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../../components/ui/Card'
+import {
+  AuthAlert,
+  AuthFooterLink,
+  AuthPageShell,
+  PasswordToggleButton,
+  authFormClassName,
+} from '../../../components/auth/AuthUi'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -31,6 +37,8 @@ function ResetPasswordForm() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const {
     register,
@@ -60,84 +68,84 @@ function ResetPasswordForm() {
   if (!token) {
     return (
       <AuthLayout>
-        <Card className="w-full">
-          <CardContent className="space-y-4 pt-6 text-center">
-            <p className="text-sm text-destructive">Link de recuperação inválido ou ausente.</p>
-            <Button className="w-full" onClick={() => router.push('/forgot-password')}>
-              Solicitar novo link
-            </Button>
-          </CardContent>
-        </Card>
+        <AuthPageShell title="Link inválido" description="Solicite um novo link de recuperação de senha.">
+          <Button className="w-full" onClick={() => router.push('/forgot-password')}>
+            Solicitar novo link
+          </Button>
+        </AuthPageShell>
       </AuthLayout>
     )
   }
 
   return (
     <AuthLayout>
-      <Card className="w-full">
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl md:text-2xl">Nova senha</CardTitle>
-          <CardDescription>Defina uma nova senha para sua conta.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-            <Input
-              label="Nova senha"
-              type="password"
-              autoComplete="new-password"
-              placeholder="Mínimo de 8 caracteres"
-              icon={<Lock />}
-              {...register('newPassword')}
-              error={errors.newPassword?.message}
-            />
-            <Input
-              label="Confirmar senha"
-              type="password"
-              autoComplete="new-password"
-              placeholder="Repita a nova senha"
-              icon={<Lock />}
-              {...register('confirmPassword')}
-              error={errors.confirmPassword?.message}
-            />
+      <AuthPageShell title="Nova senha" description="Defina uma nova senha para sua conta.">
+        <form className={authFormClassName} onSubmit={handleSubmit(onSubmit)}>
+          <Input
+            label="Nova senha"
+            type={showNewPassword ? 'text' : 'password'}
+            autoComplete="new-password"
+            placeholder="Mínimo de 8 caracteres"
+            icon={<Lock />}
+            {...register('newPassword')}
+            error={errors.newPassword?.message}
+            endAdornment={
+              <PasswordToggleButton
+                visible={showNewPassword}
+                onToggle={() => setShowNewPassword((v) => !v)}
+              />
+            }
+          />
+          <Input
+            label="Confirmar senha"
+            type={showConfirmPassword ? 'text' : 'password'}
+            autoComplete="new-password"
+            placeholder="Repita a nova senha"
+            icon={<Lock />}
+            {...register('confirmPassword')}
+            error={errors.confirmPassword?.message}
+            endAdornment={
+              <PasswordToggleButton
+                visible={showConfirmPassword}
+                onToggle={() => setShowConfirmPassword((v) => !v)}
+              />
+            }
+          />
 
-            {error && (
-              <div role="alert" className="flex items-start gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
-                <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                <span>{error}</span>
-              </div>
-            )}
+          {error && <AuthAlert variant="error">{error}</AuthAlert>}
+          {success && <AuthAlert variant="success">{success}</AuthAlert>}
 
-            {success && (
-              <div role="status" className="flex items-start gap-2 rounded-md border border-success/20 bg-success/10 p-3 text-sm text-success">
-                <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                <span>{success}</span>
-              </div>
-            )}
+          <Button type="submit" className="w-full" loading={loading} disabled={!!success}>
+            {loading ? 'Salvando...' : 'Redefinir senha'}
+          </Button>
+        </form>
 
-            <Button type="submit" className="w-full" loading={loading} disabled={!!success}>
-              {loading ? 'Salvando...' : 'Redefinir senha'}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-              onClick={() => router.push('/login')}
-            >
+        <div className="mt-6 text-center">
+          <AuthFooterLink onClick={() => router.push('/login')}>
+            <span className="inline-flex items-center gap-1.5">
               <ArrowLeft className="size-4" aria-hidden="true" />
               Voltar ao login
-            </button>
-          </div>
-        </CardContent>
-      </Card>
+            </span>
+          </AuthFooterLink>
+        </div>
+      </AuthPageShell>
+    </AuthLayout>
+  )
+}
+
+function ResetPasswordFallback() {
+  return (
+    <AuthLayout>
+      <AuthPageShell title="Carregando" description="Preparando a redefinição de senha.">
+        <p className="text-center text-sm text-muted-foreground">Aguarde um momento...</p>
+      </AuthPageShell>
     </AuthLayout>
   )
 }
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm text-muted-foreground">Carregando...</div>}>
+    <Suspense fallback={<ResetPasswordFallback />}>
       <ResetPasswordForm />
     </Suspense>
   )

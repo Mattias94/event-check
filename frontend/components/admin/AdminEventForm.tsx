@@ -9,6 +9,10 @@ import TimeField from './TimeField'
 import CapacityField from './CapacityField'
 import Input from '../ui/Input'
 import Select from '../ui/Select'
+import DateField from '../ui/DateField'
+import LocationField from '../ui/LocationField'
+import Textarea from '../ui/Textarea'
+import { FormAlert } from '../ui/FormAlert'
 import Button from '../ui/Button'
 import { Card } from '../ui/Card'
 import { createEventUpdateSchema, eventCreationSchema, EventCreationData, todayString } from '../../lib/schemas'
@@ -53,6 +57,7 @@ export default function AdminEventForm({
     handleSubmit,
     control,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<EventCreationData>({
     resolver: zodResolver(schema),
@@ -63,12 +68,21 @@ export default function AdminEventForm({
       date: initialData.date,
       time: initialData.time,
       location: initialData.location,
+      latitude: initialData.latitude ?? null,
+      longitude: initialData.longitude ?? null,
+      placeId: initialData.placeId ?? null,
       capacity: initialData.capacity,
       coverImageUrl: initialData.coverImageUrl ?? null,
     } : {
       coverImageUrl: null,
+      latitude: null,
+      longitude: null,
+      placeId: null,
     },
   })
+
+  const latitude = watch('latitude')
+  const longitude = watch('longitude')
 
   useEffect(() => {
     let active = true
@@ -136,7 +150,7 @@ export default function AdminEventForm({
   }
 
   return (
-    <Card className="w-full min-w-0 p-4 md:p-6">
+    <Card className="w-full min-w-0 overflow-visible p-4 md:p-6">
       {initialData && (
         <h2 className="mb-6 text-xl font-semibold text-foreground md:text-2xl">
           Editar Evento
@@ -144,9 +158,9 @@ export default function AdminEventForm({
       )}
 
       {readOnly && (
-        <div className="mb-4 rounded-md border border-warning/30 bg-warning/10 p-3 text-sm text-foreground">
+        <FormAlert variant="warning" className="mb-4">
           Este evento está {initialData?.status === 'cancelled' ? 'cancelado' : 'finalizado'} e não pode ser editado.
-        </div>
+        </FormAlert>
       )}
 
       <form className="space-y-6" onSubmit={handleSubmit(handleFormSubmit)} noValidate>
@@ -160,28 +174,18 @@ export default function AdminEventForm({
           error={errors.title?.message}
         />
 
-        <div>
-          <label htmlFor="event-description" className="mb-1.5 block text-sm font-medium text-foreground">
-            Descrição
-          </label>
-          <textarea
-            id="event-description"
-            {...register('description')}
-            disabled={readOnly}
-            placeholder="Digite uma descrição detalhada do evento"
-            aria-invalid={errors.description ? true : undefined}
-            aria-describedby={errors.description ? 'event-description-error' : undefined}
-            className="min-h-[6rem] w-full rounded-md border border-input bg-card px-3 py-2.5 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-            rows={4}
-          />
-          {errors.description && (
-            <p id="event-description-error" role="alert" className="mt-1.5 text-sm text-destructive">
-              {errors.description.message}
-            </p>
-          )}
-        </div>
+        <Textarea
+          id="event-description"
+          label="Descrição"
+          placeholder="Digite uma descrição detalhada do evento"
+          rows={4}
+          required
+          disabled={readOnly}
+          error={errors.description?.message}
+          {...register('description')}
+        />
 
-        <fieldset className="min-w-0 space-y-4 overflow-hidden rounded-lg border border-border p-4 md:p-5">
+        <fieldset className="min-w-0 space-y-4 overflow-visible rounded-lg border border-border p-4 md:p-5">
           <legend className="px-1 text-base font-semibold text-foreground">
             Informações do evento
           </legend>
@@ -209,17 +213,27 @@ export default function AdminEventForm({
             </div>
 
             <div className="min-w-0">
-            <Input
-              label="Data"
+            <Controller
               name="date"
-              type="date"
-              min={minDate}
-              required
-              hint="Não agende no passado"
-              className="date-input w-full"
-              disabled={readOnly}
-              {...register('date')}
-              error={errors.date?.message}
+              control={control}
+              render={({ field }) => (
+                <DateField
+                  id="event-date"
+                  ref={field.ref}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  min={minDate}
+                  required
+                  allowManualInput
+                  calendarSize="compact"
+                  showLabelIcon
+                  hint="Digite ou selecione — não agende no passado"
+                  showFormatHint={false}
+                  disabled={readOnly}
+                  error={errors.date?.message}
+                />
+              )}
             />
             </div>
 
@@ -253,14 +267,30 @@ export default function AdminEventForm({
           </div>
         </fieldset>
 
-        <Input
-          label="Localização"
+        <Controller
           name="location"
-          placeholder="Digite o local do evento"
-          disabled={readOnly}
-          required
-          {...register('location')}
-          error={errors.location?.message}
+          control={control}
+          render={({ field }) => (
+            <LocationField
+              id="event-location"
+              ref={field.ref}
+              label="Localização"
+              value={field.value ?? ''}
+              latitude={latitude ?? null}
+              longitude={longitude ?? null}
+              onChange={(selection) => {
+                field.onChange(selection.location)
+                setValue('latitude', selection.latitude ?? null)
+                setValue('longitude', selection.longitude ?? null)
+                setValue('placeId', selection.placeId ?? null)
+              }}
+              onBlur={field.onBlur}
+              required
+              disabled={readOnly}
+              error={errors.location?.message}
+              hint="Busque o endereço no mapa ou digite manualmente"
+            />
+          )}
         />
 
         <div>
@@ -331,17 +361,9 @@ export default function AdminEventForm({
           )}
         </div>
 
-        {error && (
-          <div role="alert" className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-            {error}
-          </div>
-        )}
+        {error && <FormAlert variant="error">{error}</FormAlert>}
 
-        {success && (
-          <div role="status" className="flex items-center gap-2 rounded-md bg-success/10 p-3 text-sm text-success">
-            <span>{success}</span>
-          </div>
-        )}
+        {success && <FormAlert variant="success">{success}</FormAlert>}
 
         {!readOnly && (
           <div className="flex gap-3">

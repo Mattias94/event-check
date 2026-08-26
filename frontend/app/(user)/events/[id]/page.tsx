@@ -2,17 +2,26 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft, CalendarDays, CheckCircle2, Clock, MapPin, Tag, Users } from 'lucide-react'
-import { getEventById, enrollUser, unenrollUser, isUserEnrolled } from '../../../lib/events'
-import { Event } from '../../../lib/types'
-import { getCurrentUserId } from '../../../lib/auth-guard'
-import EventCoverImage from '../../../components/EventCoverImage'
-import LoadingState from '../../../components/LoadingState'
-import ErrorState from '../../../components/ErrorState'
-import { Button } from '../../../components/ui/Button'
-import { Card, CardContent } from '../../../components/ui/Card'
-import { Badge } from '../../../components/ui/Badge'
-import { Progress } from '../../../components/ui/Progress'
+import { CalendarDays, CheckCircle2, Clock, MapPin, Tag, Users } from 'lucide-react'
+import {
+  getEventById,
+  enrollUser,
+  unenrollUser,
+  isUserEnrolled,
+  getUserEnrollmentsWithQr,
+} from '../../../../lib/events'
+import { Event } from '../../../../lib/types'
+import { getCurrentUserId } from '../../../../lib/auth-guard'
+import EventCoverImage from '../../../../components/EventCoverImage'
+import EventLocationMap from '../../../../components/EventLocationMap'
+import EnrollmentQrCode from '../../../../components/EnrollmentQrCode'
+import LoadingState from '../../../../components/LoadingState'
+import ErrorState from '../../../../components/ErrorState'
+import { Button } from '../../../../components/ui/Button'
+import { Card, CardContent } from '../../../../components/ui/Card'
+import { Badge } from '../../../../components/ui/Badge'
+import { Progress } from '../../../../components/ui/Progress'
+import { cn } from '../../../../lib/utils'
 
 export default function EventDetailPage() {
   const router = useRouter()
@@ -25,6 +34,8 @@ export default function EventDetailPage() {
   const [actionError, setActionError] = useState<string | null>(null)
   const [isEnrolled, setIsEnrolled] = useState(false)
   const [enrolling, setEnrolling] = useState(false)
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
+  const [qrLoading, setQrLoading] = useState(false)
   const currentUserId = getCurrentUserId()
 
   useEffect(() => {
@@ -34,6 +45,24 @@ export default function EventDetailPage() {
     }
     loadData()
   }, [currentUserId, router, eventId])
+
+  async function loadEnrollmentQr(userId: string, enrolled: boolean) {
+    if (!enrolled) {
+      setQrDataUrl(null)
+      return
+    }
+
+    setQrLoading(true)
+    try {
+      const enrollments = await getUserEnrollmentsWithQr(userId)
+      const match = enrollments.find((item) => item.eventId === eventId)
+      setQrDataUrl(match?.qrDataUrl ?? null)
+    } catch {
+      setQrDataUrl(null)
+    } finally {
+      setQrLoading(false)
+    }
+  }
 
   async function loadData() {
     setLoading(true)
@@ -47,7 +76,9 @@ export default function EventDetailPage() {
       }
       setEvent(eventData)
       if (currentUserId) {
-        setIsEnrolled(await isUserEnrolled(currentUserId, eventId))
+        const enrolled = await isUserEnrolled(currentUserId, eventId)
+        setIsEnrolled(enrolled)
+        await loadEnrollmentQr(currentUserId, enrolled)
       }
     } catch {
       setEvent(null)
@@ -83,6 +114,7 @@ export default function EventDetailPage() {
       const result = await unenrollUser(currentUserId, eventId)
       if (result.success) {
         setIsEnrolled(false)
+        setQrDataUrl(null)
         await loadData()
       } else {
         setActionError(result.error || 'Não foi possível cancelar a inscrição.')
@@ -115,27 +147,18 @@ export default function EventDetailPage() {
   const details = [
     { icon: CalendarDays, label: 'Data', value: new Date(event.date).toLocaleDateString('pt-BR') },
     { icon: Clock, label: 'Hora', value: event.time },
-    { icon: MapPin, label: 'Local', value: event.location },
     { icon: Users, label: 'Capacidade', value: String(event.capacity) },
   ]
 
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-7xl items-center px-4 md:h-16 md:px-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push('/events')}
-            className="-ml-2 h-11 md:h-9"
-          >
-            <ArrowLeft aria-hidden="true" />
-            Voltar
-          </Button>
-        </div>
-      </header>
+  const mobileContentPadding = isEnrolled
+    ? 'pb-[calc(21rem+env(safe-area-inset-bottom,0px))] lg:pb-8'
+    : canEnroll
+      ? 'pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] lg:pb-8'
+      : 'pb-[calc(8rem+env(safe-area-inset-bottom,0px))] lg:pb-8'
 
-      <main className="mx-auto max-w-7xl px-4 pb-32 pt-6 md:px-6 md:pt-8 lg:pb-8">
+  return (
+    <div className="min-h-full bg-background">
+      <div className={cn('mx-auto max-w-7xl px-4 pt-4 sm:px-5 sm:pt-6 md:px-6 md:pt-8', mobileContentPadding)}>
         <div className="mb-6 md:mb-8">
           {event.coverImageUrl && (
             <EventCoverImage src={event.coverImageUrl} className="mb-4 rounded-lg" />
@@ -175,6 +198,18 @@ export default function EventDetailPage() {
                 </div>
 
                 <div>
+                  <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground md:text-base">
+                    <MapPin className="size-4 text-muted-foreground" aria-hidden="true" />
+                    Localização
+                  </h2>
+                  <EventLocationMap
+                    location={event.location}
+                    latitude={event.latitude}
+                    longitude={event.longitude}
+                  />
+                </div>
+
+                <div>
                   <div className="mb-2 flex items-center justify-between gap-2">
                     <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground md:text-base">
                       <Users className="size-4 text-muted-foreground" aria-hidden="true" />
@@ -199,22 +234,29 @@ export default function EventDetailPage() {
             </Card>
           </div>
 
-          <aside>
-            <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-4 backdrop-blur lg:sticky lg:top-24 lg:rounded-lg lg:border lg:bg-card lg:p-6 lg:shadow-sm">
+          <aside className="lg:self-start">
+            <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-4 pb-safe backdrop-blur lg:static lg:inset-auto lg:rounded-lg lg:border lg:bg-card lg:p-6 lg:shadow-sm">
               {actionError && (
                 <p role="alert" className="mb-3 text-sm text-destructive">{actionError}</p>
               )}
 
               {isEnrolled ? (
                 <>
-                  <div className="mb-3 flex items-center gap-2 rounded-lg bg-success/10 p-3 lg:mb-4">
-                    <CheckCircle2 className="size-5 shrink-0 text-success" aria-hidden="true" />
-                    <div>
-                      <p className="text-sm font-medium text-success md:text-base">
-                        Você está inscrito
-                      </p>
-                      <p className="mt-0.5 text-xs text-success/80">
-                        Enviamos por e-mail o QR code para o check-in no dia do evento.
+                  <div className="mb-4 flex flex-col items-center gap-3 lg:items-center">
+                    <EnrollmentQrCode
+                      qrDataUrl={qrDataUrl}
+                      eventTitle={event.title}
+                      loading={qrLoading}
+                    />
+                    <div className="min-w-0 text-center lg:text-center">
+                      <div className="mb-2 flex items-center justify-center gap-2">
+                        <CheckCircle2 className="size-5 shrink-0 text-success" aria-hidden="true" />
+                        <p className="text-sm font-medium text-success md:text-base">
+                          Você está inscrito
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted-foreground md:text-sm">
+                        Toque no QR code para ampliar e apresentar ao administrador no check-in.
                       </p>
                     </div>
                   </div>
@@ -246,7 +288,7 @@ export default function EventDetailPage() {
             </div>
           </aside>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

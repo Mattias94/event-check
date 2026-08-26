@@ -1,4 +1,4 @@
-import { IsDateString, IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator'
+import { IsDateString, IsInt, IsNumber, IsOptional, IsString, Min, MinLength } from 'class-validator'
 import { Type } from 'class-transformer'
 
 export class CreateEventDto {
@@ -22,6 +22,20 @@ export class CreateEventDto {
   @IsString()
   @MinLength(3)
   location!: string
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  latitude?: number | null
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  longitude?: number | null
+
+  @IsOptional()
+  @IsString()
+  placeId?: string | null
 
   @Type(() => Number)
   @IsInt()

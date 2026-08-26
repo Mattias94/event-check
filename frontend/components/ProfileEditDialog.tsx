@@ -120,14 +120,15 @@ export default function ProfileEditDialog({ user, open, onClose, onSaved }: Prof
       onClick={onClose}
     >
       <div
-        className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border bg-card shadow-xl sm:max-h-[90vh] sm:rounded-lg"
+        className="flex max-h-[92dvh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl border bg-card pb-safe shadow-xl sm:max-h-[90vh] sm:rounded-lg"
         onClick={(event) => event.stopPropagation()}
       >
+        <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-muted sm:hidden" aria-hidden="true" />
         <div className="flex shrink-0 items-center justify-between border-b px-4 py-3 sm:px-6 sm:py-4">
           <h2 id="profile-edit-title" className="text-lg font-semibold text-foreground">
             Editar perfil
           </h2>
-          <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Fechar">
+          <Button type="button" variant="ghost" size="icon" className="size-11" onClick={onClose} aria-label="Fechar">
             <X aria-hidden="true" />
           </Button>
         </div>
@@ -150,7 +151,7 @@ export default function ProfileEditDialog({ user, open, onClose, onSaved }: Prof
                   variant="outline"
                   size="sm"
                   onClick={handleRemoveAvatar}
-                  className="absolute -right-1 -top-1 size-8 rounded-full p-0"
+                  className="absolute -right-1 -top-1 size-10 rounded-full p-0 md:size-11"
                   aria-label="Remover foto"
                 >
                   <X className="size-4" aria-hidden="true" />

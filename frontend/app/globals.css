@@ -118,10 +118,35 @@
     max-width: 100%;
     text-overflow: ellipsis;
   }
+
+  .leaflet-container {
+    font-family: inherit;
+    background: hsl(var(--muted) / 0.35);
+  }
+
+  .leaflet-pane,
+  .leaflet-top,
+  .leaflet-bottom {
+    z-index: 1;
+  }
 }
 
 @layer components {
   .card {
     @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  }
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .pt-safe {
+    padding-top: max(0px, env(safe-area-inset-top));
+  }
+
+  .touch-target {
+    @apply min-h-11 min-w-11;
   }
 }

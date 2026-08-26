@@ -1,11 +1,8 @@
 import { z } from 'zod'
+import { parseIsoDateLocal, todayIsoLocal } from './date-utils'
 import { MAX_EVENT_CAPACITY } from './event-categories'
 
-const todayString = () => {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return today.toISOString().slice(0, 10)
-}
+const todayString = todayIsoLocal
 
 const capacitySchema = z
   .number({
@@ -26,9 +23,9 @@ export const eventCreationSchema = z.object({
     .min(1, 'Selecione uma categoria'),
   date: z.string({ required_error: 'Selecione uma data' })
     .refine((date) => {
-      const selectedDate = new Date(date)
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
+      const selectedDate = parseIsoDateLocal(date)
+      const today = parseIsoDateLocal(todayIsoLocal())
+      if (!selectedDate || !today) return false
       return selectedDate >= today
     }, 'Data não pode ser no passado'),
   time: z.string({ required_error: 'Selecione um horário' })
@@ -36,6 +33,9 @@ export const eventCreationSchema = z.object({
     .transform((value) => value.slice(0, 5)),
   location: z.string({ required_error: 'Campo obrigatório' })
     .min(3, 'Localização deve ter no mínimo 3 caracteres'),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
+  placeId: z.string().nullable().optional(),
   capacity: capacitySchema,
   coverImageUrl: z.string().nullable().optional(),
 })

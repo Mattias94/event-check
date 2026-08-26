@@ -30,6 +30,9 @@ export interface Event {
   date: string
   time: string
   location: string
+  latitude?: number | null
+  longitude?: number | null
+  placeId?: string | null
   capacity: number
   coverImageUrl?: string | null
   currentEnrollments: number

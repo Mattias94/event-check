@@ -2,30 +2,24 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
+import EventLocationTrigger from './EventLocationTrigger'
 import {
   ArrowRight,
   BookOpen,
-  CalendarCheck2,
   CalendarDays,
   CheckCircle2,
   Clock,
   HeartPulse,
   Laptop,
-  LogOut,
-  MapPin,
-  Menu,
   Pencil,
-  QrCode,
-  ShieldCheck,
   Sparkles,
   TrendingUp,
   Users,
-  X,
   XCircle,
   Phone,
 } from 'lucide-react'
-import { getEnrollmentsForUser, getUpcomingEvents } from '../lib/events'
-import { User, getUserById, logoutSession } from '../lib/auth'
+import { getEnrollmentsForUser, getUpcomingEvents, getUserEnrollmentsWithQr } from '../lib/events'
+import { User, getUserById } from '../lib/auth'
 import { getCurrentUser } from '../lib/auth-guard'
 import { displayPhone } from '../lib/phone'
 import { Event } from '../lib/types'
@@ -34,6 +28,7 @@ import { Card, CardContent } from './ui/Card'
 import { Badge } from './ui/Badge'
 import { Skeleton } from './ui/Skeleton'
 import ProfileEditDialog from './ProfileEditDialog'
+import EnrollmentQrCode from './EnrollmentQrCode'
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   'Tecnologia': Laptop,
@@ -52,10 +47,11 @@ export default function DashboardClient() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [menuOpen, setMenuOpen] = useState(false)
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([])
   const [historyEvents, setHistoryEvents] = useState<Event[]>([])
   const [newEvents, setNewEvents] = useState<Event[]>([])
+  const [qrByEventId, setQrByEventId] = useState<Record<string, string>>({})
+  const [qrLoading, setQrLoading] = useState(true)
   const [profileOpen, setProfileOpen] = useState(false)
 
   useEffect(() => {
@@ -76,8 +72,9 @@ export default function DashboardClient() {
   }, [router])
 
   function loadEvents(userId: string) {
-    Promise.all([getEnrollmentsForUser(userId), getUpcomingEvents()])
-      .then(([enrolledEvents, allUpcoming]) => {
+    setQrLoading(true)
+    Promise.all([getEnrollmentsForUser(userId), getUpcomingEvents(), getUserEnrollmentsWithQr(userId)])
+      .then(([enrolledEvents, allUpcoming, enrollmentsWithQr]) => {
         const today = new Date()
         today.setHours(0, 0, 0, 0)
 
@@ -98,29 +95,27 @@ export default function DashboardClient() {
         const enrolledIds = new Set(enrolledEvents.map((event) => event.id))
         const discover = allUpcoming
           .filter((event) => !enrolledIds.has(event.id))
-          .slice(0, 4)
+          .slice(0, 2)
 
         setUpcomingEvents(upcoming)
         setHistoryEvents(history)
         setNewEvents(discover)
+        setQrByEventId(
+          Object.fromEntries(enrollmentsWithQr.map((item) => [item.eventId, item.qrDataUrl])),
+        )
       })
       .catch(() => {
         setUpcomingEvents([])
         setHistoryEvents([])
         setNewEvents([])
+        setQrByEventId({})
       })
-  }
-
-  const handleLogout = async () => {
-    await logoutSession()
-    localStorage.removeItem('currentUser')
-    localStorage.removeItem('authToken')
-    router.push('/register')
+      .finally(() => setQrLoading(false))
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background px-4 py-8 md:px-6">
+      <div className="min-h-full bg-background px-4 py-6 sm:px-5 md:px-6 md:py-8">
         <div className="mx-auto w-full max-w-7xl space-y-6">
           <Skeleton className="h-9 w-56" />
           <Skeleton className="h-4 w-80 max-w-full" />
@@ -145,69 +140,8 @@ export default function DashboardClient() {
     .toUpperCase()
 
   return (
-    <div className="min-h-screen overflow-x-clip bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex h-14 min-h-14 max-w-7xl items-center justify-between gap-2 px-3 sm:h-16 sm:gap-3 sm:px-4 md:px-6">
-          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <CalendarCheck2 className="size-5" aria-hidden="true" />
-            </div>
-            <span className="truncate text-sm font-semibold tracking-tight text-foreground sm:text-base md:text-lg">
-              Event-Check
-            </span>
-          </div>
-
-          {/* Ações - desktop */}
-          <div className="hidden shrink-0 items-center gap-2 sm:flex">
-            {user?.role === 'admin' && (
-              <Button variant="outline" size="sm" onClick={() => router.push('/admin/events')}>
-                <ShieldCheck aria-hidden="true" />
-                Painel Admin
-              </Button>
-            )}
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut aria-hidden="true" />
-              Sair
-            </Button>
-          </div>
-
-          {/* Menu - mobile */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-11 shrink-0 sm:hidden"
-            onClick={() => setMenuOpen((open) => !open)}
-            aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'}
-            aria-expanded={menuOpen}
-          >
-            {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-          </Button>
-        </div>
-
-        {menuOpen && (
-          <div className="border-t bg-background px-4 py-3 sm:hidden">
-            <div className="flex flex-col gap-2">
-              {user?.role === 'admin' && (
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => router.push('/admin/events')}
-                >
-                  <ShieldCheck aria-hidden="true" />
-                  Painel Admin
-                </Button>
-              )}
-              <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
-                <LogOut aria-hidden="true" />
-                Sair
-              </Button>
-            </div>
-          </div>
-        )}
-      </header>
-
-      <main className="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-8">
+    <div className="min-h-full bg-background">
+      <div className="mx-auto max-w-7xl px-4 py-5 sm:px-5 sm:py-6 md:px-6 md:py-8">
         {/* Boas-vindas */}
         <div className="mb-6 md:mb-8">
           <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">Bem-vindo</h1>
@@ -252,22 +186,26 @@ export default function DashboardClient() {
                                 </span>
                               </p>
                               <p className="flex items-center gap-2">
-                                <MapPin className="size-4 shrink-0" aria-hidden="true" />
-                                <span className="truncate">{event.location}</span>
+                                <EventLocationTrigger
+                                  location={event.location}
+                                  latitude={event.latitude}
+                                  longitude={event.longitude}
+                                  className="min-w-0 flex-1"
+                                />
                               </p>
                             </div>
                           </div>
-                          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center md:w-auto md:flex-col md:items-end">
-                            <div className="mx-auto flex size-20 shrink-0 items-center justify-center rounded-lg border bg-muted sm:mx-0 md:size-24">
-                              <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                                <QrCode className="size-8 md:size-10" aria-hidden="true" />
-                                <span className="text-[10px] font-medium">QR Code</span>
-                              </div>
-                            </div>
+                          <div className="flex w-full flex-col items-center gap-3 md:w-auto md:items-end">
+                            <EnrollmentQrCode
+                              qrDataUrl={qrByEventId[event.id]}
+                              eventTitle={event.title}
+                              compact
+                              loading={qrLoading}
+                            />
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-11 flex-1 md:h-9 md:flex-none"
+                              className="h-11 w-full md:h-9 md:w-auto"
                               onClick={() => router.push(`/events/${event.id}`)}
                             >
                               Ver Detalhes
@@ -287,10 +225,10 @@ export default function DashboardClient() {
                     <p className="mb-4 text-sm text-muted-foreground md:text-base">
                       Você ainda não está inscrito em nenhum evento futuro.
                     </p>
-                    <Button onClick={() => router.push('/events')} className="w-full sm:w-auto">
-                      Descobrir Eventos
-                      <ArrowRight aria-hidden="true" />
-                    </Button>
+                      <Button onClick={() => router.push('/events')} className="w-full sm:w-auto">
+                        Descobrir Eventos
+                        <ArrowRight aria-hidden="true" />
+                      </Button>
                   </CardContent>
                 </Card>
               )}
@@ -353,10 +291,16 @@ export default function DashboardClient() {
           <div className="space-y-6 md:space-y-8">
             {/* Descobrir Eventos */}
             <section>
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <h2 className="text-lg font-semibold text-foreground md:text-xl">
                   Descubra Novos Eventos
                 </h2>
+                {newEvents.length > 0 && (
+                  <Button variant="ghost" size="sm" className="h-11 md:h-9" onClick={() => router.push('/events')}>
+                    Ver todos
+                    <ArrowRight aria-hidden="true" />
+                  </Button>
+                )}
               </div>
               <div className="space-y-4">
                 {newEvents.length > 0 ? (
@@ -366,7 +310,7 @@ export default function DashboardClient() {
                       return (
                         <Card
                           key={event.id}
-                          className="flex h-full cursor-pointer flex-col transition-all hover:border-primary/40 hover:shadow-md"
+                          className="flex h-full cursor-pointer flex-col border-primary/30 ring-1 ring-primary/20 transition-all hover:border-primary/50 hover:shadow-md"
                           onClick={() => router.push(`/events/${event.id}`)}
                         >
                           <CardContent className="flex flex-1 flex-col p-4 pt-4">
@@ -394,6 +338,10 @@ export default function DashboardClient() {
                         </Card>
                       )
                     })}
+                    <Button variant="outline" className="w-full" onClick={() => router.push('/events')}>
+                      Descobrir mais eventos
+                      <ArrowRight aria-hidden="true" />
+                    </Button>
                   </>
                 ) : (
                   <Card>
@@ -450,7 +398,7 @@ export default function DashboardClient() {
             </section>
           </div>
         </div>
-      </main>
+      </div>
 
       {user && (
         <ProfileEditDialog

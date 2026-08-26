@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { CalendarDays, Clock, MapPin, Tag, Users } from 'lucide-react'
+import { CalendarDays, Clock, Tag, Users } from 'lucide-react'
 import EventCoverImage from './EventCoverImage'
+import EventLocationTrigger from './EventLocationTrigger'
 import { Event } from '../lib/types'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card'
 import { Badge } from './ui/Badge'
@@ -33,11 +34,11 @@ export default function EventCard({ event }: EventCardProps) {
           <EventCoverImage src={event.coverImageUrl} maxHeightClass="max-h-44 sm:max-h-48" />
         )}
         <CardHeader className="pb-3">
-          <div className="flex min-w-0 flex-1 items-start justify-between gap-2">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <CardTitle className="min-w-0 flex-1 line-clamp-2 text-base leading-snug md:text-lg">
               {event.title}
             </CardTitle>
-            <Badge variant={statusVariant} className="shrink-0 whitespace-nowrap">
+            <Badge variant={statusVariant} className="w-fit shrink-0">
               {statusLabel}
             </Badge>
           </div>
@@ -45,19 +46,23 @@ export default function EventCard({ event }: EventCardProps) {
 
         <CardContent className="flex flex-1 flex-col gap-4">
           <div className="space-y-2 text-sm text-muted-foreground">
-            <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              <span className="flex items-center gap-2 whitespace-nowrap">
+            <div className="flex flex-col gap-1.5 xs:flex-row xs:flex-wrap xs:items-center xs:gap-x-4 xs:gap-y-1">
+              <span className="flex items-center gap-2">
                 <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
                 {new Date(event.date).toLocaleDateString('pt-BR')}
               </span>
-              <span className="flex items-center gap-2 whitespace-nowrap">
+              <span className="flex items-center gap-2">
                 <Clock className="size-4 shrink-0" aria-hidden="true" />
                 {event.time}
               </span>
-            </p>
+            </div>
             <p className="flex items-center gap-2">
-              <MapPin className="size-4 shrink-0" aria-hidden="true" />
-              <span className="truncate">{event.location}</span>
+              <EventLocationTrigger
+                location={event.location}
+                latitude={event.latitude}
+                longitude={event.longitude}
+                className="min-w-0 flex-1"
+              />
             </p>
             <p className="flex items-center gap-2">
               <Tag className="size-4 shrink-0" aria-hidden="true" />

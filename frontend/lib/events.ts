@@ -1,6 +1,6 @@
 import { api } from './api'
 import { getUserById } from './auth'
-import { Event, EnrollmentRecord, EnrollmentWithUser, EventFilters, CheckInResult } from './types'
+import { Event, EnrollmentRecord, EnrollmentWithUser, EventFilters, CheckInResult, UserEnrollmentWithQr } from './types'
 import { mergeEventCategories } from './event-categories'
 import { EventCreationData, EventUpdateData } from './schemas'
 
@@ -103,6 +103,11 @@ export async function getEnrollmentsForUser(userId: string): Promise<Event[]> {
     stats.enrollments.map(enrollment => getEventById(enrollment.eventId))
   )
   return events.filter((event): event is Event => event !== null)
+}
+
+/** Inscrições do usuário com QR code de check-in (data URL). */
+export async function getUserEnrollmentsWithQr(userId: string): Promise<UserEnrollmentWithQr[]> {
+  return api.get<UserEnrollmentWithQr[]>(`/users/${userId}/enrollments`)
 }
 
 /**

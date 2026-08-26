@@ -52,6 +52,9 @@ model Event {
   date               String
   time               String
   location           String
+  latitude           Float?
+  longitude          Float?
+  placeId            String?
   capacity           Int
   coverImageUrl      String?      @db.Text
   currentEnrollments Int          @default(0)
