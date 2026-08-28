@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { CalendarDays, CheckCircle2, Clock, MapPin, Tag, Users } from 'lucide-react'
+import { CalendarDays, Clock, MapPin, Tag, Users } from 'lucide-react'
 import {
   getEventById,
   enrollUser,
@@ -14,10 +14,9 @@ import { Event } from '../../../../lib/types'
 import { getCurrentUserId } from '../../../../lib/auth-guard'
 import EventCoverImage from '../../../../components/EventCoverImage'
 import EventLocationMap from '../../../../components/EventLocationMap'
-import EnrollmentQrCode from '../../../../components/EnrollmentQrCode'
+import EventEnrollmentFooter from '../../../../components/EventEnrollmentFooter'
 import LoadingState from '../../../../components/LoadingState'
 import ErrorState from '../../../../components/ErrorState'
-import { Button } from '../../../../components/ui/Button'
 import { Card, CardContent } from '../../../../components/ui/Card'
 import { Badge } from '../../../../components/ui/Badge'
 import { Progress } from '../../../../components/ui/Progress'
@@ -151,7 +150,7 @@ export default function EventDetailPage() {
   ]
 
   const mobileContentPadding = isEnrolled
-    ? 'pb-[calc(21rem+env(safe-area-inset-bottom,0px))] lg:pb-8'
+    ? 'pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] lg:pb-8'
     : canEnroll
       ? 'pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] lg:pb-8'
       : 'pb-[calc(8rem+env(safe-area-inset-bottom,0px))] lg:pb-8'
@@ -234,59 +233,18 @@ export default function EventDetailPage() {
             </Card>
           </div>
 
-          <aside className="lg:self-start">
-            <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-4 pb-safe backdrop-blur lg:static lg:inset-auto lg:rounded-lg lg:border lg:bg-card lg:p-6 lg:shadow-sm">
-              {actionError && (
-                <p role="alert" className="mb-3 text-sm text-destructive">{actionError}</p>
-              )}
-
-              {isEnrolled ? (
-                <>
-                  <div className="mb-4 flex flex-col items-center gap-3 lg:items-center">
-                    <EnrollmentQrCode
-                      qrDataUrl={qrDataUrl}
-                      eventTitle={event.title}
-                      loading={qrLoading}
-                    />
-                    <div className="min-w-0 text-center lg:text-center">
-                      <div className="mb-2 flex items-center justify-center gap-2">
-                        <CheckCircle2 className="size-5 shrink-0 text-success" aria-hidden="true" />
-                        <p className="text-sm font-medium text-success md:text-base">
-                          Você está inscrito
-                        </p>
-                      </div>
-                      <p className="text-xs text-muted-foreground md:text-sm">
-                        Toque no QR code para ampliar e apresentar ao administrador no check-in.
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="destructive"
-                    className="w-full"
-                    onClick={handleUnenroll}
-                    loading={enrolling}
-                  >
-                    {enrolling ? 'Processando...' : 'Cancelar inscrição'}
-                  </Button>
-                </>
-              ) : canEnroll ? (
-                <Button
-                  size="lg"
-                  className="w-full"
-                  onClick={handleEnroll}
-                  loading={enrolling}
-                >
-                  {enrolling ? 'Processando...' : 'Inscrever-se'}
-                </Button>
-              ) : (
-                <div className="rounded-lg bg-muted p-4 text-center text-sm text-muted-foreground">
-                  {event.status !== 'active'
-                    ? 'Inscrições indisponíveis para este evento.'
-                    : 'Todas as vagas foram preenchidas.'}
-                </div>
-              )}
-            </div>
-          </aside>
+          <EventEnrollmentFooter
+            isEnrolled={isEnrolled}
+            canEnroll={canEnroll}
+            enrolling={enrolling}
+            actionError={actionError}
+            qrDataUrl={qrDataUrl}
+            qrLoading={qrLoading}
+            eventTitle={event.title}
+            eventStatus={event.status}
+            onEnroll={handleEnroll}
+            onUnenroll={handleUnenroll}
+          />
         </div>
       </div>
     </div>

@@ -11,16 +11,17 @@ import {
   CalendarDays,
   Clock,
   FileDown,
+  QrCode,
   Search,
   Tag,
   TrendingUp,
   UserCheck,
   Users,
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/Card'
-import { Badge } from '../../../../components/ui/Badge'
 import Button from '../../../../components/ui/Button'
 import Input from '../../../../components/ui/Input'
+import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/Card'
+import { Badge } from '../../../../components/ui/Badge'
 import { Skeleton } from '../../../../components/ui/Skeleton'
 
 interface EnrollmentWithDetails extends EnrollmentWithUser {}
@@ -298,7 +299,7 @@ function AdminDashboardContent() {
   return (
     <div className="mx-auto w-full min-w-0 max-w-7xl px-4 py-6 md:px-6 md:py-8">
       {/* Cabeçalho da página */}
-      <div className="mb-6 md:mb-8">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between md:mb-8">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
             Visão Geral do Evento
@@ -307,6 +308,14 @@ function AdminDashboardContent() {
             {event.title} — {new Date(event.date).toLocaleDateString('pt-BR')}
           </p>
         </div>
+        <Button
+          variant="secondary"
+          className="h-11 w-full shrink-0 sm:w-auto"
+          onClick={() => router.push(`/admin/events/${event.id}/check-in`)}
+        >
+          <QrCode aria-hidden="true" />
+          Ler QR Code
+        </Button>
       </div>
 
       {/* Stat tiles */}

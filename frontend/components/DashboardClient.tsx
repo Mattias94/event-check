@@ -291,17 +291,9 @@ export default function DashboardClient() {
           <div className="space-y-6 md:space-y-8">
             {/* Descobrir Eventos */}
             <section>
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-lg font-semibold text-foreground md:text-xl">
-                  Descubra Novos Eventos
-                </h2>
-                {newEvents.length > 0 && (
-                  <Button variant="ghost" size="sm" className="h-11 md:h-9" onClick={() => router.push('/events')}>
-                    Ver todos
-                    <ArrowRight aria-hidden="true" />
-                  </Button>
-                )}
-              </div>
+              <h2 className="mb-4 text-lg font-semibold text-foreground md:text-xl">
+                Descubra Novos Eventos
+              </h2>
               <div className="space-y-4">
                 {newEvents.length > 0 ? (
                   <>
