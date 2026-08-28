@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { CalendarDays, Clock, MapPin, Tag, Users } from 'lucide-react'
 import {
   getEventById,
@@ -15,6 +15,7 @@ import { getCurrentUserId } from '../../../../lib/auth-guard'
 import EventCoverImage from '../../../../components/EventCoverImage'
 import EventLocationMap from '../../../../components/EventLocationMap'
 import EventEnrollmentFooter from '../../../../components/EventEnrollmentFooter'
+import PageBackButton from '../../../../components/PageBackButton'
 import LoadingState from '../../../../components/LoadingState'
 import ErrorState from '../../../../components/ErrorState'
 import { Card, CardContent } from '../../../../components/ui/Card'
@@ -23,9 +24,19 @@ import { Progress } from '../../../../components/ui/Progress'
 import { cn } from '../../../../lib/utils'
 
 export default function EventDetailPage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <EventDetailContent />
+    </Suspense>
+  )
+}
+
+function EventDetailContent() {
   const router = useRouter()
   const params = useParams()
+  const searchParams = useSearchParams()
   const eventId = params.id as string
+  const from = searchParams.get('from')
 
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
@@ -36,6 +47,10 @@ export default function EventDetailPage() {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [qrLoading, setQrLoading] = useState(false)
   const currentUserId = getCurrentUserId()
+
+  const backHref = from === 'dashboard' ? '/dashboard' : '/events'
+  const backLabel =
+    from === 'dashboard' ? 'Voltar para meus eventos' : 'Voltar para descobrir eventos'
 
   useEffect(() => {
     if (!currentUserId) {
@@ -158,6 +173,10 @@ export default function EventDetailPage() {
   return (
     <div className="min-h-full bg-background">
       <div className={cn('mx-auto max-w-7xl px-4 pt-4 sm:px-5 sm:pt-6 md:px-6 md:pt-8', mobileContentPadding)}>
+        <div className="mb-4 md:mb-5">
+          <PageBackButton href={backHref} label={backLabel} />
+        </div>
+
         <div className="mb-6 md:mb-8">
           {event.coverImageUrl && (
             <EventCoverImage src={event.coverImageUrl} className="mb-4 rounded-lg" />

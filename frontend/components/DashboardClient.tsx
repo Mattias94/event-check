@@ -206,7 +206,7 @@ export default function DashboardClient() {
                               variant="outline"
                               size="sm"
                               className="h-11 w-full md:h-9 md:w-auto"
-                              onClick={() => router.push(`/events/${event.id}`)}
+                              onClick={() => router.push(`/events/${event.id}?from=dashboard`)}
                             >
                               Ver Detalhes
                             </Button>
@@ -247,7 +247,7 @@ export default function DashboardClient() {
                         <button
                           key={event.id}
                           type="button"
-                          onClick={() => router.push(`/events/${event.id}`)}
+                          onClick={() => router.push(`/events/${event.id}?from=dashboard`)}
                           className="flex min-h-11 w-full flex-col gap-2 py-3 text-left transition-colors first:pt-0 last:pb-0 hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-center sm:justify-between"
                         >
                           <div className="min-w-0">
@@ -303,7 +303,7 @@ export default function DashboardClient() {
                         <Card
                           key={event.id}
                           className="flex h-full cursor-pointer flex-col border-primary/30 ring-1 ring-primary/20 transition-all hover:border-primary/50 hover:shadow-md"
-                          onClick={() => router.push(`/events/${event.id}`)}
+                          onClick={() => router.push(`/events/${event.id}?from=discover`)}
                         >
                           <CardContent className="flex flex-1 flex-col p-4 pt-4">
                             <div className="mb-3 flex h-24 w-full items-center justify-center rounded-md bg-secondary md:h-28">

@@ -286,7 +286,7 @@ export default function QrCheckInScanner({
               onClick={() => router.push(`/admin/dashboard?eventId=${eventId}`)}
             >
               <ArrowLeft aria-hidden="true" />
-              Voltar ao dashboard do evento
+              <span className="truncate">Voltar ao dashboard</span>
             </Button>
           )}
           <Button

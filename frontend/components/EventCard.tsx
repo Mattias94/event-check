@@ -26,7 +26,7 @@ export default function EventCard({ event }: EventCardProps) {
 
   return (
     <Link
-      href={`/events/${event.id}`}
+      href={`/events/${event.id}?from=discover`}
       className="group block h-full rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       <Card className="flex h-full flex-col overflow-hidden transition-all group-hover:border-primary/40 group-hover:shadow-md">

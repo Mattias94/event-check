@@ -1,10 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
 import QrCheckInScanner from '../../../../../../components/admin/QrCheckInScanner'
+import PageBackButton from '../../../../../../components/PageBackButton'
 import LoadingState from '../../../../../../components/LoadingState'
 import ErrorState from '../../../../../../components/ErrorState'
 import { getEventById } from '../../../../../../lib/events'
@@ -56,13 +55,11 @@ export default function EventCheckInPage() {
   return (
     <div className="flex min-h-[calc(100dvh-3.5rem)] w-full items-center justify-center px-4 py-6 pb-safe sm:px-6 lg:min-h-screen lg:px-8 lg:py-10">
       <div className="mx-auto w-full max-w-md sm:max-w-lg">
-        <Link
+        <PageBackButton
           href={`/admin/dashboard?eventId=${eventId}`}
-          className="mb-5 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4 shrink-0" aria-hidden="true" />
-          Voltar ao dashboard do evento
-        </Link>
+          label="Voltar ao dashboard do evento"
+          className="mb-5"
+        />
 
         <div className="mb-6 text-center sm:text-left">
           <h1 className="line-clamp-3 break-words text-2xl font-bold tracking-tight text-foreground md:text-3xl">
