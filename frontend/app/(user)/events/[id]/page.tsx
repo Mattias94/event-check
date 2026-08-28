@@ -16,6 +16,7 @@ import EventCoverImage from '../../../../components/EventCoverImage'
 import EventLocationMap from '../../../../components/EventLocationMap'
 import EventEnrollmentFooter from '../../../../components/EventEnrollmentFooter'
 import PageBackButton from '../../../../components/PageBackButton'
+import { FormAlert } from '../../../../components/ui/FormAlert'
 import LoadingState from '../../../../components/LoadingState'
 import ErrorState from '../../../../components/ErrorState'
 import { Card, CardContent } from '../../../../components/ui/Card'
@@ -42,6 +43,7 @@ function EventDetailContent() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [enrollNotice, setEnrollNotice] = useState<string | null>(null)
   const [isEnrolled, setIsEnrolled] = useState(false)
   const [enrolling, setEnrolling] = useState(false)
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
@@ -106,10 +108,16 @@ function EventDetailContent() {
     if (!currentUserId) return
     setEnrolling(true)
     setActionError(null)
+    setEnrollNotice(null)
     try {
       const result = await enrollUser(currentUserId, eventId)
       if (result.success) {
         setIsEnrolled(true)
+        setEnrollNotice(
+          result.emailSent
+            ? 'Inscrição confirmada! Enviamos o QR code de check-in para seu e-mail.'
+            : 'Inscrição confirmada! Seu QR code também está disponível abaixo.',
+        )
         await loadData()
       } else {
         setActionError(result.error || 'Não foi possível concluir a inscrição.')
@@ -176,6 +184,12 @@ function EventDetailContent() {
         <div className="mb-4 md:mb-5">
           <PageBackButton href={backHref} label={backLabel} />
         </div>
+
+        {enrollNotice && (
+          <FormAlert variant="success" className="mb-4">
+            {enrollNotice}
+          </FormAlert>
+        )}
 
         <div className="mb-6 md:mb-8">
           {event.coverImageUrl && (

@@ -11,9 +11,9 @@ import { ResetPasswordDto } from './dtos/reset-password.dto'
 
 @Injectable()
 export class AuthService {
-  /** Desabilitar temporariamente: EMAIL_VERIFICATION_REQUIRED=false no .env */
+  /** Desabilitar apenas em dev local: EMAIL_VERIFICATION_REQUIRED=false no .env */
   private readonly emailVerificationRequired =
-    process.env.EMAIL_VERIFICATION_REQUIRED === 'true'
+    process.env.EMAIL_VERIFICATION_REQUIRED !== 'false'
 
   constructor(
     private readonly usersRepository: UsersRepository,
@@ -79,7 +79,9 @@ export class AuthService {
           ? 'Conta de administrador criada com sucesso.'
           : emailSent
             ? 'Conta criada! Enviamos um e-mail com o link de confirmação.'
-            : 'Conta criada! Verifique seu e-mail para confirmar o cadastro (envio pendente de configuração).'
+            : this.mailService.isConfigured()
+              ? 'Conta criada! Não foi possível enviar o e-mail agora — use "Reenviar" na tela de confirmação.'
+              : 'Conta criada! Verifique seu e-mail para confirmar (modo desenvolvimento: link no terminal do backend).'
         : 'Conta criada com sucesso! Você já pode fazer login.',
     }
   }

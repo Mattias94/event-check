@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, type FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ImagePlus, X } from 'lucide-react'
 import EventCoverImage from '../EventCoverImage'
@@ -31,6 +31,59 @@ interface AdminEventFormProps {
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
+const EVENT_FORM_FIELDS = [
+  'title',
+  'description',
+  'category',
+  'date',
+  'time',
+  'capacity',
+  'location',
+] as const
+
+const EVENT_FIELD_LABELS: Record<(typeof EVENT_FORM_FIELDS)[number], string> = {
+  title: 'Título do Evento',
+  description: 'Descrição',
+  category: 'Categoria',
+  date: 'Data',
+  time: 'Horário',
+  capacity: 'Capacidade',
+  location: 'Localização',
+}
+
+const EVENT_FIELD_ANCHORS: Record<(typeof EVENT_FORM_FIELDS)[number], string> = {
+  title: 'title',
+  description: 'event-description',
+  category: 'event-category',
+  date: 'event-date',
+  time: 'event-time',
+  capacity: 'event-capacity',
+  location: 'event-location',
+}
+
+const EMPTY_EVENT_VALUES = {
+  title: '',
+  description: '',
+  category: '',
+  date: '',
+  time: '',
+  location: '',
+  capacity: undefined as number | undefined,
+  coverImageUrl: null,
+  latitude: null,
+  longitude: null,
+  placeId: null,
+}
+
+function scrollToField(field: (typeof EVENT_FORM_FIELDS)[number]) {
+  requestAnimationFrame(() => {
+    document.getElementById(EVENT_FIELD_ANCHORS[field])?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    })
+  })
+}
+
 export default function AdminEventForm({
   initialData,
   onSubmit,
@@ -58,9 +111,11 @@ export default function AdminEventForm({
     control,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isSubmitted },
   } = useForm<EventCreationData>({
     resolver: zodResolver(schema),
+    reValidateMode: 'onChange',
+    shouldFocusError: false,
     defaultValues: initialData ? {
       title: initialData.title,
       description: initialData.description,
@@ -73,13 +128,16 @@ export default function AdminEventForm({
       placeId: initialData.placeId ?? null,
       capacity: initialData.capacity,
       coverImageUrl: initialData.coverImageUrl ?? null,
-    } : {
-      coverImageUrl: null,
-      latitude: null,
-      longitude: null,
-      placeId: null,
-    },
+    } : EMPTY_EVENT_VALUES,
   })
+
+  const validationIssues = EVENT_FORM_FIELDS
+    .filter((key) => errors[key]?.message)
+    .map((key) => ({
+      key,
+      label: EVENT_FIELD_LABELS[key],
+      message: errors[key]?.message as string,
+    }))
 
   const latitude = watch('latitude')
   const longitude = watch('longitude')
@@ -149,6 +207,11 @@ export default function AdminEventForm({
     }
   }
 
+  function handleInvalid(fieldErrors: FieldErrors<EventCreationData>) {
+    const firstField = EVENT_FORM_FIELDS.find((key) => fieldErrors[key]?.message)
+    if (firstField) scrollToField(firstField)
+  }
+
   return (
     <Card className="w-full min-w-0 overflow-visible p-4 md:p-6">
       {initialData && (
@@ -163,8 +226,34 @@ export default function AdminEventForm({
         </FormAlert>
       )}
 
-      <form className="space-y-6" onSubmit={handleSubmit(handleFormSubmit)} noValidate>
+      <form className="space-y-6" onSubmit={handleSubmit(handleFormSubmit, handleInvalid)} noValidate>
+        {isSubmitted && validationIssues.length > 0 && (
+          <FormAlert
+            variant="error"
+            title={
+              validationIssues.length === 1
+                ? '1 campo precisa de atenção'
+                : `${validationIssues.length} campos precisam de atenção`
+            }
+          >
+            <ul className="space-y-1.5">
+              {validationIssues.map(({ key, label, message }) => (
+                <li key={key}>
+                  <button
+                    type="button"
+                    onClick={() => scrollToField(key)}
+                    className="w-full text-left underline-offset-2 hover:underline"
+                  >
+                    <span className="font-medium">{label}:</span> {message}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </FormAlert>
+        )}
+
         <Input
+          id="title"
           label="Título do Evento"
           name="title"
           placeholder="Digite o título"
@@ -243,11 +332,13 @@ export default function AdminEventForm({
               control={control}
               render={({ field }) => (
                 <TimeField
+                  id="event-time"
                   ref={field.ref}
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
                   disabled={readOnly}
+                  required
                   error={errors.time?.message}
                 />
               )}
@@ -261,7 +352,13 @@ export default function AdminEventForm({
               required
               minEnrolled={minEnrolled}
               error={errors.capacity?.message}
-              {...register('capacity', { valueAsNumber: true })}
+              {...register('capacity', {
+                setValueAs: (value) => {
+                  if (value === '' || value === null || value === undefined) return undefined
+                  const parsed = Number(value)
+                  return Number.isNaN(parsed) ? undefined : parsed
+                },
+              })}
             />
             </div>
           </div>

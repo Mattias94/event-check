@@ -25,19 +25,22 @@ export function formatTimePtBr(value: string): string {
 }
 
 interface TimeFieldProps {
+  id?: string
   value?: string
   onChange: (value: string) => void
   onBlur?: () => void
   error?: string
   disabled?: boolean
   hint?: string
+  required?: boolean
 }
 
 const TimeField = forwardRef<HTMLInputElement, TimeFieldProps>(
-  ({ value = '', onChange, onBlur, error, disabled, hint }, ref) => {
+  ({ id, value = '', onChange, onBlur, error, disabled, hint, required }, ref) => {
     const groupId = useId()
-    const hourId = `${groupId}-hour`
-    const minuteId = `${groupId}-minute`
+    const fieldId = id ?? `${groupId}-time`
+    const hourId = `${fieldId}-hour`
+    const minuteId = `${fieldId}-minute`
     const errorId = error ? `${groupId}-error` : undefined
     const hintId = `${groupId}-hint`
     const describedBy = [hintId, errorId].filter(Boolean).join(' ') || undefined
@@ -81,7 +84,7 @@ const TimeField = forwardRef<HTMLInputElement, TimeFieldProps>(
     )
 
     return (
-      <fieldset className="w-full min-w-0 border-0 p-0">
+      <fieldset id={fieldId} className="w-full min-w-0 border-0 p-0">
         <input
           ref={ref}
           type="hidden"
@@ -95,6 +98,11 @@ const TimeField = forwardRef<HTMLInputElement, TimeFieldProps>(
         <legend className={cn(formLabelClassName, 'flex items-center gap-1.5')}>
           <Clock className="size-4 text-muted-foreground" aria-hidden="true" />
           Horário
+          {required && (
+            <span className="text-destructive" aria-hidden="true">
+              *
+            </span>
+          )}
         </legend>
 
         <div

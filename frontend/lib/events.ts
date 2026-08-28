@@ -54,10 +54,13 @@ export async function isUserEnrolled(userId: string, eventId: string): Promise<b
   return result.enrolled
 }
 
-export async function enrollUser(userId: string, eventId: string): Promise<{ success: boolean; error?: string }> {
+export async function enrollUser(
+  userId: string,
+  eventId: string,
+): Promise<{ success: boolean; error?: string; emailSent?: boolean }> {
   try {
-    await api.post(`/events/${eventId}/enrollments/${userId}`)
-    return { success: true }
+    const result = await api.post<{ emailSent?: boolean }>(`/events/${eventId}/enrollments/${userId}`)
+    return { success: true, emailSent: result.emailSent }
   } catch (err: any) {
     return { success: false, error: err.message }
   }

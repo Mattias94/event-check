@@ -7,11 +7,20 @@ const todayString = todayIsoLocal
 const capacitySchema = z
   .number({
     required_error: 'Informe a capacidade',
-    invalid_type_error: 'Informe um número válido',
+    invalid_type_error: 'Informe a capacidade',
   })
   .int('A capacidade deve ser um número inteiro')
   .min(1, 'Capacidade deve ser no mínimo 1')
   .max(MAX_EVENT_CAPACITY, `Capacidade máxima: ${MAX_EVENT_CAPACITY.toLocaleString('pt-BR')}`)
+
+const capacityInputSchema = z.preprocess(
+  (value) => {
+    if (value === '' || value === null || value === undefined) return undefined
+    if (typeof value === 'number' && Number.isNaN(value)) return undefined
+    return value
+  },
+  capacitySchema,
+)
 
 export const eventCreationSchema = z.object({
   title: z.string({ required_error: 'Campo obrigatório' })
@@ -29,6 +38,7 @@ export const eventCreationSchema = z.object({
       return selectedDate >= today
     }, 'Data não pode ser no passado'),
   time: z.string({ required_error: 'Selecione um horário' })
+    .min(1, 'Selecione um horário')
     .regex(/^\d{2}:\d{2}(:\d{2})?$/, 'Use o formato HH:MM (24 horas, ex.: 14:30)')
     .transform((value) => value.slice(0, 5)),
   location: z.string({ required_error: 'Campo obrigatório' })
@@ -36,17 +46,25 @@ export const eventCreationSchema = z.object({
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
   placeId: z.string().nullable().optional(),
-  capacity: capacitySchema,
+  capacity: capacityInputSchema,
   coverImageUrl: z.string().nullable().optional(),
 })
 
 export function createEventUpdateSchema(currentEnrollments = 0) {
+  const minCapacity = Math.max(1, currentEnrollments)
   return eventCreationSchema.extend({
-    capacity: capacitySchema.min(
-      Math.max(1, currentEnrollments),
-      currentEnrollments > 0
-        ? `Capacidade não pode ser menor que ${currentEnrollments} inscrito(s)`
-        : 'Capacidade deve ser no mínimo 1',
+    capacity: z.preprocess(
+      (value) => {
+        if (value === '' || value === null || value === undefined) return undefined
+        if (typeof value === 'number' && Number.isNaN(value)) return undefined
+        return value
+      },
+      capacitySchema.min(
+        minCapacity,
+        currentEnrollments > 0
+          ? `Capacidade não pode ser menor que ${currentEnrollments} inscrito(s)`
+          : 'Capacidade deve ser no mínimo 1',
+      ),
     ),
   })
 }

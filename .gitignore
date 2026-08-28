@@ -12,6 +12,9 @@ backend/.env.*
 frontend/.env
 frontend/.env.*
 !frontend/.env.example
+*.pem
+credentials.json
+secrets.json
 
 # Vercel local config (may contain project IDs)
 .vercel/

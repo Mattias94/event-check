@@ -15,7 +15,7 @@ import {
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { createUser } from '../lib/auth'
+import { createUser, resendVerificationEmail } from '../lib/auth'
 import { isIsoDateWithinBounds, normalizeDateValue, todayIsoLocal } from '../lib/date-utils'
 
 const registerSchema = z.object({
@@ -37,8 +37,12 @@ type RegisterData = z.infer<typeof registerSchema>
 export default function AuthForm() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [resendMessage, setResendMessage] = useState<string | null>(null)
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null)
+  const [awaitingVerification, setAwaitingVerification] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
   const {
@@ -52,6 +56,7 @@ export default function AuthForm() {
     setLoading(true)
     setSuccess(null)
     setError(null)
+    setResendMessage(null)
     try {
       const result = await createUser({
         name: data.name,
@@ -65,7 +70,7 @@ export default function AuthForm() {
         localStorage.setItem('currentUser', JSON.stringify(result.user))
       }
 
-      const successMsg = result.message ?? 'Conta criada com sucesso! Você já pode fazer login.'
+      const successMsg = result.message ?? 'Conta criada com sucesso!'
       setSuccess(successMsg)
 
       if (result.token && result.isFirstUser) {
@@ -78,12 +83,75 @@ export default function AuthForm() {
         return
       }
 
-      setTimeout(() => router.push('/login'), 4000)
+      setPendingEmail(data.email)
+      setAwaitingVerification(true)
     } catch (e: any) {
       setError(e.message || 'Erro ao criar conta. Tente novamente.')
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleResendVerification() {
+    if (!pendingEmail) return
+    setResending(true)
+    setResendMessage(null)
+    try {
+      const result = await resendVerificationEmail(pendingEmail)
+      setResendMessage(result.message)
+    } catch (e: any) {
+      setResendMessage(e.message || 'Não foi possível reenviar o e-mail.')
+    } finally {
+      setResending(false)
+    }
+  }
+
+  if (awaitingVerification) {
+    return (
+      <AuthPageShell
+        title="Confirme seu e-mail"
+        description="Enviamos um link de confirmação para ativar sua conta."
+      >
+        <div className="space-y-4">
+          <AuthAlert variant="success" title="Cadastro realizado">
+            {success}
+          </AuthAlert>
+
+          <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+            <p className="mb-2">
+              Abra o e-mail enviado para <strong className="text-foreground">{pendingEmail}</strong> e
+              clique em <strong className="text-foreground">Confirmar e-mail</strong>.
+            </p>
+            <p>Após confirmar, você poderá fazer login normalmente.</p>
+          </div>
+
+          {resendMessage && <AuthAlert variant="success">{resendMessage}</AuthAlert>}
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            loading={resending}
+            onClick={handleResendVerification}
+          >
+            Reenviar e-mail de confirmação
+          </Button>
+
+          <Button type="button" className="w-full" onClick={() => router.push('/login')}>
+            Ir para o login
+          </Button>
+        </div>
+
+        <AuthFormFooter
+          alternateLabel="Voltar ao cadastro"
+          onAlternate={() => {
+            setAwaitingVerification(false)
+            setPendingEmail(null)
+            setSuccess(null)
+          }}
+        />
+      </AuthPageShell>
+    )
   }
 
   return (
@@ -95,6 +163,7 @@ export default function AuthForm() {
           autoComplete="name"
           placeholder="Digite seu nome completo"
           icon={<User />}
+          required
           {...register('name')}
           error={errors.name?.message as string | undefined}
         />
@@ -105,6 +174,7 @@ export default function AuthForm() {
           autoComplete="email"
           placeholder="Digite seu e-mail"
           icon={<Mail />}
+          required
           {...register('email')}
           error={errors.email?.message as string | undefined}
         />
@@ -138,6 +208,7 @@ export default function AuthForm() {
           autoComplete="new-password"
           placeholder="Mínimo de 8 caracteres"
           icon={<Lock />}
+          required
           {...register('password')}
           error={errors.password?.message as string | undefined}
           endAdornment={

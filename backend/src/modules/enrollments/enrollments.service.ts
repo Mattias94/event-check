@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import * as QRCode from 'qrcode'
 import { EventsRepository } from '../events/events.repository'
 import { UsersRepository } from '../users/users.repository'
@@ -8,6 +8,8 @@ import { EnrollmentsRepository } from './enrollments.repository'
 
 @Injectable()
 export class EnrollmentsService {
+  private readonly logger = new Logger(EnrollmentsService.name)
+
   constructor(
     private readonly enrollmentsRepository: EnrollmentsRepository,
     private readonly eventsRepository: EventsRepository,
@@ -128,6 +130,10 @@ export class EnrollmentsService {
     })
 
     const emailSent = await this.mailService.sendEnrollmentConfirmation(user, event, qrToken)
+
+    if (!emailSent && this.mailService.isConfigured()) {
+      this.logger.warn(`E-mail de inscrição não enviado para ${user.email}`)
+    }
 
     return { ...enrollment, emailSent }
   }

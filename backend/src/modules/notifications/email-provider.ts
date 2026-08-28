@@ -13,7 +13,7 @@ export interface SendEmailOptions {
 }
 
 export interface EmailProvider {
-  send(options: SendEmailOptions): Promise<{ ok: boolean; error?: string }>
+  send(options: SendEmailOptions): Promise<{ ok: boolean; error?: string; messageId?: string }>
   readonly name: string
 }
 
@@ -58,6 +58,54 @@ export class ResendEmailProvider implements EmailProvider {
     }
 
     return { ok: true }
+  }
+}
+
+/** Brevo (ex-Sendinblue) — API transacional v3. */
+export class BrevoEmailProvider implements EmailProvider {
+  readonly name = 'brevo'
+
+  constructor(
+    private readonly apiKey: string,
+    private readonly fromEmail: string,
+    private readonly fromName: string,
+  ) {}
+
+  async send(options: SendEmailOptions) {
+    try {
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': this.apiKey,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: this.fromName, email: this.fromEmail },
+          to: [{ email: options.to }],
+          subject: options.subject,
+          htmlContent: options.html,
+          attachment: options.attachments?.map((attachment) => ({
+            name: attachment.filename,
+            content: attachment.content,
+          })),
+        }),
+      })
+
+      if (!response.ok) {
+        const body = await response.text()
+        return { ok: false, error: `Brevo HTTP ${response.status}: ${body}` }
+      }
+
+      const result = (await response.json()) as { messageId?: string }
+      if (result.messageId) {
+        console.log(`[Brevo] messageId=${result.messageId} → ${options.to}`)
+      }
+
+      return { ok: true, messageId: result.messageId }
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : 'Erro ao contatar Brevo' }
+    }
   }
 }
 

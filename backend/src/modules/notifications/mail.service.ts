@@ -3,11 +3,20 @@ import { Resend } from 'resend'
 import * as QRCode from 'qrcode'
 import { Event, User } from '../../common/domain.types'
 import {
+  BrevoEmailProvider,
   ConsoleEmailProvider,
   EmailProvider,
   MandrillEmailProvider,
   ResendEmailProvider,
 } from './email-provider'
+
+function parseMailFrom(from: string): { fromName: string; fromEmail: string } {
+  const match = from.match(/^(.*?)<([^>]+)>$/)
+  return {
+    fromName: match?.[1]?.trim() || 'Event Check',
+    fromEmail: match?.[2]?.trim() || from,
+  }
+}
 
 @Injectable()
 export class MailService {
@@ -21,37 +30,50 @@ export class MailService {
   }
 
   isConfigured(): boolean {
-    return this.provider.name !== 'console'
+    return this.provider.name !== 'console' && this.provider.name !== 'none'
   }
 
   private createProvider(): EmailProvider {
-    const provider = (process.env.EMAIL_PROVIDER ?? 'resend').toLowerCase()
+    const provider = (process.env.EMAIL_PROVIDER ?? 'brevo').toLowerCase()
     const from = process.env.MAIL_FROM ?? 'Event Check <onboarding@resend.dev>'
     const allowConsole = process.env.EMAIL_DEV_CONSOLE !== 'false'
+    const { fromName, fromEmail } = parseMailFrom(from)
+
+    if (provider === 'brevo' || provider === 'sendinblue') {
+      const apiKey = process.env.BREVO_API_KEY ?? process.env.SENDINBLUE_API_KEY
+      if (!apiKey) {
+        this.logger.warn('BREVO_API_KEY não configurada')
+        return this.fallbackProvider(allowConsole)
+      }
+      return new BrevoEmailProvider(apiKey, fromEmail, fromName)
+    }
 
     if (provider === 'mandrill' || provider === 'mailchimp') {
       const apiKey = process.env.MANDRILL_API_KEY ?? process.env.MAILCHIMP_TRANSACTIONAL_KEY
       if (!apiKey) {
         this.logger.warn('MANDRILL_API_KEY não configurada')
-        return allowConsole ? new ConsoleEmailProvider() : this.unconfiguredProvider()
+        return this.fallbackProvider(allowConsole)
       }
-
-      const fromMatch = from.match(/^(.*?)<([^>]+)>$/)
-      const fromName = fromMatch?.[1]?.trim() || 'Event Check'
-      const fromEmail = fromMatch?.[2]?.trim() || from
       return new MandrillEmailProvider(apiKey, fromEmail, fromName)
+    }
+
+    if (provider === 'resend' && process.env.RESEND_API_KEY) {
+      return new ResendEmailProvider(new Resend(process.env.RESEND_API_KEY), from)
     }
 
     if (process.env.RESEND_API_KEY) {
       return new ResendEmailProvider(new Resend(process.env.RESEND_API_KEY), from)
     }
 
-    this.logger.warn('RESEND_API_KEY não configurada')
+    this.logger.warn('Nenhum provedor de e-mail configurado (BREVO_API_KEY, RESEND_API_KEY, etc.)')
+    return this.fallbackProvider(allowConsole)
+  }
+
+  private fallbackProvider(allowConsole: boolean): EmailProvider {
     if (allowConsole) {
       this.logger.warn('Usando ConsoleEmailProvider — links aparecerão no terminal do backend')
       return new ConsoleEmailProvider()
     }
-
     return this.unconfiguredProvider()
   }
 
@@ -71,7 +93,7 @@ export class MailService {
       html: this.wrapHtml(
         'Confirme seu e-mail',
         `
-          <p>Olá, <strong>${user.name}</strong>!</p>
+          <p>Olá, <strong>${this.escapeHtml(user.name)}</strong>!</p>
           <p>Obrigado por se cadastrar no Event Check. Clique no botão abaixo para confirmar seu e-mail e ativar sua conta:</p>
           <p style="text-align: center; margin: 28px 0;">
             <a href="${verifyUrl}" style="display: inline-block; background: #4f46e5; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600;">
@@ -99,7 +121,7 @@ export class MailService {
       html: this.wrapHtml(
         'Recuperar senha',
         `
-          <p>Olá, <strong>${user.name}</strong>!</p>
+          <p>Olá, <strong>${this.escapeHtml(user.name)}</strong>!</p>
           <p>Recebemos uma solicitação para redefinir sua senha. Clique no botão abaixo para criar uma nova senha:</p>
           <p style="text-align: center; margin: 28px 0;">
             <a href="${resetUrl}" style="display: inline-block; background: #4f46e5; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600;">
@@ -126,19 +148,23 @@ export class MailService {
         errorCorrectionLevel: 'M',
         margin: 2,
       })
+      const qrDataUrl = await QRCode.toDataURL(qrToken, {
+        width: 320,
+        errorCorrectionLevel: 'M',
+        margin: 2,
+      })
 
       const eventDate = this.formatEventDate(event.date)
 
       return this.send({
         to: user.email,
         subject: `Inscrição confirmada: ${event.title}`,
-        html: this.buildEnrollmentHtml(user, event, eventDate),
+        html: this.buildEnrollmentHtml(user, event, eventDate, qrDataUrl),
         attachments: [
           {
             filename: 'qrcode-checkin.png',
             content: qrPng.toString('base64'),
             contentType: 'image/png',
-            contentId: 'qrcode-checkin',
           },
         ],
         logContext: `inscrição ${event.id} para ${user.email}`,
@@ -158,13 +184,13 @@ export class MailService {
       html: this.wrapHtml(
         'Evento cancelado',
         `
-          <p>Olá, <strong>${user.name}</strong>,</p>
+          <p>Olá, <strong>${this.escapeHtml(user.name)}</strong>,</p>
           <p>Informamos que o evento abaixo foi <strong>cancelado</strong> pelo organizador:</p>
           <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
-            <tr><td style="padding: 8px 0; color: #6b7280; width: 96px;">Evento</td><td><strong>${event.title}</strong></td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280; width: 96px;">Evento</td><td><strong>${this.escapeHtml(event.title)}</strong></td></tr>
             <tr><td style="padding: 8px 0; color: #6b7280;">Data</td><td>${eventDate}</td></tr>
-            <tr><td style="padding: 8px 0; color: #6b7280;">Horário</td><td>${event.time}</td></tr>
-            <tr><td style="padding: 8px 0; color: #6b7280;">Local</td><td>${event.location}</td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280;">Horário</td><td>${this.escapeHtml(event.time)}</td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280;">Local</td><td>${this.escapeHtml(event.location)}</td></tr>
           </table>
           <p>Sua inscrição permanece registrada, mas o evento não ocorrerá. Nenhuma ação adicional é necessária.</p>
         `,
@@ -200,7 +226,7 @@ export class MailService {
       return false
     }
 
-    this.logger.log(`E-mail enviado (${options.logContext})`)
+    this.logger.log(`E-mail enviado (${options.logContext})${result.messageId ? ` [id: ${result.messageId}]` : ''}`)
     return true
   }
 
@@ -213,11 +239,19 @@ export class MailService {
     })
   }
 
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+  }
+
   private wrapHtml(title: string, body: string): string {
     return `
       <div style="font-family: Arial, Helvetica, sans-serif; max-width: 560px; margin: 0 auto; color: #1f2937;">
         <div style="background: #4f46e5; border-radius: 12px 12px 0 0; padding: 24px 32px;">
-          <h1 style="color: #ffffff; font-size: 20px; margin: 0;">${title}</h1>
+          <h1 style="color: #ffffff; font-size: 20px; margin: 0;">${this.escapeHtml(title)}</h1>
         </div>
         <div style="border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; padding: 32px;">
           ${body}
@@ -229,23 +263,23 @@ export class MailService {
     `
   }
 
-  private buildEnrollmentHtml(user: User, event: Event, eventDate: string): string {
+  private buildEnrollmentHtml(user: User, event: Event, eventDate: string, qrDataUrl: string): string {
     return this.wrapHtml(
       'Inscrição confirmada 🎉',
       `
-        <p>Olá, <strong>${user.name}</strong>!</p>
+        <p>Olá, <strong>${this.escapeHtml(user.name)}</strong>!</p>
         <p>Sua inscrição no evento abaixo foi confirmada com sucesso:</p>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px;">
-          <tr><td style="padding: 8px 0; color: #6b7280; width: 96px;">Evento</td><td><strong>${event.title}</strong></td></tr>
+          <tr><td style="padding: 8px 0; color: #6b7280; width: 96px;">Evento</td><td><strong>${this.escapeHtml(event.title)}</strong></td></tr>
           <tr><td style="padding: 8px 0; color: #6b7280;">Data</td><td>${eventDate}</td></tr>
-          <tr><td style="padding: 8px 0; color: #6b7280;">Horário</td><td>${event.time}</td></tr>
-          <tr><td style="padding: 8px 0; color: #6b7280;">Local</td><td>${event.location}</td></tr>
+          <tr><td style="padding: 8px 0; color: #6b7280;">Horário</td><td>${this.escapeHtml(event.time)}</td></tr>
+          <tr><td style="padding: 8px 0; color: #6b7280;">Local</td><td>${this.escapeHtml(event.location)}</td></tr>
         </table>
         <div style="text-align: center; background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 12px; padding: 24px;">
           <p style="margin: 0 0 16px; font-weight: bold;">Seu QR code de check-in</p>
-          <img src="cid:qrcode-checkin" alt="QR code de check-in" width="240" height="240" style="display: block; margin: 0 auto;" />
+          <img src="${qrDataUrl}" alt="QR code de check-in" width="240" height="240" style="display: block; margin: 0 auto;" />
           <p style="margin: 16px 0 0; font-size: 13px; color: #6b7280;">
-            Apresente este QR code na entrada do evento. Ele também está no anexo deste e-mail.
+            Apresente este QR code na entrada do evento. Também enviamos o arquivo em anexo.
           </p>
         </div>
       `,
