@@ -431,6 +431,7 @@ const DateField = forwardRef<HTMLInputElement, DateFieldProps>(
             <button
               id={triggerId}
               type="button"
+              role="combobox"
               disabled={disabled}
               aria-haspopup="dialog"
               aria-expanded={open}

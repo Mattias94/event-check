@@ -186,7 +186,9 @@ const LocationField = forwardRef<HTMLInputElement, LocationFieldProps>(
               id={inputId}
               name={name}
               type="text"
+              role="combobox"
               autoComplete="off"
+              aria-autocomplete="list"
               disabled={disabled}
               required={required}
               defaultValue={value}
@@ -219,6 +221,7 @@ const LocationField = forwardRef<HTMLInputElement, LocationFieldProps>(
                     <button
                       type="button"
                       role="option"
+                      aria-selected={false}
                       className="w-full px-3 py-2 text-left text-sm hover:bg-accent"
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() =>

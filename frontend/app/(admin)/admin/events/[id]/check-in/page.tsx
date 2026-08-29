@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import QrCheckInScanner from '../../../../../../components/admin/QrCheckInScanner'
 import PageBackButton from '../../../../../../components/PageBackButton'
@@ -19,21 +19,7 @@ export default function EventCheckInPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const userId = getCurrentUserId()
-    if (!userId) {
-      router.push('/login')
-      return
-    }
-
-    if (!requireAdmin(router)) {
-      return
-    }
-
-    loadEvent()
-  }, [eventId, router])
-
-  async function loadEvent() {
+  const loadEvent = useCallback(async () => {
     setLoading(true)
     try {
       const eventData = await getEventById(eventId)
@@ -47,7 +33,21 @@ export default function EventCheckInPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [eventId])
+
+  useEffect(() => {
+    const userId = getCurrentUserId()
+    if (!userId) {
+      router.push('/login')
+      return
+    }
+
+    if (!requireAdmin(router)) {
+      return
+    }
+
+    loadEvent()
+  }, [eventId, router, loadEvent])
 
   if (loading) return <LoadingState />
   if (error || !event) return <ErrorState message={error || 'Evento não encontrado'} onRetry={loadEvent} />

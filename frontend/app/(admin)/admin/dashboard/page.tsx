@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getEventById, getEnrollments, getEventsByAdmin, unenrollUser } from '../../../../lib/events'
 import { Event, EnrollmentWithUser } from '../../../../lib/types'
@@ -82,6 +82,34 @@ function AdminDashboardContent() {
   const [filteredEnrollments, setFilteredEnrollments] = useState<EnrollmentWithDetails[]>([])
   const [proximosEventos, setProximosEventos] = useState<Event[]>([])
 
+  const loadData = useCallback(async () => {
+    if (!eventId) return
+
+    setLoading(true)
+    try {
+      const eventData = await getEventById(eventId)
+      if (!eventData) {
+        router.push('/admin/events')
+        return
+      }
+      setEvent(eventData)
+
+      const enrollmentData = await getEnrollments(eventId)
+      setEnrollments(enrollmentData)
+      setFilteredEnrollments(enrollmentData)
+
+      const adminId = getCurrentUserId()
+      if (adminId) {
+        const adminEvents = await getEventsByAdmin(adminId)
+        setProximosEventos(adminEvents.filter(e => e.id !== eventId).slice(0, 2))
+      }
+    } catch (err) {
+      console.error('Erro ao carregar dados:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [eventId, router])
+
   useEffect(() => {
     if (!eventId) {
       router.push('/admin/events')
@@ -89,7 +117,7 @@ function AdminDashboardContent() {
     }
 
     loadData()
-  }, [eventId, router])
+  }, [eventId, router, loadData])
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -104,32 +132,6 @@ function AdminDashboardContent() {
       setFilteredEnrollments(enrollments)
     }
   }, [searchQuery, enrollments])
-
-  async function loadData() {
-    setLoading(true)
-    try {
-      const eventData = await getEventById(eventId!)
-      if (!eventData) {
-        router.push('/admin/events')
-        return
-      }
-      setEvent(eventData)
-
-      const enrollmentData = await getEnrollments(eventId!)
-      setEnrollments(enrollmentData)
-      setFilteredEnrollments(enrollmentData)
-
-      const adminId = getCurrentUserId()
-      if (adminId) {
-        const adminEvents = await getEventsByAdmin(adminId)
-        setProximosEventos(adminEvents.filter(e => e.id !== eventId).slice(0, 2))
-      }
-    } catch (err) {
-      console.error('Erro ao carregar dados:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   function handleLogout() {
     localStorage.removeItem('currentUser')

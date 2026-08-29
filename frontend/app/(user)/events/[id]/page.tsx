@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { CalendarDays, Clock, MapPin, Tag, Users } from 'lucide-react'
 import {
@@ -54,15 +54,7 @@ function EventDetailContent() {
   const backLabel =
     from === 'dashboard' ? 'Voltar para meus eventos' : 'Voltar para descobrir eventos'
 
-  useEffect(() => {
-    if (!currentUserId) {
-      router.push('/login')
-      return
-    }
-    loadData()
-  }, [currentUserId, router, eventId])
-
-  async function loadEnrollmentQr(userId: string, enrolled: boolean) {
+  const loadEnrollmentQr = useCallback(async (userId: string, enrolled: boolean) => {
     if (!enrolled) {
       setQrDataUrl(null)
       return
@@ -78,9 +70,9 @@ function EventDetailContent() {
     } finally {
       setQrLoading(false)
     }
-  }
+  }, [eventId])
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true)
     setLoadError(null)
     try {
@@ -102,7 +94,15 @@ function EventDetailContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentUserId, eventId, loadEnrollmentQr])
+
+  useEffect(() => {
+    if (!currentUserId) {
+      router.push('/login')
+      return
+    }
+    loadData()
+  }, [currentUserId, router, loadData])
 
   async function handleEnroll() {
     if (!currentUserId) return

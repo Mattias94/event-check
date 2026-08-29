@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { CalendarPlus, Trash2, UserCheck, Users, XCircle } from 'lucide-react'
 import AdminEventForm from '../../../../../components/admin/AdminEventForm'
@@ -33,21 +33,7 @@ export default function EventDetailPage() {
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
 
-  useEffect(() => {
-    const userId = getCurrentUserId()
-    if (!userId) {
-      router.push('/login')
-      return
-    }
-
-    if (!requireAdmin(router)) {
-      return
-    }
-
-    loadEvent()
-  }, [eventId, router])
-
-  async function loadEvent() {
+  const loadEvent = useCallback(async () => {
     setLoading(true)
     try {
       const eventData = await getEventById(eventId)
@@ -63,7 +49,21 @@ export default function EventDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [eventId])
+
+  useEffect(() => {
+    const userId = getCurrentUserId()
+    if (!userId) {
+      router.push('/login')
+      return
+    }
+
+    if (!requireAdmin(router)) {
+      return
+    }
+
+    loadEvent()
+  }, [eventId, router, loadEvent])
 
   async function handleUpdate(data: EventCreationData) {
     setSubmitError(null)
