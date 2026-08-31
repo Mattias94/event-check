@@ -1,318 +1,383 @@
-# Event-Check: Tecnologias Utilizadas e Suas Funções
+# Event-Check — Tecnologias Utilizadas
 
-## 📋 Visão Geral do Projeto
+Documento de referência do stack do projeto **Event-Check**: plataforma web de gerenciamento de eventos, com cadastro de usuários, inscrição, check-in por QR code, mapas de localização e painel administrativo.
 
-Event-Check é uma plataforma de gerenciamento de eventos moderna e responsiva, construída com tecnologias de ponta para oferecer uma experiência de usuário excelente tanto para usuários comuns quanto para administradores de eventos.
-
----
-
-## 🛠️ Stack Tecnológico
-
-### **Frontend**
-
-#### **Next.js 14.0.0**
-- **Função Principal**: Framework React para aplicação web de página única (SPA) com suporte a renderização do lado do servidor (SSR) e geração estática de sites (SSG)
-- **Uso no Projeto**: 
-  - Roteamento de aplicação (App Router)
-  - Renderização de páginas
-  - Otimização automática de imagens
-  - Middleware de autenticação
-
-#### **React 18.2.0**
-- **Função Principal**: Biblioteca JavaScript para construção de interfaces de usuário com componentes reutilizáveis
-- **Uso no Projeto**:
-  - Criação de componentes de interface (Button, Input, EventCard)
-  - Gerenciamento de estado com hooks (useState, useEffect, useContext)
-  - Renderização condicional e listas de eventos
-
-#### **TypeScript 5.5.6**
-- **Função Principal**: Superset de JavaScript que adiciona tipagem estática
-- **Uso no Projeto**:
-  - Tipagem de componentes React
-  - Definição de interfaces de dados (Event, User, Enrollment)
-  - Validação de tipos em tempo de desenvolvimento
-  - Melhor documentação de código
-
-#### **Tailwind CSS 3.0.0**
-- **Função Principal**: Framework de CSS utilitário para estilização rápida e responsiva
-- **Uso no Projeto**:
-  - Estilização de todos os componentes
-  - Sistema de grid responsivo (breakpoints: sm, md, lg)
-  - Dark mode nativo
-  - Temas de cores (slate, green, blue, red)
-
-#### **React Hook Form 7.45.1**
-- **Função Principal**: Biblioteca para gerenciamento eficiente de formulários em React
-- **Uso no Projeto**:
-  - Validação de formulários (login, registro, criação de eventos)
-  - Redução de re-renders desnecessários
-  - Integração com resolvers de validação (Zod)
-
-#### **Zod 3.21.4**
-- **Função Principal**: Biblioteca TypeScript-first para validação de esquemas
-- **Uso no Projeto**:
-  - Validação de dados de entrada de formulários
-  - Schemas fortemente tipados (loginSchema, registerSchema, eventSchema)
-  - Geração automática de tipos TypeScript
-
-#### **@hookform/resolvers 2.9.11**
-- **Função Principal**: Resolvedor de validação que conecta Zod com React Hook Form
-- **Uso no Projeto**:
-  - Validação integrada de formulários com Zod
-  - Exibição de mensagens de erro
-
-#### **Recharts 3.10.1**
-- **Função Principal**: Biblioteca de gráficos React baseada em componentes
-- **Uso no Projeto**:
-  - Gráfico de pizza (PieChart) - Status dos inscritos
-  - Gráfico de linhas (LineChart) - Taxa de ocupação e check-in
-  - ResponsiveContainer - Adaptação a diferentes tamanhos de tela
-
-#### **clsx 1.2.1**
-- **Função Principal**: Utilitário para mesclar classes CSS condicionalmente
-- **Uso no Projeto**:
-  - Merge de classes Tailwind em componentes (Button, Input)
-  - Aplicação condicional de estilos baseada em props
+Arquitetura em **monorepo**: `frontend/` (interface) e `backend/` (API REST).
 
 ---
 
-### **Backend**
+## 1. Visão geral do stack
 
-#### **NestJS 10.4.8**
-- **Função Principal**: Framework Node.js progressivo para construção de aplicações back-end escaláveis
-- **Componentes Utilizados**:
-  - `@nestjs/common` - Decoradores e funcionalidades comuns
-  - `@nestjs/core` - Core do framework
-  - `@nestjs/platform-express` - Integração com Express para HTTP
-
-- **Uso no Projeto**:
-  - Criação de controllers e endpoints REST
-  - Middleware de autenticação
-  - Pipes de validação global
-  - CORS para comunicação com frontend
-
-#### **TypeScript 5.8.3**
-- **Função Principal**: Tipagem estática para maior segurança e documentação de código
-- **Uso no Projeto**:
-  - Tipagem de controllers, services e DTOs
-  - Validação em tempo de compilação
-  - Melhor autocomplete em IDEs
-
-#### **class-validator 0.14.1**
-- **Função Principal**: Decoradores para validação de classes
-- **Uso no Projeto**:
-  - Validação de DTOs (Data Transfer Objects)
-  - Decoradores como @IsEmail, @IsNotEmpty, @MinLength
-  - Transformação de dados de entrada
-
-#### **class-transformer 0.5.1**
-- **Função Principal**: Transformação de objetos JavaScript em instâncias de classes tipadas
-- **Uso no Projeto**:
-  - Conversão automática de JSON de entrada em instâncias de DTOs
-  - Serialização de respostas
-
-#### **reflect-metadata 0.2.2**
-- **Função Principal**: Polyfill para suportar metadados de reflexão em TypeScript
-- **Uso no Projeto**:
-  - Suporte a decoradores do NestJS
-  - Metadados utilizados por class-validator e class-transformer
-
-#### **rxjs 7.8.1**
-- **Função Principal**: Biblioteca para programação reativa com observáveis
-- **Uso no Projeto**:
-  - Programação reativa nos observáveis do NestJS
-  - Tratamento de eventos e streams de dados
-  - Operadores para transformação de dados
+| Camada | Tecnologias |
+|--------|-------------|
+| Linguagem | TypeScript (frontend e backend) |
+| Frontend | Next.js 14, React 18, Tailwind CSS |
+| Backend | NestJS 10, Node.js, Express |
+| Banco de dados | PostgreSQL (hospedado no Supabase) |
+| ORM | Prisma 7 |
+| Autenticação | JWT + cookie httpOnly + bcrypt |
+| E-mail | Brevo (padrão), com opção de Resend ou Mandrill |
+| Mapas | Leaflet, OpenStreetMap e Nominatim |
+| Check-in | QR Code (geração no backend, leitura no frontend) |
+| Hospedagem | Vercel (frontend e backend serverless) |
+| CI | GitHub Actions |
 
 ---
 
-### **Ferramentas de Desenvolvimento**
+## 2. Linguagens e runtime
 
-#### **Autoprefixer 10.4.14**
-- **Função Principal**: PostCSS plugin para adicionar prefixos de fornecedor automaticamente
-- **Uso no Projeto**: Compatibilidade de CSS em navegadores antigos
+### TypeScript
+Linguagem principal do projeto (frontend 5.5.x e backend 5.9.x).
 
-#### **PostCSS 8.4.21**
-- **Função Principal**: Ferramenta para transformar CSS com plugins
-- **Uso no Projeto**: Pipeline de processamento de CSS (Tailwind, Autoprefixer)
+- Adiciona tipos estáticos sobre o JavaScript.
+- Reduz erros em tempo de desenvolvimento (interfaces de `User`, `Event`, `Enrollment`, DTOs).
+- Melhora autocomplete e documentação do código.
 
-#### **ts-node 10.9.2**
-- **Função Principal**: Executor TypeScript para Node.js
-- **Uso no Projeto**: Execução de scripts e desenvolvimento backend em tempo real
+### Node.js
+Ambiente de execução JavaScript no servidor.
 
-#### **tsconfig-paths 4.2.0**
-- **Função Principal**: Suporte para path mapping em TypeScript
-- **Uso no Projeto**: Importações com caminhos absolutos (ex: `@/lib/types`)
+- Roda a API NestJS.
+- Executa scripts (Prisma, seed, build).
+- CI usa Node.js 18.
+
+### JavaScript
+Linguagem que o navegador e o Node executam depois da compilação do TypeScript.
 
 ---
 
-## 🏗️ Arquitetura e Padrões
+## 3. Frontend (`frontend/`)
 
-### **Frontend**
+### Next.js 14.0.0
+Framework React usado para a aplicação web.
+
+- **App Router**: rotas em `app/`, com grupos `(auth)`, `(user)` e `(admin)`.
+- Renderização de páginas, layouts e otimização de imagens.
+- Servidor de desenvolvimento (`next dev`) e build de produção (`next build`).
+- Deploy na Vercel.
+
+### React 18.2.0
+Biblioteca de interface com componentes reutilizáveis.
+
+- Componentes como `Button`, `EventCard`, `AuthForm`, `QrCheckInScanner`.
+- Estado com hooks (`useState`, `useEffect`, etc.).
+- `react-dom` renderiza a árvore no navegador.
+
+### Tailwind CSS 3
+Framework de CSS utilitário.
+
+- Estilização dos componentes sem CSS manual em massa.
+- Layout responsivo (mobile-first: `sm`, `md`, `lg`, `xl`).
+- Dark mode por classe (`darkMode: 'class'`).
+- Tema com tokens de cor (primary, muted, destructive, etc.).
+
+### PostCSS + Autoprefixer
+Pipeline de CSS.
+
+- **PostCSS**: processa o CSS no build.
+- **Autoprefixer**: adiciona prefixos de navegador automaticamente.
+
+### React Hook Form 7
+Gerenciamento de formulários.
+
+- Login, cadastro, perfil, criação/edição de eventos.
+- Menos re-renders do que controle manual de cada campo.
+
+### Zod 3 + @hookform/resolvers
+Validação de dados no frontend.
+
+- **Zod**: schemas tipados (`loginSchema`, `registerSchema`, `eventSchema`).
+- **@hookform/resolvers**: liga o Zod ao React Hook Form e exibe erros no formulário.
+
+### Recharts
+Gráficos no painel admin.
+
+- Pizza de ocupação do evento.
+- Gráficos de inscritos / check-in.
+
+### Leaflet + react-leaflet
+Mapas interativos.
+
+- **Leaflet**: biblioteca de mapas.
+- **react-leaflet**: componentes React sobre o Leaflet.
+- Exibe localização do evento e permite escolher ponto no mapa.
+
+### OpenStreetMap + Nominatim
+Dados geográficos (sem chave de API paga).
+
+- **OpenStreetMap**: tiles (imagens) do mapa.
+- **Nominatim**: busca de endereço e geocodificação reversa, via backend (`/api/geocode`).
+
+### html5-qrcode
+Leitura de QR code pela câmera no check-in do admin (`QrCheckInScanner`).
+
+### lucide-react
+Ícones SVG (setas, usuário, mapa, calendário, etc.).
+
+### Radix UI (`@radix-ui/react-label`, `@radix-ui/react-slot`)
+Primitivos de acessibilidade para rótulos e composição de botões.
+
+### class-variance-authority (CVA) + clsx + tailwind-merge + tailwindcss-animate
+Utilitários de estilo.
+
+- **CVA**: variantes de componente (ex.: botão `default` / `destructive`).
+- **clsx**: junta classes CSS de forma condicional.
+- **tailwind-merge**: evita conflito entre classes Tailwind.
+- **tailwindcss-animate**: animações prontas.
+
+### ESLint + eslint-config-next
+Análise estática do código frontend (regras de Next.js e Web Vitals).
+
+---
+
+## 4. Backend (`backend/`)
+
+### NestJS 10
+Framework Node.js da API REST.
+
+Pacotes usados:
+
+- `@nestjs/common` — decoradores, pipes, guards, exceções.
+- `@nestjs/core` — núcleo do framework.
+- `@nestjs/platform-express` — HTTP via Express.
+
+Organização em módulos:
+
+| Módulo | Função |
+|--------|--------|
+| `auth` | Login, registro, verificação de e-mail, reset de senha |
+| `users` | Perfil e listagem de usuários (admin) |
+| `events` | CRUD de eventos |
+| `enrollments` | Inscrições e check-in |
+| `geocoding` | Proxy de busca de endereço (Nominatim) |
+| `notifications` | E-mails transacionais e token do QR |
+
+Padrão em camadas: **controller** (HTTP) → **service** (regras de negócio) → **repository** (Prisma).
+
+Prefixo da API: `/api`.
+
+### Express
+Servidor HTTP por baixo do NestJS.
+
+- CORS (frontend local e Vercel).
+- Cookies.
+- Limite de body JSON (imagens em base64, até 10 MB).
+
+### class-validator + class-transformer
+Validação da entrada da API.
+
+- **class-validator**: decoradores nos DTOs (`@IsEmail`, `@IsNotEmpty`, `@MinLength`).
+- **class-transformer**: converte JSON em instâncias de classe.
+- `ValidationPipe` global: `whitelist`, `transform`, rejeita valores desconhecidos.
+
+### reflect-metadata
+Necessário para decoradores do NestJS, `class-validator` e `class-transformer`.
+
+### RxJS
+Observables usados internamente pelo NestJS (ciclo de vida, interceptors, streams).
+
+### cookie-parser
+Lê cookies HTTP. O token de sessão pode ir no cookie httpOnly, além do header `Authorization`.
+
+### dotenv
+Carrega variáveis do arquivo `.env` (porta, banco, chaves de e-mail, segredos JWT).
+
+### uuid
+Geração de identificadores únicos (tokens de verificação, reset, etc., além dos UUIDs do Prisma).
+
+---
+
+## 5. Banco de dados e persistência
+
+### PostgreSQL
+Banco relacional.
+
+Modelos principais:
+
+- **User** — usuários (roles `admin` e `user`), verificação de e-mail, perfil.
+- **Event** — eventos (data, local, coordenadas, capacidade, status, capa).
+- **Enrollment** — inscrição (token de check-in, horário de check-in).
+- **EmailVerification** — tokens de confirmação de e-mail.
+- **PasswordReset** — tokens de redefinição de senha.
+
+Hospedagem: **Supabase** (PostgreSQL gerenciado), com:
+
+- `DATABASE_URL` — pooler em modo transação (porta 6543) para a aplicação.
+- `DIRECT_URL` — conexão direta (porta 5432) para migrations.
+
+### Prisma 7
+ORM (mapeamento objeto-relacional).
+
+- Schema em `backend/prisma/schema.prisma`.
+- Migrations versionadas em `prisma/migrations/`.
+- Cliente gerado em `src/generated/prisma`.
+- Seed (`prisma/seed.ts`) para dados iniciais.
+- `@prisma/client` — acesso ao banco no código.
+- `@prisma/adapter-pg` — adaptador PostgreSQL (driver `pg`).
+- `pg` — driver Node.js do PostgreSQL.
+
+### tsx
+Executa TypeScript direto no Node (seed do Prisma: `tsx prisma/seed.ts`).
+
+---
+
+## 6. Segurança e autenticação
+
+### bcryptjs
+Hash de senhas. A senha nunca é gravada em texto puro.
+
+### jsonwebtoken (JWT)
+Tokens assinados.
+
+- **Sessão** (`AUTH_TOKEN_SECRET`): login; validade de 7 dias; enviado no header Bearer ou cookie httpOnly.
+- **QR de check-in** (`QR_TOKEN_SECRET`): inscrição do participante; lido no scanner do admin.
+
+### Guards NestJS
+Proteção de rotas (usuário autenticado, admin, ou o próprio usuário).
+
+---
+
+## 7. E-mail transacional
+
+O backend envia e-mails de verificação de cadastro, reset de senha, confirmação de inscrição (com QR) e cancelamento de evento.
+
+Provedor escolhido por `EMAIL_PROVIDER` no `.env`:
+
+| Provedor | Pacote / API | Função |
+|----------|----------------|--------|
+| **Brevo** (padrão) | API HTTP v3 (`api.brevo.com`) | Envio transacional |
+| **Resend** | pacote `resend` | Alternativa |
+| **Mandrill** | API Mailchimp Transactional | Alternativa |
+| **Console** | log no terminal | Desenvolvimento local, sem chave |
+
+`MAIL_FROM` define o remetente. `FRONTEND_URL` entra nos links dos e-mails.
+
+---
+
+## 8. QR Code e check-in
+
+### qrcode (backend)
+Gera a imagem do QR da inscrição (anexada no e-mail e exibida no dashboard do usuário).
+
+### html5-qrcode (frontend)
+Lê o QR pela câmera na tela de check-in do admin.
+
+Fluxo: inscrição → token JWT no QR → admin escaneia → API marca `checkedInAt`.
+
+---
+
+## 9. Mapas e localização
+
+| Tecnologia | Onde | Função |
+|------------|------|--------|
+| Nominatim (OpenStreetMap) | Backend (`GeocodingService`) | Busca de endereço e geocodificação reversa |
+| Leaflet / react-leaflet | Frontend | Mapa interativo |
+| OpenStreetMap tiles | Frontend | Imagens do mapa |
+
+O frontend não chama o Nominatim direto: passa pelo backend (`/api/geocode`) para respeitar a política de uso (User-Agent e intervalo entre requisições).
+
+---
+
+## 10. Infraestrutura, deploy e CI
+
+### Vercel
+Hospedagem serverless.
+
+- Frontend: app Next.js.
+- Backend: função serverless (`backend/src/serverless.ts` + `vercel.json`), reaproveitando a instância NestJS entre invocações.
+
+### GitHub Actions
+CI em pull requests para `main`, `master` e `develop`.
+
+- Instala dependências do frontend.
+- Roda `npm run lint` e `npm test` no Node 18.
+
+### Git
+Controle de versão do repositório.
+
+---
+
+## 11. Ferramentas de desenvolvimento
+
+| Ferramenta | Função |
+|------------|--------|
+| **ts-node** | Roda o backend em TypeScript no modo dev (`npm run start:dev`) |
+| **tsconfig-paths** | Resolve aliases de importação do TypeScript |
+| **tsx** | Executa scripts TS (seed) |
+| **Prisma CLI** | `generate`, `migrate`, `seed` |
+| **@types/\*** | Tipagens para Node, React, JWT, cookie-parser, pg, qrcode, uuid, Leaflet |
+| **ESLint** | Qualidade do código frontend |
+
+---
+
+## 12. Fluxo de uma requisição
+
 ```
-frontend/
-├── app/                      # App Router do Next.js
-│   ├── (auth)/              # Rotas de autenticação
-│   ├── (admin)/             # Rotas adminitradas
-│   ├── events/              # Listagem e detalhes de eventos
-│   ├── dashboard/           # Dashboard do usuário
-│   └── layout.tsx           # Layout raiz
-├── components/              # Componentes reutilizáveis
-│   ├── ui/                  # Componentes base (Button, Input)
-│   └── admin/               # Componentes específicos de admin
-├── lib/                     # Utilitários e lógica
-│   ├── api.ts              # Cliente HTTP
-│   ├── auth.ts             # Autenticação
-│   ├── events.ts           # Lógica de eventos
-│   └── types.ts            # Tipos TypeScript
-└── globals.css             # Estilos globais
+Navegador (Next.js + React)
+        │  fetch  (JSON + cookie/JWT)
+        ▼
+API NestJS  (/api/...)
+        │  ValidationPipe (class-validator)
+        │  Guard (JWT)
+        ▼
+Service (regras de negócio)
+        │
+        ▼
+Prisma  →  PostgreSQL (Supabase)
+        │
+        ▼
+Resposta JSON  →  interface React
 ```
 
-### **Backend**
-```
-backend/
-├── src/
-│   ├── main.ts             # Entrada da aplicação
-│   ├── app.module.ts       # Módulo raiz
-│   ├── controllers/        # Controllers REST
-│   ├── services/           # Lógica de negócio
-│   └── dto/                # Data Transfer Objects
-└── dist/                   # Código compilado
-```
+E-mails e geocoding saem do service para Brevo/Resend e Nominatim, respectivamente.
 
 ---
 
-## 🔐 Funcionalidades Principais
+## 13. Scripts principais
 
-### **Autenticação e Autorização**
-- Sistema de login/registro com validação
-- Armazenamento seguro de credenciais
-- Roles (Admin, User)
-- Proteção de rotas baseada em roles
+### Frontend
 
-### **Gerenciamento de Eventos**
-- CRUD completo de eventos (Admin)
-- Busca e filtro por categoria
-- Exibição em grid responsivo
-- Status de eventos (Ativo, Cancelado, Finalizado)
-
-### **Sistema de Inscrições**
-- Inscrição/Desinscrição em eventos
-- Tracking de vagas disponíveis
-- Cálculo dinâmico de capacidade
-- Histórico de eventos do usuário
-
-### **Dashboard Admin**
-- Visualização de inscritos
-- Gráficos de ocupação
-- Exportação de dados (CSV)
-- Check-in de participantes
-
----
-
-## 📱 Responsividade e Compatibilidade
-
-### **Breakpoints Tailwind (Mobile-First)**
-- `sm`: 640px (Tablets pequenos)
-- `md`: 768px (Tablets)
-- `lg`: 1024px (Desktops)
-- `xl`: 1280px (Desktops grandes)
-
-### **Suporte Dark Mode**
-- Implementado via `dark:` classes do Tailwind
-- Persistência de preferência do usuário
-
-### **Meta Tags e SEO**
-- Charset UTF-8
-- Viewport responsivo
-- Theme color
-
----
-
-## 🚀 Melhorias Implementadas
-
-1. ✅ **Correção de Bug**: Sintaxe do `toUpperCase()` em DashboardClient.tsx
-2. ✅ **Meta Tags**: Adicionadas ao layout raiz para melhor responsividade
-3. ✅ **Merge de Classes**: Corrigido em Button.tsx e Input.tsx usando clsx
-4. ✅ **Responsividade**: Melhorada em:
-   - Admin Dashboard (cards, grid, tabelas)
-   - Event Detail Page (layout, botões)
-   - All components (padding, font-sizes, gaps)
-5. ✅ **Acessibilidade**: Improved semantic HTML e ARIA attributes
-
----
-
-## 📊 Banco de Dados
-
-O projeto utiliza localStorage para persistência de dados no frontend e um backend em memória para a demonstração. Em produção, seria utilizado:
-- **PostgreSQL** ou **MongoDB** para persistência
-- **Prisma** ou **TypeORM** como ORM
-- **JWT** para tokens de autenticação
-
----
-
-## 🎯 Fluxo de Requisições
-
-```
-Cliente (React/Next.js)
-    ↓ (fetch/axios)
-API REST (NestJS)
-    ↓
-Validação (class-validator)
-    ↓
-Controllers & Services
-    ↓
-localStorage/Memory Storage
-    ↓
-Response JSON
-    ↓
-Cliente (Renderização com React)
-```
-
----
-
-## 📦 Dependências de Produção vs Desenvolvimento
-
-### **Produção** (executadas no build final)
-- next, react, react-dom
-- react-hook-form, @hookform/resolvers
-- zod
-- recharts
-- clsx
-
-### **Desenvolvimento** (apenas durante compilação)
-- typescript
-- @types/react, @types/node
-- tailwindcss, autoprefixer, postcss
-
----
-
-## 🔄 Scripts Disponíveis
-
-### **Frontend**
 ```bash
-npm run dev           # Inicia servidor de desenvolvimento
-npm run build         # Compila para produção
-npm run start         # Inicia servidor de produção
-npm run lint          # Executa linter
+npm run dev      # servidor de desenvolvimento (porta 3000)
+npm run build    # build de produção
+npm run start    # sobe o build
+npm run lint     # ESLint
 ```
 
-### **Backend**
+### Backend
+
 ```bash
-npm run build         # Compila TypeScript
-npm run start         # Inicia servidor
-npm run start:dev     # Inicia com ts-node
+npm run start:dev       # API em modo desenvolvimento (porta 3001)
+npm run build           # compilação TypeScript
+npm run start           # sobe o JS compilado
+npm run prisma:generate # gera o cliente Prisma
+npm run prisma:migrate  # aplica migrations
+npm run prisma:seed     # popula o banco
 ```
 
 ---
 
-## 🎓 Conclusão
+## 14. Resumo por responsabilidade
 
-O Event-Check utiliza uma stack moderna e bem estabelecida que combina:
-- **Performance**: Next.js com otimizações automáticas
-- **Tipo-segurança**: TypeScript em frontend e backend
-- **UX/UI**: Tailwind CSS com responsividade completa
-- **Validação**: Zod + class-validator para dados confiáveis
-- **Escalabilidade**: NestJS como framework robusto
+| Preciso de… | Tecnologia |
+|-------------|------------|
+| Interface web | React + Next.js |
+| Visual e responsividade | Tailwind CSS |
+| Formulários confiáveis | React Hook Form + Zod |
+| Gráficos no admin | Recharts |
+| Mapa do evento | Leaflet + OpenStreetMap |
+| Busca de endereço | Nominatim (via NestJS) |
+| Ícones | lucide-react |
+| API REST | NestJS |
+| Validar body da API | class-validator |
+| Guardar dados | PostgreSQL + Prisma |
+| Hospedar o banco | Supabase |
+| Senha segura | bcryptjs |
+| Sessão do usuário | JWT + cookie |
+| Check-in | qrcode + html5-qrcode |
+| E-mails | Brevo (ou Resend / Mandrill) |
+| Publicar o sistema | Vercel |
+| Checar o código no PR | GitHub Actions + ESLint |
 
-Esta arquitetura garante um código manutenível, escalável e pronto para produção, com excelente experiência de usuário em todos os dispositivos.
+---
+
+*Documento gerado a partir do código atual do repositório Event-Check (dependências em `frontend/package.json` e `backend/package.json`, schema Prisma, módulos NestJS e configuração de deploy).*

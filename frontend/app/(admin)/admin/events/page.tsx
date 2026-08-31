@@ -177,10 +177,10 @@ export default function AdminEventListPage() {
       {/* Cabeçalho da página */}
       <div className="mb-6 md:mb-8">
         <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-          Meus Eventos
+          Eventos
         </h1>
         <p className="mt-1 text-sm text-muted-foreground md:text-base">
-          Gerencie e crie seus eventos
+          Gerencie e crie eventos
         </p>
       </div>
 
