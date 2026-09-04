@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Search } from 'lucide-react'
 import LoadingState from '../../../../components/LoadingState'
 import EmptyState from '../../../../components/EmptyState'
@@ -42,23 +42,26 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<UserDetail | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
+  const hasLoadedRef = useRef(false)
 
   useEffect(() => {
     loadUsers()
   }, [])
 
   async function loadUsers() {
-    setLoading(true)
+    const isInitialLoad = !hasLoadedRef.current
+    if (isInitialLoad) setLoading(true)
     try {
       const users = await getAllUniqueUserIds()
       setAllUsers(users)
       setFilteredUsers(users)
       setSelectedUser(null)
       setSearchQuery('')
+      hasLoadedRef.current = true
     } catch (err) {
       console.error('Erro ao carregar usuários:', err)
     } finally {
-      setLoading(false)
+      if (isInitialLoad) setLoading(false)
     }
   }
 

@@ -1,26 +1,26 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { useRouter, useParams } from 'next/navigation'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useParams } from 'next/navigation'
 import QrCheckInScanner from '../../../../../../components/admin/QrCheckInScanner'
 import PageBackButton from '../../../../../../components/PageBackButton'
 import LoadingState from '../../../../../../components/LoadingState'
 import ErrorState from '../../../../../../components/ErrorState'
 import { getEventById } from '../../../../../../lib/events'
 import { Event } from '../../../../../../lib/types'
-import { getCurrentUserId, requireAdmin } from '../../../../../../lib/auth-guard'
 
 export default function EventCheckInPage() {
-  const router = useRouter()
   const params = useParams()
   const eventId = params.id as string
 
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const hasLoadedRef = useRef(false)
 
   const loadEvent = useCallback(async () => {
-    setLoading(true)
+    const isInitialLoad = !hasLoadedRef.current
+    if (isInitialLoad) setLoading(true)
     try {
       const eventData = await getEventById(eventId)
       if (!eventData) {
@@ -28,26 +28,17 @@ export default function EventCheckInPage() {
         return
       }
       setEvent(eventData)
+      hasLoadedRef.current = true
     } catch {
       setError('Erro ao carregar evento')
     } finally {
-      setLoading(false)
+      if (isInitialLoad) setLoading(false)
     }
   }, [eventId])
 
   useEffect(() => {
-    const userId = getCurrentUserId()
-    if (!userId) {
-      router.push('/login')
-      return
-    }
-
-    if (!requireAdmin(router)) {
-      return
-    }
-
     loadEvent()
-  }, [eventId, router, loadEvent])
+  }, [loadEvent])
 
   if (loading) return <LoadingState />
   if (error || !event) return <ErrorState message={error || 'Evento não encontrado'} onRetry={loadEvent} />

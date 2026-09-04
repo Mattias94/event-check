@@ -4,7 +4,7 @@ import { Suspense, useCallback, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getEventById, getEnrollments, getEventsByAdmin, unenrollUser } from '../../../../lib/events'
 import { Event, EnrollmentWithUser } from '../../../../lib/types'
-import { getCurrentUserId, requireAdmin } from '../../../../lib/auth-guard'
+import { getCurrentUserId } from '../../../../lib/auth-guard'
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import {
   AlertCircle,
@@ -87,22 +87,21 @@ function AdminDashboardContent() {
 
     setLoading(true)
     try {
-      const eventData = await getEventById(eventId)
+      const adminId = getCurrentUserId()
+      const [eventData, enrollmentData, adminEvents] = await Promise.all([
+        getEventById(eventId),
+        getEnrollments(eventId),
+        adminId ? getEventsByAdmin(adminId) : Promise.resolve([] as Event[]),
+      ])
+
       if (!eventData) {
         router.push('/admin/events')
         return
       }
       setEvent(eventData)
-
-      const enrollmentData = await getEnrollments(eventId)
       setEnrollments(enrollmentData)
       setFilteredEnrollments(enrollmentData)
-
-      const adminId = getCurrentUserId()
-      if (adminId) {
-        const adminEvents = await getEventsByAdmin(adminId)
-        setProximosEventos(adminEvents.filter(e => e.id !== eventId).slice(0, 2))
-      }
+      setProximosEventos(adminEvents.filter(e => e.id !== eventId).slice(0, 2))
     } catch (err) {
       console.error('Erro ao carregar dados:', err)
     } finally {

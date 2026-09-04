@@ -192,7 +192,7 @@ export class MailService {
             <tr><td style="padding: 8px 0; color: #6b7280;">Horário</td><td>${this.escapeHtml(event.time)}</td></tr>
             <tr><td style="padding: 8px 0; color: #6b7280;">Local</td><td>${this.escapeHtml(event.location)}</td></tr>
           </table>
-          <p>Sua inscrição permanece registrada, mas o evento não ocorrerá. Nenhuma ação adicional é necessária.</p>
+          <p>Sua inscrição neste evento não é mais válida. Acesse <a href="${this.frontendUrl}/dashboard" style="color: #4f46e5;">Meus eventos</a> para ver seus demais ingressos.</p>
         `,
       ),
       logContext: `cancelamento ${event.id} para ${user.email}`,

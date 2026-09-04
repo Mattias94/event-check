@@ -41,8 +41,8 @@ export async function deleteEvent(eventId: string): Promise<{ success: boolean; 
   }
 }
 
-export async function cancelEvent(eventId: string): Promise<Event | null> {
-  return api.post<Event>(`/events/${eventId}/cancel`)
+export async function cancelEvent(eventId: string): Promise<(Event & { emailsNotified?: number; emailsFailed?: number }) | null> {
+  return api.post<Event & { emailsNotified?: number; emailsFailed?: number }>(`/events/${eventId}/cancel`)
 }
 
 export async function getEnrollments(eventId: string): Promise<EnrollmentWithUser[]> {

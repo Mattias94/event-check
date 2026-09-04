@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { CalendarPlus, Trash2, UserCheck, Users, XCircle } from 'lucide-react'
 import AdminEventForm from '../../../../../components/admin/AdminEventForm'
@@ -13,7 +13,6 @@ import { Progress } from '../../../../../components/ui/Progress'
 import { getEventById, updateEvent, getEnrollments, deleteEvent, cancelEvent } from '../../../../../lib/events'
 import { Event, EnrollmentWithUser } from '../../../../../lib/types'
 import { EventCreationData } from '../../../../../lib/schemas'
-import { getCurrentUserId, requireAdmin } from '../../../../../lib/auth-guard'
 
 function StatusBadge({ status }: { status: Event['status'] }) {
   if (status === 'active') return <Badge variant="success">Ativo</Badge>
@@ -32,38 +31,33 @@ export default function EventDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const hasLoadedRef = useRef(false)
 
   const loadEvent = useCallback(async () => {
-    setLoading(true)
+    const isInitialLoad = !hasLoadedRef.current
+    if (isInitialLoad) setLoading(true)
     try {
-      const eventData = await getEventById(eventId)
+      const [eventData, enrollmentData] = await Promise.all([
+        getEventById(eventId),
+        getEnrollments(eventId),
+      ])
       if (!eventData) {
         setError('Evento não encontrado')
         return
       }
       setEvent(eventData)
-      const enrollmentData = await getEnrollments(eventId)
       setEnrollments(enrollmentData)
+      hasLoadedRef.current = true
     } catch {
       setError('Erro ao carregar evento')
     } finally {
-      setLoading(false)
+      if (isInitialLoad) setLoading(false)
     }
   }, [eventId])
 
   useEffect(() => {
-    const userId = getCurrentUserId()
-    if (!userId) {
-      router.push('/login')
-      return
-    }
-
-    if (!requireAdmin(router)) {
-      return
-    }
-
     loadEvent()
-  }, [eventId, router, loadEvent])
+  }, [loadEvent])
 
   async function handleUpdate(data: EventCreationData) {
     setSubmitError(null)
@@ -89,7 +83,15 @@ export default function EventDetailPage() {
     setActionLoading(true)
     try {
       const updated = await cancelEvent(eventId)
-      if (updated) setEvent(updated)
+      if (updated) {
+        setEvent(updated)
+        const notified = updated.emailsNotified ?? event.currentEnrollments
+        alert(
+          notified > 0
+            ? `Evento cancelado. ${notified} inscrito(s) notificado(s) por e-mail.`
+            : 'Evento cancelado com sucesso.',
+        )
+      }
     } catch (err: any) {
       alert(err.message || 'Erro ao cancelar evento')
     } finally {
@@ -99,7 +101,13 @@ export default function EventDetailPage() {
 
   async function handleDelete() {
     if (!event) return
-    const confirmed = confirm(`Deletar "${event.title}"?\n\nEsta ação não pode ser desfeita.`)
+    const enrollmentNote =
+      event.currentEnrollments > 0
+        ? `\n\n${event.currentEnrollments} inscrição(ões) será(ão) removida(s) junto com o evento.`
+        : ''
+    const confirmed = confirm(
+      `Deletar "${event.title}"?${enrollmentNote}\n\nEsta ação não pode ser desfeita.`,
+    )
     if (!confirmed) return
 
     setActionLoading(true)
@@ -142,13 +150,9 @@ export default function EventDetailPage() {
           <Button
             variant="outline"
             onClick={handleDelete}
-            disabled={actionLoading || event.currentEnrollments > 0}
+            disabled={actionLoading}
             className="text-destructive hover:text-destructive"
-            title={
-              event.currentEnrollments > 0
-                ? `${event.currentEnrollments} inscrito(s). Cancele primeiro ou aguarde desinscrições.`
-                : 'Deletar evento'
-            }
+            title="Deletar evento permanentemente"
           >
             <Trash2 aria-hidden="true" />
             Deletar

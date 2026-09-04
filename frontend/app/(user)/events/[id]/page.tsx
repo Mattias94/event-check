@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { CalendarDays, Clock, MapPin, Tag, Users } from 'lucide-react'
 import {
@@ -49,6 +49,7 @@ function EventDetailContent() {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [qrLoading, setQrLoading] = useState(false)
   const currentUserId = getCurrentUserId()
+  const hasLoadedRef = useRef(false)
 
   const backHref = from === 'dashboard' ? '/dashboard' : '/events'
   const backLabel =
@@ -73,26 +74,32 @@ function EventDetailContent() {
   }, [eventId])
 
   const loadData = useCallback(async () => {
-    setLoading(true)
+    const isInitialLoad = !hasLoadedRef.current
+    if (isInitialLoad) setLoading(true)
     setLoadError(null)
     try {
-      const eventData = await getEventById(eventId)
+      const [eventData, enrolled] = await Promise.all([
+        getEventById(eventId),
+        currentUserId ? isUserEnrolled(currentUserId, eventId) : Promise.resolve(false),
+      ])
+
       if (!eventData) {
         setEvent(null)
         setLoadError('Evento não encontrado')
         return
       }
       setEvent(eventData)
+      setIsEnrolled(enrolled)
+      hasLoadedRef.current = true
+
       if (currentUserId) {
-        const enrolled = await isUserEnrolled(currentUserId, eventId)
-        setIsEnrolled(enrolled)
         await loadEnrollmentQr(currentUserId, enrolled)
       }
     } catch {
       setEvent(null)
       setLoadError('Erro ao carregar evento. Verifique sua conexão e tente novamente.')
     } finally {
-      setLoading(false)
+      if (isInitialLoad) setLoading(false)
     }
   }, [currentUserId, eventId, loadEnrollmentQr])
 

@@ -54,7 +54,12 @@ export default function CreateEventPage() {
         </p>
       </div>
 
-      <AdminEventForm onSubmit={handleSubmit} loading={loading} error={error} />
+      <AdminEventForm
+        onSubmit={handleSubmit}
+        onCancel={() => router.push('/admin/events')}
+        loading={loading}
+        error={error}
+      />
     </div>
   )
 }

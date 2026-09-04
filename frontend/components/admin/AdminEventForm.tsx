@@ -24,6 +24,7 @@ import { Event } from '../../lib/types'
 interface AdminEventFormProps {
   initialData?: Event
   onSubmit: (data: EventCreationData) => Promise<void>
+  onCancel?: () => void
   loading?: boolean
   error?: string | null
   readOnly?: boolean
@@ -87,6 +88,7 @@ function scrollToField(field: (typeof EVENT_FORM_FIELDS)[number]) {
 export default function AdminEventForm({
   initialData,
   onSubmit,
+  onCancel,
   loading = false,
   error = null,
   readOnly = false,
@@ -463,7 +465,18 @@ export default function AdminEventForm({
         {success && <FormAlert variant="success">{success}</FormAlert>}
 
         {!readOnly && (
-          <div className="flex gap-3">
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+            {onCancel && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={loading || coverProcessing}
+                className="w-full sm:w-auto"
+              >
+                Cancelar
+              </Button>
+            )}
             <Button type="submit" disabled={loading || coverProcessing} loading={loading} className="w-full sm:w-auto">
               {coverProcessing ? 'Processando imagem...' : initialData ? 'Atualizar Evento' : 'Criar Evento'}
             </Button>

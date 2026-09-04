@@ -57,6 +57,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
         const active = item.href === activeHref
         return (
           <Link
+            prefetch
             key={item.href}
             href={item.href}
             onClick={onNavigate}

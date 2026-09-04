@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { Event, EventFilters } from '../../common/domain.types'
 import { EnrollmentsRepository } from '../enrollments/enrollments.repository'
 import { MailService } from '../notifications/mail.service'
@@ -10,6 +10,8 @@ import { UpdateEventDto } from './dtos/update-event.dto'
 
 @Injectable()
 export class EventsService {
+  private readonly logger = new Logger(EventsService.name)
+
   constructor(
     private readonly eventsRepository: EventsRepository,
     private readonly enrollmentsRepository: EnrollmentsRepository,
@@ -111,12 +113,7 @@ export class EventsService {
   }
 
   async delete(id: string) {
-    const event = await this.getById(id)
-    if (event.currentEnrollments > 0) {
-      throw new BadRequestException(
-        `Não é possível deletar este evento pois possui ${event.currentEnrollments} inscrito(s).`,
-      )
-    }
+    await this.getById(id)
 
     await this.enrollmentsRepository.deleteByEventId(id)
     await this.eventsRepository.delete(id)
@@ -140,15 +137,27 @@ export class EventsService {
     })
 
     const enrollments = await this.enrollmentsRepository.findByEventId(id)
-    await Promise.all(
+    const emailResults = await Promise.allSettled(
       enrollments.map(async (enrollment) => {
         const user = await this.usersRepository.findById(enrollment.userId)
-        if (user) {
-          await this.mailService.sendEventCancellation(user, updated)
-        }
+        if (!user) return false
+        return this.mailService.sendEventCancellation(user, updated)
       }),
     )
 
-    return updated
+    const emailsNotified = emailResults.filter(
+      (result) => result.status === 'fulfilled' && result.value === true,
+    ).length
+    const emailsFailed = enrollments.length - emailsNotified
+
+    if (emailsFailed > 0) {
+      this.logger.warn(
+        `Cancelamento do evento ${id}: ${emailsFailed} e-mail(s) de notificação não enviado(s)`,
+      )
+    } else if (emailsNotified > 0) {
+      this.logger.log(`Cancelamento do evento ${id}: ${emailsNotified} inscrito(s) notificado(s)`)
+    }
+
+    return { ...updated, emailsNotified, emailsFailed }
   }
 }

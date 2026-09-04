@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { DEFAULT_EVENT_CATEGORIES } from '../../../lib/event-categories'
 import { getUpcomingEvents, getCategories } from '../../../lib/events'
@@ -28,20 +28,23 @@ export default function EventsPage() {
   const [endDate, setEndDate] = useState('')
   const [categories, setCategories] = useState<string[]>([...DEFAULT_EVENT_CATEGORIES])
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const hasLoadedRef = useRef(false)
 
   const hasActiveFilters = Boolean(searchQuery.trim() || selectedCategory || startDate || endDate)
 
   const loadEvents = useCallback(async (filters?: EventFilters) => {
-    setLoading(true)
+    const isInitialLoad = !hasLoadedRef.current
+    if (isInitialLoad) setLoading(true)
     setError(null)
     try {
       const upcomingEvents = await getUpcomingEvents(filters)
       setEvents(upcomingEvents)
+      hasLoadedRef.current = true
     } catch (err) {
       console.error('Erro ao carregar eventos:', err)
       setError('Erro ao carregar eventos. Tente novamente.')
     } finally {
-      setLoading(false)
+      if (isInitialLoad) setLoading(false)
     }
   }, [])
 

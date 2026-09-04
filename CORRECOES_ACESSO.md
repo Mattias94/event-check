@@ -11,7 +11,7 @@ As páginas admin e user não estavam protegidas adequadamente, permitindo acess
 - Verifica se o usuário é admin (`role === 'admin'`)
 - Redireciona para `/dashboard` se não for admin
 - Redireciona para `/login` se não estiver autenticado
-- Mostra `LoadingState` durante validação
+- Verificação **síncrona** — retorna `null` durante redirecionamento (sem tela de loading)
 
 ### 2. **Componente UserProtection** (`/components/UserProtection.tsx`)
 - Protege rotas de usuários comuns
@@ -26,24 +26,21 @@ As páginas admin e user não estavam protegidas adequadamente, permitindo acess
 </AdminProtection>
 ```
 
-### 4. **Dashboard Atualizado** (`/app/dashboard/page.tsx`)
+### 4. **Layout User** (`/app/(user)/layout.tsx`)
 ```tsx
 <UserProtection>
-  <DashboardClient />
+  <UserShell>{children}</UserShell>
 </UserProtection>
 ```
 
-### 5. **Página de Eventos Atualizada** (`/app/events/page.tsx`)
-```tsx
-<UserProtection>
-  <EventsPageContent />
-</UserProtection>
-```
+### 5. **Dashboard** (`/app/(user)/dashboard/page.tsx`)
+Renderizado dentro do layout user — proteção herdada do layout.
 
-### 6. **Limpeza de Verificações Redundantes**
-- Removido `requireAdmin(router)` das páginas admin
-- Removido `getCurrentUserId()` verificações do useEffect
-- As verificações estão centralizadas no layout/componentes de proteção
+### 6. **Eventos user** (`/app/(user)/events/page.tsx`)
+Mesma proteção via layout `(user)`.
+- Verificações centralizadas nos layouts; páginas admin sem auth duplicada
+
+### 7. **Limpeza de Verificações Redundantes**
 
 ## 🔄 Fluxo de Autenticação
 
@@ -73,6 +70,7 @@ UserProtection verifica localStorage ('currentUser')
 - ✅ `/admin/dashboard` - Dashboard de evento
 - ✅ `/admin/events/create` - Criar evento
 - ✅ `/admin/events/[id]` - Editar evento
+- ✅ `/admin/events/[id]/check-in` - Check-in QR
 
 ### User (requer autenticação):
 - ✅ `/dashboard` - Dashboard do usuário
@@ -107,5 +105,5 @@ UserProtection verifica localStorage ('currentUser')
 ✅ Segurança melhorada - Rotas protegidas no layout, não apenas nas páginas
 ✅ Experiência do usuário melhorada - Redirecionamentos automáticos
 ✅ Código mais limpo - Lógica de autenticação centralizada
-✅ Manutenção facilitada - Mudanças em um lugar
-✅ Loading states apropriados - Feedback visual durante verificação
+✅ Manutenção facilitada — mudanças nos layouts `(admin)` e `(user)`
+✅ Carregamento mais rápido — guards síncronos, sem spinner de permissão

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   AlertCircle,
@@ -24,7 +24,7 @@ import { Card } from '../../../../components/ui/Card'
 import { Badge } from '../../../../components/ui/Badge'
 import Button from '../../../../components/ui/Button'
 import { getEventsByAdmin, deleteEvent, cancelEvent } from '../../../../lib/events'
-import { getCurrentUserId, requireAdmin } from '../../../../lib/auth-guard'
+import { getCurrentUserId } from '../../../../lib/auth-guard'
 import { Event } from '../../../../lib/types'
 
 interface Toast {
@@ -45,25 +45,28 @@ export default function AdminEventListPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [toasts, setToasts] = useState<Toast[]>([])
+  const hasLoadedRef = useRef(false)
 
   useEffect(() => {
     loadEvents()
   }, [])
 
   async function loadEvents() {
-    setLoading(true)
+    const isInitialLoad = !hasLoadedRef.current
+    if (isInitialLoad) setLoading(true)
     setError(null)
     try {
       const userId = getCurrentUserId()
       if (userId) {
         const adminEvents = await getEventsByAdmin(userId)
         setEvents(adminEvents)
+        hasLoadedRef.current = true
       }
     } catch (err) {
       setError('Erro ao carregar eventos. Tente recarregar a página.')
       console.error('Erro ao carregar eventos:', err)
     } finally {
-      setLoading(false)
+      if (isInitialLoad) setLoading(false)
     }
   }
 
@@ -76,8 +79,15 @@ export default function AdminEventListPage() {
   }
 
   async function handleDelete(eventId: string, eventTitle: string) {
+    const event = events.find(e => e.id === eventId)
+    const inscritosCount = event?.currentEnrollments || 0
+    const enrollmentNote =
+      inscritosCount > 0
+        ? `\n\n${inscritosCount} inscrição(ões) será(ão) removida(s) junto com o evento.`
+        : ''
+
     const confirmed = confirm(
-      `Tem certeza que deseja deletar o evento "${eventTitle}"?\n\nEsta ação não pode ser desfeita.`
+      `Tem certeza que deseja deletar o evento "${eventTitle}"?${enrollmentNote}\n\nEsta ação não pode ser desfeita.`
     )
 
     if (!confirmed) return
@@ -111,7 +121,13 @@ export default function AdminEventListPage() {
       const updated = await cancelEvent(eventId)
       if (updated) {
         setEvents(events.map(e => (e.id === eventId ? updated : e)))
-        showToast(`Evento cancelado. ${inscritosCount} inscrito(s) notificado(s).`, 'success')
+        const notified = updated.emailsNotified ?? inscritosCount
+        showToast(
+          notified > 0
+            ? `Evento cancelado. ${notified} inscrito(s) notificado(s) por e-mail.`
+            : 'Evento cancelado com sucesso.',
+          'success',
+        )
       }
     } catch (err: any) {
       showToast(err.message || 'Erro ao cancelar evento', 'error')
@@ -305,13 +321,8 @@ export default function AdminEventListPage() {
                       <Button
                         variant="outline"
                         onClick={() => handleDelete(event.id, event.title)}
-                        disabled={event.currentEnrollments > 0}
                         className="w-full justify-center text-destructive hover:text-destructive"
-                        title={
-                          event.currentEnrollments > 0
-                            ? `${event.currentEnrollments} inscrito(s). Cancele primeiro.`
-                            : 'Deletar evento'
-                        }
+                        title="Deletar evento permanentemente"
                       >
                         <Trash2 aria-hidden="true" />
                         Deletar

@@ -20,7 +20,12 @@ Arquitetura em **monorepo**: `frontend/` (interface) e `backend/` (API REST).
 | Mapas | Leaflet, OpenStreetMap e Nominatim |
 | Check-in | QR Code (geração no backend, leitura no frontend) |
 | Hospedagem | Vercel (frontend e backend serverless) |
-| CI | GitHub Actions |
+| CI | GitHub Actions (ESLint no frontend) |
+| Produção | Vercel — frontend e backend serverless |
+
+**URLs em produção:**
+- Frontend: https://event-check-seven.vercel.app
+- API: https://event-check-backend.vercel.app/api
 
 ---
 
@@ -125,7 +130,21 @@ Utilitários de estilo.
 - **tailwindcss-animate**: animações prontas.
 
 ### ESLint + eslint-config-next
-Análise estática do código frontend (regras de Next.js e Web Vitals).
+Análise estática do código frontend (regras de Next.js e Web Vitals). Executado no CI em cada pull request — falhas bloqueiam o merge.
+
+### UserShell + AdminShell
+Layouts com sidebar fixa (desktop) e drawer mobile.
+
+- **UserShell**: navegação `Meus eventos` e `Descobrir eventos`; link opcional ao painel admin.
+- **AdminShell**: navegação `Eventos`, `Usuários` e `Criar evento`; badge Admin.
+- **SkipLink**: link “Ir para o conteúdo principal” para acessibilidade.
+
+### AdminProtection + UserProtection
+Guards de rota no cliente (`localStorage` + JWT).
+
+- Verificação **síncrona** — sem tela intermediária de “Verificando permissões…”.
+- Admin → redireciona user para `/dashboard`; user → redireciona admin para `/admin/events`.
+- Não autenticado → `/login`.
 
 ---
 
@@ -288,8 +307,12 @@ Hospedagem serverless.
 ### GitHub Actions
 CI em pull requests para `main`, `master` e `develop`.
 
-- Instala dependências do frontend.
-- Roda `npm run lint` e `npm test` no Node 18.
+| Job | Comando | Observação |
+|-----|---------|------------|
+| **lint** | `npm run lint` | ESLint via `eslint-config-next`; falha bloqueia o PR |
+| **test** | `npm test` | Placeholder (`echo 'No tests configured yet'`) — testes automatizados ainda não implementados |
+
+Ambos usam Node.js 18 e `npm ci` no diretório `frontend/`.
 
 ### Git
 Controle de versão do repositório.
@@ -377,7 +400,21 @@ npm run prisma:seed     # popula o banco
 | E-mails | Brevo (ou Resend / Mandrill) |
 | Publicar o sistema | Vercel |
 | Checar o código no PR | GitHub Actions + ESLint |
+| Proteger rotas admin/user | AdminProtection + UserProtection |
+| Layout com sidebar | UserShell + AdminShell |
 
 ---
 
-*Documento gerado a partir do código atual do repositório Event-Check (dependências em `frontend/package.json` e `backend/package.json`, schema Prisma, módulos NestJS e configuração de deploy).*
+## 15. Regras de negócio recentes (API)
+
+| Ação | Comportamento atual |
+|------|---------------------|
+| **Cancelar evento** | Status `cancelled`; inscrições permanecem; e-mails aos inscritos via Brevo |
+| **Excluir evento** | Permitido mesmo com inscritos; remove inscrições em cascata e depois o evento |
+| **Inscrição** | Operação atômica — evita overbooking |
+
+Detalhes completos em `BUSINESS_RULES.md`.
+
+---
+
+*Documento atualizado em setembro/2026 a partir do código do repositório Event-Check (`frontend/package.json`, `backend/package.json`, schema Prisma, módulos NestJS e deploy na Vercel).*

@@ -1,15 +1,52 @@
-# 🎯 Wireframes de Baixa Fidelidade - Event-Check
+# Wireframes de Baixa Fidelidade — Event-Check
 
-## 📋 Índice
-1. [Fluxo de Usuário Regular](#fluxo-de-usuário-regular)
-2. [Fluxo de Admin](#fluxo-de-admin)
-3. [Componentes Reutilizáveis](#componentes-reutilizáveis)
-4. [Design Tokens](#design-tokens)
-5. [Estados de Componentes](#estados-de-componentes)
+Documento alinhado à interface implementada (Next.js + Tailwind, set/2026).
+
+## Índice
+1. [Estrutura de navegação](#estrutura-de-navegação)
+2. [Fluxo de Usuário Regular](#fluxo-de-usuário-regular)
+3. [Fluxo de Admin](#fluxo-de-admin)
+4. [Componentes Reutilizáveis](#componentes-reutilizáveis)
+5. [Design Tokens](#design-tokens)
+6. [Estados de Componentes](#estados-de-componentes)
 
 ---
 
-## 🔐 Fluxo de Usuário Regular
+## Estrutura de navegação
+
+### UserShell (layout `(user)`)
+```
+┌──────────────┬─────────────────────────────────────────────┐
+│ Event-Check  │  [≡ menu mobile]  Event-Check             │
+│              ├─────────────────────────────────────────────┤
+│ Meus eventos │                                             │
+│ Descobrir    │           Conteúdo da página                │
+│              │                                             │
+│ [Painel Admin│                                             │
+│  (se admin)] │                                             │
+│              │                                             │
+│ [Sair]       │                                             │
+└──────────────┴─────────────────────────────────────────────┘
+Sidebar fixa (lg+); drawer no mobile.
+```
+
+### AdminShell (layout `(admin)`)
+```
+┌──────────────┬─────────────────────────────────────────────┐
+│ Event-Check  │  [≡ menu mobile]  Event-Check             │
+│ [Admin]      ├─────────────────────────────────────────────┤
+│              │                                             │
+│ Eventos      │           Conteúdo da página                │
+│ Usuários     │                                             │
+│ Criar evento │                                             │
+│              │                                             │
+│ [Sair]       │                                             │
+└──────────────┴─────────────────────────────────────────────┘
+```
+
+---
+
+## Fluxo de Usuário Regular
 
 ### 1️⃣ Tela de Login
 ```
@@ -67,233 +104,113 @@ Validações:
 - Data de nascimento válida
 ```
 
-### 3️⃣ Dashboard do Usuário
+### 3️⃣ Dashboard do Usuário (`/dashboard`)
 ```
-┌────────────────────────────────────────────────────────────┐
-│  EventCheck  │        Bem-vindo           │  [Painel Admin] │
-│              │  Aqui estão os eventos     │    [Logout]     │
-├────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─────────────────────────────┐  ┌──────────────────────┐ │
-│  │  Meus Próximos Eventos      │  │ Descubra Novos      │ │
-│  ├─────────────────────────────┤  │ Eventos              │ │
-│  │ [Evento 1]                  │  ├──────────────────────┤ │
-│  │ Local: ...                  │  │ 🤖 Evento Inovação   │ │
-│  │ Horário: ...                │  │    Data: 25/09       │ │
-│  │ Status: Confirmado          │  │    Vagas: 50         │ │
-│  │ [Ver Detalhes] [QR Code]    │  │ [Ver Eventos]        │ │
-│  │                             │  │                      │ │
-│  │ [Evento 2]                  │  │ 💻 Evento Frontend   │ │
-│  │ Local: ...                  │  │    Data: 10/10       │ │
-│  │ Horário: ...                │  │    Vagas: 110        │ │
-│  │ Status: Confirmado          │  │ [Ver Eventos]        │ │
-│  │ [Ver Detalhes]              │  │                      │ │
-│  │                             │  │ ┌──────────────────┐ │ │
-│  ├─────────────────────────────┤  │ │ Minha Conta      │ │ │
-│  │  Histórico de Eventos       │  │ ├──────────────────┤ │ │
-│  │  DevOps Conf (15/07/2024)   │  │ │ [Avatar] JS       │ │ │
-│  │  ✓ Check-in Realizado       │  │ │ João Silva        │ │ │
-│  │                             │  │ │ joao@email.com   │ │ │
-│  │                             │  │ │[Editar] [Config] │ │ │
-│  │                             │  │ └──────────────────┘ │ │
-│  └─────────────────────────────┘  └──────────────────────┘ │
-│                                                             │
-└────────────────────────────────────────────────────────────┘
+┌──────────────┬─────────────────────────────────────────────┐
+│ UserShell    │  Meus eventos                               │
+│ (sidebar)    ├─────────────────────────────────────────────┤
+│              │  Próximos eventos inscritos                 │
+│              │  ┌─────────────────────────────────────┐   │
+│              │  │ [Capa] Título · data · local        │   │
+│              │  │ [Ver detalhes]  [QR code ampliável] │   │
+│              │  └─────────────────────────────────────┘   │
+│              │                                             │
+│              │  Histórico (eventos passados / check-in)    │
+│              │                                             │
+└──────────────┴─────────────────────────────────────────────┘
 
-Layout: 3 colunas (lg) / 1 coluna (mobile)
-- Coluna esquerda: Próximos eventos + Histórico
-- Coluna direita: Descobrir + Minha Conta
+Navegação lateral: Meus eventos | Descobrir eventos
+Admin logado como user: link "Painel Admin" na sidebar
 ```
 
-### 4️⃣ Página de Exploração de Eventos
+### 4️⃣ Página de Exploração (`/events`)
 ```
-┌────────────────────────────────────────────────────────────┐
-│  [← Voltar]    Explorar Eventos                 [Logout]   │
-├────────────────────────────────────────────────────────────┤
-│ Filtros:                                                   │
-│ [🔍 Buscar.....] [📅 Categoria ▼] [📆 De] [📆 Até]       │
-├────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────┐ │
-│  │ Evento Título    │  │ Outro Evento     │  │ Evento 3 │ │
-│  │ Local: São Paulo │  │ Local: Rio       │  │ Local: X │ │
-│  │ Data: 20/09/2026 │  │ Data: 25/09/2026 │  │ Data: Y  │ │
-│  │ Vagas: 50/100    │  │ Vagas: 120/200   │  │ Vagas: Z │ │
-│  │ Status: Com Vagas│  │ Status: Cheio    │  │ Status:  │ │
-│  │ [Inscrever-se]   │  │ [Ver Detalhes]   │  │ [Ver...] │ │
-│  │ [Ver Detalhes]   │  │ [Já Inscrito ✓]  │  │          │ │
-│  └──────────────────┘  └──────────────────┘  └──────────┘ │
-│                                                             │
-│  [Carregar Mais...]                                        │
-│                                                             │
-└────────────────────────────────────────────────────────────┘
-
-Card de Evento:
-- Título, local, data
-- Indicador de vagas (com cores: verde, amarelo, vermelho)
-- Botão de ação contextual (Inscrever, Ver Detalhes, Já Inscrito)
+┌──────────────┬─────────────────────────────────────────────┐
+│ UserShell    │  Descobrir eventos                          │
+│              ├─────────────────────────────────────────────┤
+│              │ [Buscar] [Categoria ▼] [De] [Até]          │
+│              │                                             │
+│              │  Grid de EventCard (1/2/3 colunas)         │
+│              │  - capa, título, local, data, vagas        │
+│              │  - Inscrever-se | Ver detalhes | Cheio     │
+│              │                                             │
+└──────────────┴─────────────────────────────────────────────┘
 ```
 
-### 5️⃣ Página de Detalhes do Evento
+### 5️⃣ Detalhes do Evento (`/events/[id]`)
 ```
-┌────────────────────────────────────────────────────────────┐
-│  [← Voltar]    Detalhes do Evento          [Logout]        │
-├────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌────────────────────────────────────────────────────┐   │
-│  │ Título: Workshop de Arquitetura Limpa             │   │
-│  │ Data: 20/08/2024 - 14:00                          │   │
-│  │ Local: São Paulo - Auditório A                    │   │
-│  │ Categoria: Tecnologia                             │   │
-│  │                                                    │   │
-│  │ Descrição:                                        │   │
-│  │ Lorem ipsum dolor sit amet, consectetur adipis... │   │
-│  │                                                    │   │
-│  │ Vagas Restantes: 45 / 100                         │   │
-│  │ ████████░░░░░░░░░░ 55%                           │   │
-│  │                                                    │   │
-│  │ Primeiros Inscritos:                              │   │
-│  │ 1. João Silva (01/08 às 10:30)                   │   │
-│  │ 2. Maria Santos (01/08 às 11:15)                 │   │
-│  │ 3. Pedro Costa (02/08 às 09:00)                  │   │
-│  │                                                    │   │
-│  │         [Inscrever-se]  ou  [Desinscrever]        │   │
-│  └────────────────────────────────────────────────────┘   │
-│                                                             │
-└────────────────────────────────────────────────────────────┘
+┌──────────────┬─────────────────────────────────────────────┐
+│ UserShell    │  [← Voltar]  Detalhes                       │
+│              ├─────────────────────────────────────────────┤
+│              │  Capa + título + data/hora + categoria      │
+│              │  Mapa Leaflet (localização)                 │
+│              │  Descrição · barra de vagas                 │
+│              │  [Inscrever-se] ou QR + [Cancelar inscrição]│
+└──────────────┴─────────────────────────────────────────────┘
 
-Estados do Botão:
-- Default: "Inscrever-se" (clickable)
-- Com Vaga: Mesmo acima
-- Sem Vaga: "Cheio" (disabled)
-- Já Inscrito: "Desinscrever" (clickable) + "Já Inscrito ✓"
+Estados: disponível | cheio | já inscrito (QR ampliável)
 ```
 
 ---
 
-## 👨‍💼 Fluxo de Admin
+## Fluxo de Admin
 
-### 1️⃣ Painel Admin - Lista de Eventos
+### 1️⃣ Lista de Eventos (`/admin/events`)
 ```
-┌────────────────────────────────────────────────────────────┐
-│  [← Voltar]        Meus Eventos         [👤 Pesquisar] │
-│                    Gerencie seus         [+ Criar]      │
-│                                                             │
-├────────────────────────────────────────────────────────────┤
-│ Estatísticas:                                               │
-│ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐        │
-│ │ Total      │ │ Ativos     │ │ Total Inscr. │        │
-│ │    1       │ │    1       │ │     0        │        │
-│ └──────────────┘ └──────────────┘ └──────────────┘        │
-│                                                             │
-│ ┌────────────────────────────────────────────────────┐   │
-│ │ Título: Workshop React                            │   │
-│ │ Status: 🟢 Ativo   Data: 24/09/2026              │   │
-│ │ Local: São Paulo - Auditório A                   │   │
-│ │ Inscritos: 0 / 150 ████░░░░░░ 0%               │   │
-│ │                                                    │   │
-│ │ [📊 Dashboard] [✏️ Editar] [⏸️ Cancelar] [🗑️Deletar]   │
-│ └────────────────────────────────────────────────────┘   │
-│                                                             │
-│ [Carregar Mais...]                                        │
-│                                                             │
-└────────────────────────────────────────────────────────────┘
-
-Card de Evento (Admin):
-- Informações gerais
-- Barra de progresso de inscritos
-- 4 botões de ação (Dashboard, Editar, Cancelar, Deletar)
+┌──────────────┬─────────────────────────────────────────────┐
+│ AdminShell   │  Meus eventos · estatísticas (cards)      │
+│              ├─────────────────────────────────────────────┤
+│              │  EventCard admin:                           │
+│              │  status · data · inscritos/capacidade       │
+│              │  [Dashboard] [Editar] [Check-in]            │
+│              │  [Cancelar] [Deletar]                       │
+│              │                                             │
+│              │  Deletar: sempre habilitado; com inscritos  │
+│              │  remove inscrições em cascata (confirmação) │
+└──────────────┴─────────────────────────────────────────────┘
 ```
 
-### 2️⃣ Criar Evento
+### 2️⃣ Criar / Editar Evento
 ```
-┌────────────────────────────────────────────────────────────┐
-│  [← Voltar]        Criar Novo Evento                       │
-├────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────────────────────────────────────────────┐    │
-│  │ Criar Novo Evento                                │    │
-│  ├──────────────────────────────────────────────────┤    │
-│  │ Título do Evento:                                │    │
-│  │ [Workshop de React Avançado.................] │    │
-│  │                                                  │    │
-│  │ Descrição:                                       │    │
-│  │ [Aprenda técnicas avançadas...........................│    │
-│  │ ....................................................] │    │
-│  │                                                  │    │
-│  │ Categoria: [Tecnologia ▼]                       │    │
-│  │                                                  │    │
-│  │ Data: [2026-09-24]  Horário: [14:00]           │    │
-│  │                                                  │    │
-│  │ Localização:                                     │    │
-│  │ [São Paulo - Auditório de Tecnologia...........] │    │
-│  │                                                  │    │
-│  │ Capacidade (número de vagas):                    │    │
-│  │ [150]                                            │    │
-│  │                                                  │    │
-│  │ ⚠️ Capacidade não pode ser menor que 100.       │    │
-│  │                                                  │    │
-│  │            [Criar Evento]                        │    │
-│  └──────────────────────────────────────────────────┘    │
-│                                                             │
-└────────────────────────────────────────────────────────────┘
+┌──────────────┬─────────────────────────────────────────────┐
+│ AdminShell   │  Criar novo evento (ou editar)              │
+│              ├─────────────────────────────────────────────┤
+│              │  Capa (upload JPEG/PNG/WebP)                │
+│              │  Título · Descrição · Categoria             │
+│              │  Data · Horário · Capacidade                │
+│              │  Localização + mapa (LocationPickerDialog)  │
+│              │                                             │
+│              │  [Cancelar]  [Criar Evento / Salvar]        │
+└──────────────┴─────────────────────────────────────────────┘
 
-Validações em Tempo Real:
-- Título: mín. 3 caracteres
-- Data: não pode ser no passado
-- Capacidade: > 0
-- Todos os campos obrigatórios
+Validações: data futura, capacidade ≥ 1, campos obrigatórios (Zod)
 ```
 
-### 3️⃣ Dashboard do Evento (Admin)
+### 3️⃣ Dashboard do Evento (`/admin/dashboard?eventId=`)
 ```
-┌────────────────────────────────────────────────────────────┐
-│  EventCheck 📋   │ Dashboard do Admin   [🚪 Sair]          │
-│  Visão Geral: Workshop de React Avançado - 24/09/2026     │
-├────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────────────┐  ┌──────────────────┐              │
-│  │ 👥 Total        │  │ ✓ Presentes      │  ┌─────────┐ │
-│  │ Inscritos        │  │ (Check-in)       │  │ ✨ Vagas│ │
-│  │    0             │  │      0           │  │Restant. │ │
-│  │ 0 Confirmados    │  │ ↑ 0% Capacidade  │  │  150    │ │
-│  │ 0 Cancelados     │  │                  │  │Máxima:  │ │
-│  └──────────────────┘  └──────────────────┘  │ 150     │ │
-│                                               └─────────┘ │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │ Status dos Inscritos                                │   │
-│  │ [Gráfico Pizza]                                     │   │
-│  │ • Confirmados  • Check-in  • Cancelados            │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-│  ┌──────────────────────────────┐  ┌──────────────────┐   │
-│  │ Taxa Ocupação e Check-in     │  │ Check-Ins       │   │
-│  │ [Gráfico Linha]              │  │ Recentes        │   │
-│  │ • Capacidade • Confirmados   │  ├──────────────────┤   │
-│  │ • Check-ins                  │  │ Ana Silva - 13:45│   │
-│  │                              │  │ Carlos - 13:42  │   │
-│  │                              │  │ Maria - 13:30   │   │
-│  └──────────────────────────────┘  └──────────────────┘   │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │ Lista de Inscritos                                  │   │
-│  │ [🔍 Search] [Filter] [Exportar para CSV]            │   │
-│  ├─────────────────────────────────────────────────────┤   │
-│  │ Nome        │ E-mail          │ Status│ Hora│ Ações│   │
-│  ├─────────────────────────────────────────────────────┤   │
-│  │ (vazio - nenhum inscrito)                           │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-└────────────────────────────────────────────────────────────┘
-
-Coluna Direita (Sticky):
-- Check-Ins Recentes (avatares + horário)
-- Próximos Eventos (lista)
-- [➕ Criar Novo Evento] (botão destacado)
+┌──────────────┬─────────────────────────────────────────────┐
+│ AdminShell   │  Métricas: inscritos · check-in · vagas     │
+│              │  Gráficos Recharts (pizza + linha)          │
+│              │  Lista inscritos · busca · export CSV       │
+│              │  Check-ins recentes                         │
+│              │  [Ir para check-in QR]                      │
+└──────────────┴─────────────────────────────────────────────┘
 ```
 
-### 4️⃣ Pesquisar Usuários
+### 4️⃣ Check-in QR (`/admin/events/[id]/check-in`)
+```
+┌──────────────┬─────────────────────────────────────────────┐
+│ AdminShell   │  [← Voltar ao dashboard]                    │
+│              │  Check-in — {título do evento}              │
+│              │  ┌─────────────────────────────────────┐   │
+│              │  │  Preview câmera / upload / manual   │   │
+│              │  │  QrCheckInScanner                   │   │
+│              │  └─────────────────────────────────────┘   │
+│              │  Toast: sucesso | já fez check-in | erro   │
+└──────────────┴─────────────────────────────────────────────┘
+```
+
+### 5️⃣ Pesquisar Usuários (`/admin/users`)
 ```
 ┌────────────────────────────────────────────────────────────┐
 │  [← Voltar]        Pesquisar Usuários          [Logout]    │
@@ -438,88 +355,39 @@ Estados:
 
 ---
 
-## 🎨 Design Tokens
+## Design Tokens
 
-### Cores
+Paleta implementada via CSS variables (`globals.css`) — tema **teal** (shadcn-style).
 
-#### Paleta Primária
-- **Primary (Azul)**: `#0066cc` / `rgb(0, 102, 204)`
-- **Primary Dark**: `#004fa3` / `rgb(0, 79, 163)`
-- **Primary Light**: `#3399ff` / `rgb(51, 153, 255)`
+### Cores (light mode)
 
-#### Paleta Secundária
-- **Secondary (Cinza Escuro)**: `#1f2937` / `rgb(31, 41, 55)`
-- **Secondary Dark**: `#111827` / `rgb(17, 24, 39)`
-- **Secondary Light**: `#6b7280` / `rgb(107, 114, 128)`
+| Token | HSL | Uso |
+|-------|-----|-----|
+| **primary** | `174 84% 28%` (~ `#0F766E`) | Botões, marca, links |
+| **accent** | `174 60% 92%` | Item ativo na sidebar |
+| **destructive** | `0 72% 45%` | Excluir, erros |
+| **success** | `152 65% 28%` | Confirmações, vagas OK |
+| **warning** | `36 92% 32%` | Alertas |
+| **background** | `180 20% 99%` | Fundo da página |
+| **foreground** | `200 50% 8%` | Texto principal |
+| **muted-foreground** | `200 18% 32%` | Texto secundário |
+| **border** | `200 16% 88%` | Bordas, divisores |
 
-#### Status
-- **Success (Verde)**: `#10b981` / `rgb(16, 185, 129)`
-- **Error (Vermelho)**: `#ef4444` / `rgb(239, 68, 68)`
-- **Warning (Amarelo)**: `#f59e0b` / `rgb(245, 158, 11)`
-- **Info (Azul)**: `#3b82f6` / `rgb(59, 130, 246)`
-
-#### Neutrals
-- **White**: `#ffffff` / `rgb(255, 255, 255)`
-- **Gray 50**: `#f9fafb` / `rgb(249, 250, 251)`
-- **Gray 100**: `#f3f4f6` / `rgb(243, 244, 246)`
-- **Gray 200**: `#e5e7eb` / `rgb(229, 231, 235)`
-- **Gray 300**: `#d1d5db` / `rgb(209, 213, 219)`
-- **Gray 400**: `#9ca3af` / `rgb(156, 163, 175)`
-- **Gray 500**: `#6b7280` / `rgb(107, 114, 128)`
-- **Gray 600**: `#4b5563` / `rgb(75, 85, 99)`
-- **Gray 700**: `#374151` / `rgb(55, 65, 81)`
-- **Gray 800**: `#1f2937` / `rgb(31, 41, 55)`
-- **Gray 900**: `#111827` / `rgb(17, 24, 39)`
-- **Black**: `#000000` / `rgb(0, 0, 0)`
+Dark mode: classe `.dark` no `<html>` — mesmos tokens com valores invertidos.
 
 ### Tipografia
 
-#### Font Family
-- **Primary**: `Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`
-- **Fallback**: `Arial, Helvetica, sans-serif`
+- **Font stack:** system UI (`Segoe UI`, `-apple-system`, sans-serif)
+- **Títulos de página:** `text-2xl` / `text-3xl`, `font-bold`
+- **Corpo:** `text-sm` / `text-base`
+- **Labels de formulário:** `text-sm font-medium`
 
-#### Font Sizes
-- **H1**: `32px / 2rem` | `weight: 700` | `line-height: 1.2`
-- **H2**: `24px / 1.5rem` | `weight: 700` | `line-height: 1.3`
-- **H3**: `20px / 1.25rem` | `weight: 600` | `line-height: 1.4`
-- **Body Large**: `18px / 1.125rem` | `weight: 400` | `line-height: 1.5`
-- **Body**: `16px / 1rem` | `weight: 400` | `line-height: 1.5`
-- **Body Small**: `14px / 0.875rem` | `weight: 400` | `line-height: 1.5`
-- **Caption**: `12px / 0.75rem` | `weight: 400` | `line-height: 1.4`
-- **Label**: `14px / 0.875rem` | `weight: 600` | `line-height: 1.4`
+### Espaçamento e radius
 
-### Espaçamento
-
-```
-0px, 2px, 4px, 6px, 8px, 12px, 16px, 20px, 24px, 32px, 40px, 48px
-
-Exemplo de aplicação:
-- Padding Input: 12px (vertical) x 16px (horizontal)
-- Margin Seção: 32px (vertical) x 0 (horizontal)
-- Gap Cards: 16px
-- Border Radius: 8px (cards), 4px (inputs/buttons)
-```
-
-### Sombras
-
-```
-- Elevation 0: nenhuma
-- Elevation 1: 0 1px 3px rgba(0, 0, 0, 0.12)
-- Elevation 2: 0 4px 6px rgba(0, 0, 0, 0.1)
-- Elevation 3: 0 10px 15px rgba(0, 0, 0, 0.1)
-- Elevation 4: 0 20px 25px rgba(0, 0, 0, 0.1)
-```
-
-### Z-Index
-
-```
-- Background: 0
-- Default: 1
-- Sticky: 10
-- Modal: 50
-- Toast: 100
-- Tooltip: 150
-```
+- **Radius padrão:** `--radius: 0.75rem`
+- **Sidebar:** `w-60` (240px) desktop
+- **Touch targets:** `min-h-11` em links de navegação
+- **Container:** padding responsivo `1rem` → `2rem`
 
 ---
 
@@ -667,21 +535,18 @@ Exemplos:
 
 ---
 
-## ✅ Checklist de Implementação no Figma
+## Checklist de implementação
 
-- [ ] **Design Tokens** definidos (cores, tipografia, espaçamento)
-- [ ] **Componentes Base** criados (Button, Input, Card, Badge)
-- [ ] **Estados** documentados (default, hover, focus, disabled, loading, error)
-- [ ] **Dark Mode** implementado em todos os componentes
-- [ ] **Versões Mobile e Desktop** para cada tela
-- [ ] **Ícones** definidos ou importados
-- [ ] **Grid System** aplicado (12 colunas)
-- [ ] **Breakpoints** aplicados
-- [ ] **Protótipo Interativo** criado
-- [ ] **Design congelado** (pronto para desenvolvimento)
+- [x] **Design tokens** — CSS variables em `globals.css`
+- [x] **Componentes base** — Button, Input, Card, Badge, Toast
+- [x] **Estados** — loading, error, empty, disabled
+- [x] **Dark mode** — tokens `.dark` definidos
+- [x] **Mobile + desktop** — sidebar + drawer
+- [x] **Ícones** — lucide-react
+- [x] **Responsividade** — Tailwind `sm` / `md` / `lg`
+- [x] **Protótipo funcional** — app Next.js em produção
+- [ ] **Figma** — wireframes de baixa fidelidade (este documento)
 
----
-
-**Data de Congelamento do Design**: [A definir no Figma]
-**Versão**: 1.0
-**Status**: Wireframes de Baixa Fidelidade ✅
+**Versão:** 2.0  
+**Status:** Wireframes alinhados ao código implementado (set/2026)  
+**Produção:** https://event-check-seven.vercel.app
