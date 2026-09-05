@@ -140,9 +140,9 @@ export default function EventDetailPage() {
           <StatusBadge status={event.status} />
         </div>
 
-        <div className="flex shrink-0 flex-wrap gap-2">
+        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
           {event.status === 'active' && (
-            <Button variant="outline" onClick={handleCancel} disabled={actionLoading}>
+            <Button variant="outline" onClick={handleCancel} disabled={actionLoading} className="h-11 w-full sm:h-10 sm:w-auto">
               <XCircle aria-hidden="true" />
               Cancelar
             </Button>
@@ -151,7 +151,7 @@ export default function EventDetailPage() {
             variant="outline"
             onClick={handleDelete}
             disabled={actionLoading}
-            className="text-destructive hover:text-destructive"
+            className="h-11 w-full text-destructive hover:text-destructive sm:h-10 sm:w-auto"
             title="Deletar evento permanentemente"
           >
             <Trash2 aria-hidden="true" />

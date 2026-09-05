@@ -65,7 +65,7 @@ export function Calendar({
     onMonthChange(year, month + 1)
   }
 
-  const navSize = isCompact ? 'size-7' : 'size-8'
+  const navSize = isCompact ? 'size-9' : 'size-10 sm:size-11'
   const navIconSize = isCompact ? 'size-3.5' : 'size-4'
   const doubleNavIconSize = isCompact ? 'size-3' : 'size-3.5'
 
@@ -169,7 +169,7 @@ export function Calendar({
                   onClick={() => cell.iso && onSelect(cell.iso)}
                   className={cn(
                     'flex aspect-square items-center justify-center font-medium tabular-nums transition-colors',
-                    isCompact ? 'min-h-7' : 'min-h-8 sm:min-h-9',
+                    isCompact ? 'min-h-9' : 'min-h-10 sm:min-h-11',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                     'disabled:cursor-not-allowed disabled:opacity-35',
                     cell.isSelected

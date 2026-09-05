@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
 import EventLocationTrigger from './EventLocationTrigger'
+import EventCoverImage from './EventCoverImage'
 import {
   ArrowRight,
   BookOpen,
@@ -161,9 +162,18 @@ export default function DashboardClient() {
               {upcomingEvents.length > 0 ? (
                 <div className="space-y-4">
                   {upcomingEvents.map((event) => (
-                    <Card key={event.id} className="transition-all hover:border-primary/40 hover:shadow-md">
-                      <CardContent className="p-4 pt-4 md:p-6 md:pt-6">
-                        <div className="flex flex-col gap-4 md:flex-row">
+                    <Card key={event.id} className="overflow-hidden transition-all hover:border-primary/40 hover:shadow-md">
+                      <div className="flex flex-col sm:flex-row">
+                        {event.coverImageUrl && (
+                          <EventCoverImage
+                            src={event.coverImageUrl}
+                            alt=""
+                            className="shrink-0 rounded-none sm:aspect-auto sm:w-40 sm:max-w-[40%] sm:self-stretch md:w-44"
+                            maxHeightClass="max-h-44 sm:max-h-none sm:min-h-[140px]"
+                          />
+                        )}
+                        <CardContent className="flex min-w-0 flex-1 flex-col p-4 pt-4 md:p-6 md:pt-6">
+                        <div className="flex flex-col gap-4 lg:flex-row">
                           <div className="min-w-0 flex-1">
                             <div className="mb-3 flex flex-wrap items-start gap-2">
                               <h3 className="min-w-0 flex-1 line-clamp-2 font-semibold leading-snug text-foreground">
@@ -176,11 +186,11 @@ export default function DashboardClient() {
                             </div>
                             <div className="space-y-2 text-sm text-muted-foreground">
                               <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                                <span className="flex items-center gap-2 whitespace-nowrap">
+                                <span className="flex items-center gap-2">
                                   <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
                                   {new Date(event.date).toLocaleDateString('pt-BR')}
                                 </span>
-                                <span className="flex items-center gap-2 whitespace-nowrap">
+                                <span className="flex items-center gap-2">
                                   <Clock className="size-4 shrink-0" aria-hidden="true" />
                                   {event.time}
                                 </span>
@@ -195,7 +205,7 @@ export default function DashboardClient() {
                               </p>
                             </div>
                           </div>
-                          <div className="flex w-full flex-col items-center gap-3 md:w-auto md:items-end">
+                          <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center lg:w-auto lg:flex-col lg:items-end">
                             <EnrollmentQrCode
                               qrDataUrl={qrByEventId[event.id]}
                               eventTitle={event.title}
@@ -205,14 +215,15 @@ export default function DashboardClient() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-11 w-full md:h-9 md:w-auto"
+                              className="h-11 w-full sm:h-10 sm:flex-1 lg:h-9 lg:w-auto"
                               onClick={() => router.push(`/events/${event.id}?from=dashboard`)}
                             >
                               Ver Detalhes
                             </Button>
                           </div>
                         </div>
-                      </CardContent>
+                        </CardContent>
+                      </div>
                     </Card>
                   ))}
                 </div>
@@ -302,13 +313,21 @@ export default function DashboardClient() {
                       return (
                         <Card
                           key={event.id}
-                          className="flex h-full cursor-pointer flex-col border-primary/30 ring-1 ring-primary/20 transition-all hover:border-primary/50 hover:shadow-md"
+                          className="flex h-full cursor-pointer flex-col overflow-hidden border-primary/30 ring-1 ring-primary/20 transition-all hover:border-primary/50 hover:shadow-md"
                           onClick={() => router.push(`/events/${event.id}?from=discover`)}
                         >
-                          <CardContent className="flex flex-1 flex-col p-4 pt-4">
-                            <div className="mb-3 flex h-24 w-full items-center justify-center rounded-md bg-secondary md:h-28">
+                          {event.coverImageUrl ? (
+                            <EventCoverImage
+                              src={event.coverImageUrl}
+                              alt=""
+                              maxHeightClass="max-h-36 md:max-h-40"
+                            />
+                          ) : (
+                            <div className="flex h-24 w-full items-center justify-center bg-secondary md:h-28">
                               <CategoryIcon className="size-10 text-primary md:size-12" aria-hidden="true" />
                             </div>
+                          )}
+                          <CardContent className="flex flex-1 flex-col p-4 pt-4">
                             <h3 className="mb-2 line-clamp-2 text-sm font-semibold text-foreground md:text-base">
                               {event.title}
                             </h3>

@@ -157,7 +157,7 @@ export default function EventsPage() {
               aria-hidden={!filtersOpen}
             >
               <div className="overflow-hidden">
-                <div className="grid grid-cols-1 gap-2 border-t border-border/40 pt-2.5 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-2 border-t border-border/40 pt-2.5 sm:grid-cols-2 lg:grid-cols-3">
                   <Select
                     aria-label="Filtrar por categoria"
                     value={selectedCategory}

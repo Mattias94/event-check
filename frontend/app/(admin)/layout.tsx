@@ -221,7 +221,11 @@ function AdminShell({ children }: { children: ReactNode }) {
 
       {/* Conteúdo principal — deslocado pela largura da sidebar no desktop */}
       <div className="min-w-0 lg:pl-60">
-        <main id="admin-main-content" tabIndex={-1} className="min-h-screen min-w-0 outline-none">
+        <main
+          id="admin-main-content"
+          tabIndex={-1}
+          className="min-h-[calc(100dvh-3.5rem-env(safe-area-inset-top,0px))] min-w-0 outline-none lg:min-h-screen"
+        >
           {children}
         </main>
       </div>

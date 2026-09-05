@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react'
 import EnrollmentQrCode from './EnrollmentQrCode'
 import Button from './ui/Button'
+import { cn } from '../lib/utils'
 
 export interface EventEnrollmentFooterProps {
   isEnrolled: boolean
@@ -41,6 +42,13 @@ export default function EventEnrollmentFooter({
       ? 'Inscrições indisponíveis para este evento.'
       : 'Todas as vagas foram preenchidas.'
 
+  /** Reserva espaço no fluxo da página para a barra fixa mobile (evita conteúdo oculto). */
+  const mobileSpacerClass = isEnrolled
+    ? 'h-[5.5rem]'
+    : canEnroll
+      ? 'h-[5.75rem]'
+      : 'h-[7.5rem]'
+
   const enrolledPanel = (
     <>
       <div className="mb-4 flex flex-col items-center gap-3">
@@ -76,7 +84,7 @@ export default function EventEnrollmentFooter({
               onClick={() => setMobileOpen(true)}
               aria-expanded={false}
               aria-controls="event-mobile-qr-panel"
-              className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-primary bg-primary/10 px-4 py-3 pb-safe shadow-[0_-8px_24px_rgba(0,0,0,0.12)] backdrop-blur-md transition-colors active:bg-primary/15"
+              className="fixed inset-x-0 bottom-0 z-30 min-h-[4.5rem] border-t-2 border-primary bg-primary/10 px-4 py-3 pb-safe shadow-[0_-8px_24px_rgba(0,0,0,0.12)] backdrop-blur-md transition-colors active:bg-primary/15"
             >
               <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
                 <div className="flex min-w-0 flex-1 items-center gap-3 text-left">
@@ -171,6 +179,12 @@ export default function EventEnrollmentFooter({
           )}
         </div>
       </aside>
+
+      {/* Espaçador mobile — altura da barra fixa inferior */}
+      <div
+        className={cn('shrink-0 lg:hidden', mobileSpacerClass)}
+        aria-hidden="true"
+      />
     </>
   )
 }

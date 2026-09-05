@@ -207,6 +207,10 @@ function AdminDashboardContent() {
 
       const eventData = await getEventById(eventId)
       if (eventData) setEvent(eventData)
+
+      if (result.emailSent) {
+        alert(`Inscrição cancelada. ${enrollment.userName} foi notificado(a) por e-mail.`)
+      }
     } finally {
       setActionLoadingId(null)
     }
@@ -443,9 +447,9 @@ function AdminDashboardContent() {
               />
             </div>
 
-            {/* Tabela (desktop) */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full min-w-[640px] text-sm">
+            {/* Tabela (desktop largo) */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
                     <th className="py-3 pr-3 font-medium">Nome</th>
@@ -503,8 +507,8 @@ function AdminDashboardContent() {
               </table>
             </div>
 
-            {/* Cards (mobile) */}
-            <div className="space-y-3 md:hidden">
+            {/* Cards (mobile e tablet) */}
+            <div className="space-y-3 lg:hidden">
               {filteredEnrollments.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
                   Nenhum inscrito encontrado

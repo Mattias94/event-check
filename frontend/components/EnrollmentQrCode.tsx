@@ -50,7 +50,7 @@ export default function EnrollmentQrCode({
       <div
         className={cn(
           'flex animate-pulse items-center justify-center rounded-lg border bg-muted',
-          compact ? 'size-24 sm:size-20 md:size-24' : 'size-32 md:size-36',
+          compact ? 'size-24 md:size-28' : 'size-32 md:size-36',
           className,
         )}
         aria-hidden="true"
@@ -63,7 +63,7 @@ export default function EnrollmentQrCode({
       <div
         className={cn(
           'flex flex-col items-center justify-center gap-1 rounded-lg border bg-muted/50 px-2 text-center text-muted-foreground',
-          compact ? 'size-24 sm:size-20 md:size-24' : 'size-32 md:size-36',
+          compact ? 'size-24 md:size-28' : 'size-32 md:size-36',
           className,
         )}
       >
@@ -73,7 +73,7 @@ export default function EnrollmentQrCode({
     )
   }
 
-  const previewSize = compact ? 'size-24 sm:size-20 md:size-24' : 'size-32 md:size-36'
+  const previewSize = compact ? 'size-24 md:size-28' : 'size-32 md:size-36'
 
   return (
     <>

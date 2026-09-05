@@ -187,10 +187,10 @@ export default function LocationPickerDialog({
   if (!mounted || !open) return null
 
   return createPortal(
-    <>
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4">
       <div
         aria-hidden="true"
-        className="fixed inset-0 z-[120] bg-black/40"
+        className="absolute inset-0 bg-black/40"
         onMouseDown={onClose}
       />
       <div
@@ -198,7 +198,7 @@ export default function LocationPickerDialog({
         aria-modal="true"
         aria-labelledby={titleId}
         onMouseDown={(event) => event.stopPropagation()}
-        className="fixed inset-x-3 top-[5dvh] z-[130] mx-auto flex max-h-[90dvh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl sm:inset-x-auto"
+        className="relative z-[130] flex max-h-[min(90dvh,calc(100%-1.5rem))] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl"
       >
         <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3 sm:px-5">
           <div>
@@ -213,7 +213,7 @@ export default function LocationPickerDialog({
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="inline-flex size-10 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             <X className="size-4" aria-hidden="true" />
           </button>
@@ -249,7 +249,7 @@ export default function LocationPickerDialog({
                       type="button"
                       role="option"
                       aria-selected={false}
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                      className="flex min-h-11 w-full items-center px-3 py-2.5 text-left text-sm hover:bg-accent"
                       onClick={() => handleSelectResult(result)}
                     >
                       {result.location}
@@ -308,7 +308,7 @@ export default function LocationPickerDialog({
           </Button>
         </div>
       </div>
-    </>,
+    </div>,
     document.body,
   )
 }

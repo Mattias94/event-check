@@ -144,6 +144,11 @@ function EventDetailContent() {
       if (result.success) {
         setIsEnrolled(false)
         setQrDataUrl(null)
+        setEnrollNotice(
+          result.emailSent
+            ? 'Inscrição cancelada. Enviamos a confirmação para seu e-mail.'
+            : 'Inscrição cancelada com sucesso.',
+        )
         await loadData()
       } else {
         setActionError(result.error || 'Não foi possível cancelar a inscrição.')
@@ -179,11 +184,7 @@ function EventDetailContent() {
     { icon: Users, label: 'Capacidade', value: String(event.capacity) },
   ]
 
-  const mobileContentPadding = isEnrolled
-    ? 'pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))] lg:pb-8'
-    : canEnroll
-      ? 'pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))] lg:pb-8'
-      : 'pb-[calc(8rem+env(safe-area-inset-bottom,0px))] lg:pb-8'
+  const mobileContentPadding = 'pb-4 lg:pb-8'
 
   return (
     <div className="min-h-full bg-background">

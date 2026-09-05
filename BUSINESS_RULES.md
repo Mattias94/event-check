@@ -32,6 +32,7 @@
 - Usuário não pode se inscrever em eventos passados, cancelados ou finalizados.
 - Vagas são reservadas atomicamente (proteção contra corrida de concorrência).
 - Ao confirmar inscrição, o usuário recebe **e-mail com QR code** de check-in (PNG anexo).
+- Ao **cancelar a inscrição** (usuário ou admin), o participante recebe e-mail de confirmação do cancelamento.
 
 ## Usuários
 

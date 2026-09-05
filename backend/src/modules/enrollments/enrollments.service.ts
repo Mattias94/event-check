@@ -211,11 +211,22 @@ export class EnrollmentsService {
       throw new NotFoundException('Evento não encontrado')
     }
 
+    const user = await this.usersRepository.findById(userId)
+    if (!user) {
+      throw new NotFoundException('Usuário não encontrado')
+    }
+
     const removed = await this.enrollmentsRepository.deleteAndReleaseSpot(userId, eventId)
     if (!removed) {
       throw new NotFoundException('Inscrição não encontrada')
     }
 
-    return { success: true }
+    const emailSent = await this.mailService.sendEnrollmentCancellation(user, event)
+
+    if (!emailSent && this.mailService.isConfigured()) {
+      this.logger.warn(`E-mail de cancelamento de inscrição não enviado para ${user.email}`)
+    }
+
+    return { success: true, emailSent }
   }
 }

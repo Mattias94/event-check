@@ -66,9 +66,10 @@ export async function enrollUser(
   }
 }
 
-export async function unenrollUser(userId: string, eventId: string): Promise<{ success: boolean; error?: string }> {
+export async function unenrollUser(userId: string, eventId: string): Promise<{ success: boolean; error?: string; emailSent?: boolean }> {
   try {
-    return await api.delete<{ success: boolean }>(`/events/${eventId}/enrollments/${userId}`)
+    const result = await api.delete<{ success: boolean; emailSent?: boolean }>(`/events/${eventId}/enrollments/${userId}`)
+    return { success: true, emailSent: result.emailSent }
   } catch (err: any) {
     return { success: false, error: err.message }
   }
@@ -114,12 +115,13 @@ export async function getUserEnrollmentsWithQr(userId: string): Promise<UserEnro
 }
 
 /**
- * Resumo de usuário com inscrições (para busca no painel admin).
+ * Resumo de usuário para listagem no painel admin.
  */
 export interface EnrolledUserSummary {
   id: string
   name: string
   email: string
+  role?: 'admin' | 'user'
 }
 
 /** Normaliza resposta da API (objetos ou IDs legados) com nome/e-mail do cadastro. */
@@ -136,6 +138,7 @@ async function enrichUserSummaries(raw: unknown): Promise<EnrolledUserSummary[]>
           id: summary.id,
           name: user?.name ?? summary.id,
           email: user?.email ?? '—',
+          role: user?.role,
         }
       }
 
@@ -145,6 +148,7 @@ async function enrichUserSummaries(raw: unknown): Promise<EnrolledUserSummary[]>
         id,
         name: user?.name ?? id,
         email: user?.email ?? '—',
+        role: user?.role,
       }
     }),
   )

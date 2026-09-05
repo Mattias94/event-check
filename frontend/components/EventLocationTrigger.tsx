@@ -37,8 +37,8 @@ export default function EventLocationTrigger({
   return (
     <button
       type="button"
-      aria-label={label}
-      title={label}
+      title={location}
+      aria-label={`${label}: ${location}`}
       aria-busy={loading || undefined}
       disabled={loading}
       onClick={handleOpen}
@@ -48,7 +48,7 @@ export default function EventLocationTrigger({
       )}
     >
       <MapPin className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-      <span className="min-w-0 truncate">{location}</span>
+      <span className="min-w-0 line-clamp-2 break-words">{location}</span>
     </button>
   )
 }

@@ -96,10 +96,10 @@ export default function AdminUsersPage() {
       <div className="mb-6 md:mb-8">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-            Pesquisar Usuários
+            Usuários
           </h1>
           <p className="mt-1 text-sm text-muted-foreground md:text-base">
-            Visualize inscrições e histórico de eventos
+            Todos os usuários registrados no sistema
           </p>
         </div>
       </div>
@@ -108,7 +108,7 @@ export default function AdminUsersPage() {
       <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
           {/* Search Panel */}
           <section aria-labelledby="users-search-heading" className="lg:col-span-1">
-            <Card className="sticky top-16 p-4 md:p-6 lg:top-4">
+            <Card className="p-4 md:p-6 max-lg:static lg:sticky lg:top-4">
               <h2 id="users-search-heading" className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
                 <Search className="size-5" aria-hidden="true" />
                 Pesquisar
@@ -146,14 +146,21 @@ export default function AdminUsersPage() {
                       aria-pressed={selected}
                       aria-label={`${user.name}, ${user.email}`}
                       className={cn(
-                        'w-full rounded-md px-3 py-2.5 text-left transition-colors',
+                        'flex min-h-11 w-full flex-col justify-center rounded-md px-3 py-2.5 text-left transition-colors',
                         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                         selected
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
                       )}
                     >
-                      <div className="truncate text-sm font-medium">{user.name}</div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 truncate text-sm font-medium">{user.name}</div>
+                        {user.role === 'admin' && (
+                          <Badge variant="secondary" className="shrink-0 text-[10px] uppercase">
+                            Admin
+                          </Badge>
+                        )}
+                      </div>
                       <div className={cn(
                         'truncate text-xs',
                         selected ? 'text-primary-foreground/85' : 'text-muted-foreground',
@@ -168,7 +175,7 @@ export default function AdminUsersPage() {
               </ul>
 
               <p className="mt-4 rounded-md bg-muted p-3 text-sm text-muted-foreground">
-                Total de usuários:{' '}
+                Total registrados:{' '}
                 <span className="font-semibold text-foreground">{allUsers.length}</span>
               </p>
             </Card>

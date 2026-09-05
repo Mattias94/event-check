@@ -29,29 +29,22 @@ export class UsersService {
     return this.withoutPassword(user)
   }
 
-  /**
-   * Retorna IDs únicos de usuários que possuem ao menos uma inscrição.
-   * Segue o comportamento original: a busca de usuários do admin é baseada
-   * em quem já se inscreveu em algum evento, não na lista completa de contas.
-   */
-  private async getAllUniqueUserIds(): Promise<string[]> {
-    const enrollments = await this.enrollmentsRepository.findAll()
-    return Array.from(new Set(enrollments.map((enrollment) => enrollment.userId))).sort()
-  }
-
-  async searchUsers(query: string): Promise<{ id: string; name: string; email: string }[]> {
-    const enrolledUserIds = new Set(await this.getAllUniqueUserIds())
-    const enrolledUsers = (await this.usersRepository.findAll())
-      .filter((user) => enrolledUserIds.has(user.id))
-      .map((user) => ({ id: user.id, name: user.name, email: user.email }))
+  async searchUsers(query: string): Promise<{ id: string; name: string; email: string; role: string }[]> {
+    const allUsers = (await this.usersRepository.findAll())
+      .map((user) => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      }))
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
 
     if (!query.trim()) {
-      return enrolledUsers
+      return allUsers
     }
 
     const lowerQuery = query.toLowerCase()
-    return enrolledUsers.filter(
+    return allUsers.filter(
       (user) =>
         user.name.toLowerCase().includes(lowerQuery) ||
         user.email.toLowerCase().includes(lowerQuery) ||

@@ -222,7 +222,7 @@ const LocationField = forwardRef<HTMLInputElement, LocationFieldProps>(
                       type="button"
                       role="option"
                       aria-selected={false}
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                      className="flex min-h-11 w-full items-center px-3 py-2.5 text-left text-sm hover:bg-accent"
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() =>
                         applySelection({

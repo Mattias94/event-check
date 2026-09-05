@@ -241,7 +241,7 @@ export default function AdminEventListPage() {
                       alt={`Capa do evento ${event.title}`}
                     />
                   )}
-                  <div className="grid min-h-0 grid-cols-1 gap-5 p-5 md:p-6 md:grid-cols-2 xl:grid-cols-3 xl:items-stretch xl:gap-0">
+                  <div className="grid min-h-0 grid-cols-1 gap-5 p-5 md:p-6 lg:grid-cols-3 lg:items-stretch lg:gap-6">
                     {/* Informações do evento */}
                     <div className="flex min-w-0 flex-col items-center justify-center px-2 text-center md:px-4 xl:px-6">
                       <div className="flex w-full max-w-md flex-col items-center gap-2">
@@ -273,13 +273,13 @@ export default function AdminEventListPage() {
                     </div>
 
                     {/* Gráfico de ocupação */}
-                    <div className="flex w-full min-w-0 flex-1 items-center justify-center border-y border-border py-4 md:py-5 xl:border-x xl:border-y-0 xl:px-4 xl:py-6">
+                    <div className="flex w-full min-w-0 flex-1 items-center justify-center border-y border-border py-4 lg:border-x lg:border-y-0 lg:px-4 lg:py-6">
                       <EventOccupancyPieChart event={event} />
                     </div>
 
                     {/* Ações */}
                     <div
-                      className="flex w-full flex-col justify-center gap-2 px-2 md:col-span-2 xl:col-span-1 xl:px-4"
+                      className="flex w-full flex-col justify-center gap-2 lg:px-2"
                       aria-label={`Ações do evento ${event.title}`}
                     >
                       <Button
@@ -293,7 +293,7 @@ export default function AdminEventListPage() {
                       <Button
                         variant="secondary"
                         onClick={() => router.push(`/admin/events/${event.id}/check-in`)}
-                        className="w-full justify-center"
+                        className="h-11 w-full justify-center sm:h-10"
                       >
                         <QrCode aria-hidden="true" />
                         Ler QR Code
@@ -301,7 +301,7 @@ export default function AdminEventListPage() {
                       <Button
                         variant="outline"
                         onClick={() => router.push(`/admin/events/${event.id}`)}
-                        className="w-full justify-center"
+                        className="h-11 w-full justify-center sm:h-10"
                       >
                         <Pencil aria-hidden="true" />
                         Editar
@@ -311,7 +311,7 @@ export default function AdminEventListPage() {
                         <Button
                           variant="outline"
                           onClick={() => handleCancel(event.id, event.title)}
-                          className="w-full justify-center text-warning hover:text-warning"
+                          className="h-11 w-full justify-center text-warning hover:text-warning sm:h-10"
                         >
                           <XCircle aria-hidden="true" />
                           Cancelar
@@ -321,7 +321,7 @@ export default function AdminEventListPage() {
                       <Button
                         variant="outline"
                         onClick={() => handleDelete(event.id, event.title)}
-                        className="w-full justify-center text-destructive hover:text-destructive"
+                        className="h-11 w-full justify-center text-destructive hover:text-destructive sm:h-10"
                         title="Deletar evento permanentemente"
                       >
                         <Trash2 aria-hidden="true" />

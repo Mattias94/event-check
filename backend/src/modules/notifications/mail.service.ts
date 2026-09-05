@@ -175,6 +175,31 @@ export class MailService {
     }
   }
 
+  async sendEnrollmentCancellation(user: User, event: Event): Promise<boolean> {
+    const eventDate = this.formatEventDate(event.date)
+
+    return this.send({
+      to: user.email,
+      subject: `Inscrição cancelada: ${event.title}`,
+      html: this.wrapHtml(
+        'Inscrição cancelada',
+        `
+          <p>Olá, <strong>${this.escapeHtml(user.name)}</strong>,</p>
+          <p>Confirmamos o cancelamento da sua inscrição no evento abaixo:</p>
+          <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
+            <tr><td style="padding: 8px 0; color: #6b7280; width: 96px;">Evento</td><td><strong>${this.escapeHtml(event.title)}</strong></td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280;">Data</td><td>${eventDate}</td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280;">Horário</td><td>${this.escapeHtml(event.time)}</td></tr>
+            <tr><td style="padding: 8px 0; color: #6b7280;">Local</td><td>${this.escapeHtml(event.location)}</td></tr>
+          </table>
+          <p>Sua vaga foi liberada. O QR code de check-in deste evento não é mais válido.</p>
+          <p>Quer participar de outro evento? Acesse <a href="${this.frontendUrl}/events" style="color: #4f46e5;">Descobrir eventos</a>.</p>
+        `,
+      ),
+      logContext: `cancelamento de inscrição ${event.id} para ${user.email}`,
+    })
+  }
+
   async sendEventCancellation(user: User, event: Event): Promise<boolean> {
     const eventDate = this.formatEventDate(event.date)
 
